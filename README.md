@@ -5,20 +5,21 @@ Minecraft Fabric mod for the Complex Skyblock profile. Tracks money boosters, es
 ## Install at home
 
 1. Sign into GitHub and open [the latest release](https://github.com/Jlorenzoo/money-booster-hud/releases/latest).
-2. Download **money-booster-hud-1.3.2.jar** from **Assets**. Keep it as a `.jar` file.
+2. Download **money-booster-hud-1.3.3.jar** from **Assets**. Keep it as a `.jar` file.
 3. Open your Minecraft profile's `mods` folder. With Minecraft closed, remove any older Money Booster HUD jar and copy in the downloaded jar.
 4. Start Minecraft. Use `/boostermenu` or `/boosterhud` to open the menu.
 
 Required: Minecraft **26.2**, Fabric Loader **0.19.0 or newer**, **Fabric API**, and **Java 25 or newer**. The jar works across operating systems with those dependencies. In Prism Launcher, right-click the instance and open its folder; in CurseForge, open the profile's folder.
 
-## Features in 1.3.2
+## Features in 1.3.3
 
+- Latest booster bonus prominently displayed in the initial menu, with its source, percentage and duration.
 - Booster bonus totals and per-activation history with saved item sprites, percentage, announced duration and tracked duration.
 - History filter for money boosts only or all recorded consumable effects.
 - Plain white rolling ten-second earnings HUD, refreshed once a second, with a two-second reconciliation delay.
 - With boosters included by default, plus an optional estimated base rate without them. Drag the white HUD text directly while the menu is open.
 - Recognized chest-shop transactions, dollar auction sales, player payments and listing fees are excluded from earnings.
-- Sidebar state takes priority over an expired local countdown; below one minute, it can show Active when the server does not provide seconds.
+- Sidebar state takes priority over an expired local countdown. Minute-only sidebar values no longer freeze the HUD: it keeps an estimated seconds countdown from the chat duration. When that estimate expires but the effect remains visible, it shows Active.
 - Compact menus, flat buttons, anchored footers, pagination and scrolling at smaller GUI sizes.
 
 Amounts are estimates from scoreboard samples. Rounded balances, delayed server updates, and unrecognized transactions can affect accuracy. Item sources are matched to recent item use; unknown sources are labeled accordingly. The source zip is included in each release. The included build script uses the original workstation's Minecraft/Fabric library paths and needs adjustment to build elsewhere.
