@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "skyblocktoolkit",
+  "version": "1.0.0",
+  "name": "Skyblock Toolkit",
+  "description": "One menu for booster earnings, fishing cues, chat copy and HUD layouts.",
+  "authors": [
+    "Jeremy",
+    "xpncvr (Chat Copy)"
+  ],
+  "license": "GPL-3.0",
+  "environment": "client",
+  "provides": [
+    "moneyboosterhud",
+    "fishingpings",
+    "chattextselect"
+  ],
+  "entrypoints": {
+    "client": [
+      "com.skyblocktoolkit.ToolkitMod"
+    ]
+  },
+  "mixins": [
+    "chattextselect.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

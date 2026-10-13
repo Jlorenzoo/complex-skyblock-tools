@@ -1,0 +1,8 @@
+build/
+*.class
+*.pyc
+__pycache__/
+*.lock
+*.tmp
+toolkit-installation-status.txt
+.DS_Store
