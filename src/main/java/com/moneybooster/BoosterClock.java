@@ -28,7 +28,7 @@ public final class BoosterClock {
             total=Math.max(total,end-started);
         }
     }
-    private boolean recent(long now) { return lastPresent >= 0 && now - lastPresent <= 1500; }
+    private boolean recent(long now) { return lastPresent >= 0 && now - lastPresent <= 3000; }
     public boolean active(long now) {
         if (recent(now)) return true;
         // Once the sidebar has shown the effect, a confirmed removal ends it even if chat predicted longer.

@@ -148,6 +148,8 @@ public class BoosterStatsManager {
         long now = System.currentTimeMillis();
         if (!BoosterManager.isActive() && history.activeId() >= 0) {
             history.finish(now, "Finished"); markContext();
+        } else if (BoosterManager.isActive() && history.activeId() < 0 && BoosterManager.getPercentage() > 0) {
+            ensureActiveHistory(BoosterManager.getPercentage(), now);
         }
         ledger.tick(now); history.tick(now);
         if (now-averageUpdated>=1000) { averageRate=average.perHour(now);baseAverageRate=baseAverage.perHour(now);averageUpdated=now; }
@@ -160,11 +162,27 @@ public class BoosterStatsManager {
         if (!Double.isFinite(newBal) || newBal < 0) return;
         boolean active = BoosterManager.isActive();
         if (active && history.activeId() < 0) {
-            recordEffect(BoosterManager.getPercentage(), -1, "Money booster", new BoosterSources.Source("Unknown source", "Detected on scoreboard", null, false));
+            ensureActiveHistory(BoosterManager.getPercentage(), System.currentTimeMillis());
         }
         wasBoosterActive = active;
         ledger.observe(newBal, System.currentTimeMillis(), active ? BoosterManager.getPercentage() : 0, RateTracker.getActiveTestId(), history.activeId());
         lastKnownBalance = newBal;
+    }
+    public static void ensureActiveHistory(int pct, long now) {
+        if (pct <= 0 || history.activeId() >= 0) return;
+        if (history.tryResume(pct, now, 45_000)) {
+            markContext();
+            return;
+        }
+        BoosterSources.Source src = resolveScoreboardSource(pct, now);
+        recordEffect(pct, -1, "Money booster", src);
+    }
+    private static BoosterSources.Source resolveScoreboardSource(int pct, long now) {
+        BoosterHistory.Entry latest = history.latestMoneyBooster();
+        if (latest != null && latest.percentage == pct && "Coconut".equals(latest.source) && (now - latest.lastSeen <= 120_000)) {
+            return new BoosterSources.Source("Coconut", latest.itemName != null ? latest.itemName : "Coconut", latest.iconJson, true);
+        }
+        return new BoosterSources.Source("Unknown source", "Detected on scoreboard", null, false);
     }
     private static void onSettled(MoneyLedger.Receipt receipt) {
         if (ModConfig.getInstance().isAverageEnabled()) { average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs()); }

@@ -43,6 +43,18 @@ public final class BoosterHistory {
         return result;
     }
     public Entry latestMoneyBooster(){for(Entry e:newestFirst())if(e.percentage>0)return e;return null;}
+    public boolean tryResume(int pct, long now, long maxGapMs) {
+        Entry latest = latestMoneyBooster();
+        if (latest != null && latest.percentage == pct && (now - latest.lastSeen <= maxGapMs)) {
+            activeId = latest.id;
+            latest.status = "Active";
+            latest.ended = 0;
+            latest.lastSeen = now;
+            dirty = true;
+            return true;
+        }
+        return false;
+    }
     public long activeId() { return activeId; }
     public Entry find(long id) { for (Entry e : entries) if (e.id == id) return e; return null; }
     public Entry start(String source, String name, String icon, boolean inferred, int pct, long duration, String effect, long now) {

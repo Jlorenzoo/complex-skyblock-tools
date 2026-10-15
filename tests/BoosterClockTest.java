@@ -7,12 +7,12 @@ public class BoosterClockTest {
   clock.observe(true,-1,35900); check(clock.active(36100),"Local expiry defeated sidebar");
   clock.observe(true,-1,70000); check(clock.active(70000),"Below-minute booster ended early");
   check(!clock.hasTimer(70000),"Invented exact seconds");
-  clock.observe(false,-1,70250); check(clock.active(71000),"Temporary removal caused flicker");
-  clock.observe(false,-1,71750); check(!clock.active(71750),"Effect survived confirmed removal");
+  clock.observe(false,-1,70250); check(clock.active(72500),"Temporary removal caused flicker");
+  clock.observe(false,-1,73500); check(!clock.active(73500),"Effect survived confirmed removal");
   clock.reset(); clock.start(180,0); clock.observe(true,60000,1000);
   check(clock.remaining(1000)==60000,"Sidebar time not used");
   clock.observe(true,120000,2000); check(clock.remaining(2000)==120000 && clock.progress(2000)<=1,"Extension not reconciled");
-  clock.observe(false,-1,2500);clock.observe(false,-1,4000);check(!clock.active(4000),"Chat timer overrode server removal");
+  clock.observe(false,-1,2500);clock.observe(false,-1,5500);check(!clock.active(5500),"Chat timer overrode server removal");
   clock.reset();clock.start(10,0);check(clock.active(9000)&&!clock.active(11000),"Chat-only fallback");
   clock.reset();clock.observe(true,-1,0);check(clock.active(0),"Joining with active sidebar booster");clock.reset();check(!clock.active(0),"Disconnect baseline");
   var state=BoosterSidebar.parse(List.of("+39% Money Booster:"));

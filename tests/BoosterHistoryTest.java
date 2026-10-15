@@ -24,6 +24,10 @@ public class BoosterHistoryTest {
   var loaded=new BoosterHistory(path);
   if(loaded.newestFirst().size()!=3 || loaded.find(coconut.id).bonus!=20 || loaded.find(potion.id).bonus!=40)throw new AssertionError("Persistence");
   if(!loaded.find(coconut.id).iconJson.equals(coconut.iconJson))throw new AssertionError("Sprite data lost");
+  if(!loaded.tryResume(20, 2500, 45000)) throw new AssertionError("tryResume failed within gap");
+  if(loaded.activeId() != potion.id || !loaded.find(potion.id).status.equals("Active")) throw new AssertionError("tryResume active state");
+  loaded.finish(2800, "Finished");
+  if(loaded.tryResume(20, 50000, 45000)) throw new AssertionError("tryResume succeeded beyond gap");
   var unknown=loaded.start("Unknown source","Detected on scoreboard",null,false,40,-1,"Money booster",3000); loaded.save(4000);
   var reopened=new BoosterHistory(path);
   if(reopened.activeId()!=-1 || !reopened.find(unknown.id).status.equals("Interrupted"))throw new AssertionError("Stale active after restart");
