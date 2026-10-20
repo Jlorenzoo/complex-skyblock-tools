@@ -24,9 +24,9 @@ public final class FishingSettingsScreen extends Screen {
             @Override protected void applyValue(){mod.settings().volume=(float)value;updateMessage();}
             @Override public void onRelease(net.minecraft.client.input.MouseButtonEvent e){super.onRelease(e);mod.settings().save();}
             @Override public void extractWidgetRenderState(GuiGraphicsExtractor g,int mx,int my,float tick){
-                g.fill(getX(),getY(),getRight(),getBottom(),0xFF252C34);
-                int knob=getX()+(int)((getWidth()-4)*value);g.fill(knob,getY()+getHeight()-3,knob+4,getBottom(),0xFFBEC7D0);
-                g.centeredText(font,getMessage(),getX()+getWidth()/2,getY()+6,0xFFE4E8EC);
+                g.fill(getX(),getY(),getRight(),getBottom(),com.skyblocktoolkit.ToolkitTheme.palette().surface());
+                int knob=getX()+(int)((getWidth()-4)*value);g.fill(knob,getY()+getHeight()-3,knob+4,getBottom(),com.skyblocktoolkit.ToolkitTheme.palette().onAccent());
+                g.centeredText(font,getMessage(),getX()+getWidth()/2,getY()+6,com.skyblocktoolkit.ToolkitTheme.palette().text());
             }
         });
         volume.setMessage(Component.literal("Volume: "+Math.round(mod.settings().volume*100)+"%"));
@@ -50,11 +50,11 @@ public final class FishingSettingsScreen extends Screen {
         testSnap.setY(y+168-scroll);testSnap.visible=fits(testSnap.getY());
     }
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mx,int my,float tick){
-        refresh();g.fill(0,0,width,height,0x8806090D);g.fill(x,y,x+w,y+h,0xF0181D25);
-        g.text(font,"Fishing Pings",x+12,y+10,0xFFF0F2F4,false);
-        g.text(font,"Quiet cues for depth, area and snapped lines",x+12,y+23,0xFF9EA9B8,false);
+        refresh();g.fill(0,0,width,height,com.skyblocktoolkit.ToolkitTheme.palette().scrim());g.fill(x,y,x+w,y+h,com.skyblocktoolkit.ToolkitTheme.palette().panel());
+        g.text(font,"Fishing Pings",x+12,y+10,com.skyblocktoolkit.ToolkitTheme.palette().text(),false);
+        g.text(font,"Quiet cues for depth, area and snapped lines",x+12,y+23,com.skyblocktoolkit.ToolkitTheme.palette().muted(),false);
         g.enableScissor(x+8,y+36,x+w-8,footer-8);
-        g.centeredText(font,Component.literal("Target depth: "+String.format(java.util.Locale.ROOT,"%.0f",mod.settings().target)+" blocks"),x+w/2,y+122-scroll,0xFFD5DCE4);
+        g.centeredText(font,Component.literal("Target depth: "+String.format(java.util.Locale.ROOT,"%.0f",mod.settings().target)+" blocks"),x+w/2,y+122-scroll,com.skyblocktoolkit.ToolkitTheme.palette().text());
         g.disableScissor();super.extractRenderState(g,mx,my,tick);
     }
     @Override public boolean mouseScrolled(double mx,double my,double horizontal,double vertical){if(mx>=x&&mx<=x+w&&my>=y+36&&my<footer){scroll+=(int)(-vertical*8);refresh();return true;}return super.mouseScrolled(mx,my,horizontal,vertical);}

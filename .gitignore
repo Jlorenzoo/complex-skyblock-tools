@@ -13,3 +13,8 @@ toolkit-installation-status.txt
 .idea/
 .vscode/
 *.iml
+.local/
+local-settings.json
+*-smoke.log
+installation-*.log
+update-record.json

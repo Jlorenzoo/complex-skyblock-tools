@@ -33,9 +33,10 @@ public final class ToolkitScreen extends Screen {
     private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming"};
     public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,9);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==1||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
+        addThemeButton(x,y,w);
         if(page==8){hudElements();updateControls();return;}
         int[] targets={1,9,2,3,4,7};String[] names={"Boosters","Farming","Fishing","Chat Copy","Auction","Blackout"};
         String[] compactNames={"Boost","Farm","Fish","Chat","AH","Dim"};
@@ -68,8 +69,16 @@ public final class ToolkitScreen extends Screen {
         updateControls();
     }
     private void go(int next){persist();page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;advanced=false;rebuildWidgets();}
+    private void addThemeButton(int x,int y,int w){
+        int bw=layout.compact()?64:104;
+        var cfg=ToolkitConfig.get();
+        var button=addRenderableWidget(ToolkitButton.action(cfg.lightMode?"Light mode":"Dark mode",b->{
+            cfg.lightMode=!cfg.lightMode;persist();rebuildWidgets();
+        },x+w-bw-12,y+10,bw,22));
+        button.setTooltip(Tooltip.create(Component.literal("Switch to "+(cfg.lightMode?"dark":"light")+" theme")));
+    }
     private void label(Supplier<String> text,int top,int color,float scale){labels.add(new Label(text,top,color,scale));contentHeight=Math.max(contentHeight,top+(int)(10*scale));}
-    private void label(String text,int top){label(()->text,top,ToolkitTheme.MUTED,1);}
+    private void label(String text,int top){label(()->text,top,ToolkitTheme.palette().muted(),1);}
     private void button(String text,int top,Runnable action){button(()->text,top,0,Math.min(Math.max(90,font.width(text)+24),layout.bodyWidth()),action);}
     private void button(Supplier<String> text,int top,int offset,int w,Runnable action){
         Button b=addRenderableWidget(ToolkitButton.action(text.get(),unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,w,24));
@@ -94,11 +103,11 @@ public final class ToolkitScreen extends Screen {
             protected void applyValue(){apply.accept(value*maximum);updateMessage();}
             public void onRelease(MouseButtonEvent e){super.onRelease(e);persist();}
             public void extractWidgetRenderState(GuiGraphicsExtractor g,int mx,int my,float tick){
-                ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,ToolkitTheme.SURFACE);
-                g.text(font,getMessage(),getX()+8,getY()+5,ToolkitTheme.TEXT,false);
+                ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,ToolkitTheme.palette().surface());
+                g.text(font,getMessage(),getX()+8,getY()+5,ToolkitTheme.palette().text(),false);
                 int start=getX()+8,end=getRight()-8,knob=start+(int)((end-start)*value);
-                g.fill(start,getBottom()-5,end,getBottom()-3,0xFF353940);g.fill(start,getBottom()-5,knob,getBottom()-3,ToolkitTheme.RED_ACTIVE_TRACK);
-                ToolkitTheme.rounded(g,knob-2,getBottom()-6,4,4,2,ToolkitTheme.WHITE_PURE);
+                g.fill(start,getBottom()-5,end,getBottom()-3,com.skyblocktoolkit.ToolkitTheme.palette().track());g.fill(start,getBottom()-5,knob,getBottom()-3,ToolkitTheme.palette().accentTrack());
+                ToolkitTheme.rounded(g,knob-2,getBottom()-6,4,4,2,ToolkitTheme.palette().onAccent());
             }
         });slider.setMessage(Component.literal(name+": "+Math.round(setting*100)+"%"));controls.add(new Control(slider,top,22));contentHeight=Math.max(contentHeight,top+22);
     }
@@ -123,33 +132,43 @@ public final class ToolkitScreen extends Screen {
     }
     private void hudElements(){
         var cfg=ToolkitConfig.get();
-        toggleCell("Booster timer",0,0,()->cfg.boosterHud,()->cfg.boosterHud=!cfg.boosterHud);
-        toggleCell("Crop earnings",0,1,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        toggleCell("Fishing earnings",34,0,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
-        toggleCell("Rate test info",34,1,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
-        pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),84);
+        toggleCell("Money timer",0,0,()->cfg.boosterHud,()->cfg.boosterHud=!cfg.boosterHud);
+        toggleCell("XP timer",0,1,()->cfg.xpBoosterHud,()->cfg.xpBoosterHud=!cfg.xpBoosterHud);
+        toggleCell("Crop earnings",34,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        toggleCell("Fishing earnings",34,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
+        toggleCell("Rate test info",68,0,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
+        pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),108);
     }
     private void money(){
         var cfg=ModConfig.getInstance();
-        label("Latest booster bonus",0);
-        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus);},17,ToolkitTheme.ACCENT,1.5f);
-        label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),42,ToolkitTheme.TEXT,1);
-        label(()->BoosterManager.isActive()?"Active: +"+BoosterManager.getPercentage()+"% · "+BoosterManager.formatTime(BoosterManager.getRemainingMs(System.currentTimeMillis())):"No active booster",64,ToolkitTheme.MUTED,1);
-        button("History",92,()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)));
-        advancedButton(128);
+        var toolkit=ToolkitConfig.get();
+        toggleCell("Money timer",0,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
+        toggleCell("XP timer",0,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
+        toggle("5-second reminder",34,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
+        label("Soft highlight + ending cue on visible timers.",64);
+        label(()->timerStatus(BoosterTimers.Type.MONEY),86,ToolkitTheme.palette().moneyText(),1);
+        label(()->timerStatus(BoosterTimers.Type.XP),104,ToolkitTheme.palette().xpText(),1);
+        label(()->"Session money bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),124,ToolkitTheme.palette().text(),1);
+        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest money bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},142,ToolkitTheme.palette().muted(),1);
+        actionRow(168,new String[]{"History",advanced?"Less settings":"Advanced..."},new Runnable[]{()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->{advanced=!advanced;rebuildWidgets();}});
         if(advanced){
-            pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),164);
+            button("HUD elements...",202,()->{hudReturnPage=page;go(8);});
+            pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),238);
         }
+    }
+    private String timerStatus(BoosterTimers.Type type){
+        long now=System.currentTimeMillis();var timers=BoosterManager.timers;var clock=timers.clock(type);
+        return type.label+": "+(clock.active(now)?"+"+timers.percentage(type)+"% · "+BoosterTimers.formatTime(clock.remaining(now),clock.hasTimer(now)):"Inactive");
     }
     private void farming(){
         var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
         label("Crop Visibility",0);
         label("Dim & desaturate immature crops for easy spotting.",15);
         toggle("Clear Harvest textures",30,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-        label(()->ClearHarvest.isEnabled()?"Status: Active (Clear Harvest)":"Status: Vanilla textures",58,ClearHarvest.isEnabled()?ToolkitTheme.ACCENT:ToolkitTheme.MUTED,1);
+        label(()->ClearHarvest.isEnabled()?"Status: Active (Clear Harvest)":"Status: Vanilla textures",58,ClearHarvest.isEnabled()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted(),1);
 
         label("Crop Earnings",80);
-        label(()->com.moneybooster.BoosterStatsManager.averageLabel(),95,ToolkitTheme.TEXT,1.2f);
+        label(()->com.moneybooster.BoosterStatsManager.averageLabel(),95,ToolkitTheme.palette().text(),1.2f);
         toggleCell("Crop earnings HUD",118,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
         button(()->"HUD elements...",118,half+10,half,()->{hudReturnPage=9;go(8);});
         pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new com.moneybooster.BoosterStatsScreen(this)),()->"Edit HUD",()->go(5),148);
@@ -164,7 +183,7 @@ public final class ToolkitScreen extends Screen {
         sliderAt("Volume",34,cfg.volume,3,half+10,half,v->cfg.volume=(float)v);
         actionRow(76,new String[]{"Preview","Fish prices",advanced?"Less settings":"Advanced..."},new Runnable[]{mod::previewDepth,()->{fishEarnings=true;advanced=false;scroll=0;rebuildWidgets();},()->{advanced=!advanced;rebuildWidgets();}});
         if(advanced){
-            label(()->"Reel depth: "+(int)cfg.target+" blocks",116,ToolkitTheme.MUTED,1);
+            label(()->"Reel depth: "+(int)cfg.target+" blocks",116,ToolkitTheme.palette().muted(),1);
             button(()->"-",136,0,32,()->cfg.target=Math.max(1,cfg.target-1));
             button(()->"+",136,40,32,()->cfg.target=Math.min(1000,cfg.target+1));
             button(()->"Alert sounds",112,half+10,half,()->{soundReturnPage=2;go(6);});
@@ -172,10 +191,11 @@ public final class ToolkitScreen extends Screen {
         }
     }
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
-        labels.add(new Label(()->name,top+6,ToolkitTheme.TEXT,1,22));
+        labels.add(new Label(()->name,top+6,ToolkitTheme.palette().text(),1,22));
         EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+112,layout.bodyY()+top+6-scroll,Math.max(40,layout.bodyWidth()-112),14,Component.literal(name+" price per fish")));
         field.setBordered(false);field.setMaxLength(24);field.setValue(String.format(java.util.Locale.ROOT,"%.2f",read.getAsDouble()));
-        field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?0xFFE6ECF2:0xFFFF9F99);if(Double.isFinite(value))write.accept(value);});
+        field.setTextColor(ToolkitTheme.palette().text());
+        field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().error());if(Double.isFinite(value))write.accept(value);});
         priceFields.add(field);controls.add(new Control(field,top+6,14));contentHeight=Math.max(contentHeight,top+22);
     }
     private void fishPrices(){
@@ -188,10 +208,10 @@ public final class ToolkitScreen extends Screen {
         priceField("Tropical · 2%",136,()->cfg.tropicalPrice,v->cfg.tropicalPrice=v);
         button(()->"Window: "+(cfg.earningsWindow==60?"60s":"5m"),168,0,Math.min(160,layout.bodyWidth()),()->cfg.earningsWindow=cfg.earningsWindow==60?300:60);
 
-        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),230,ToolkitTheme.ACCENT,1);
-        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},248,ToolkitTheme.TEXT,1);
-        label(()->ToolkitMod.fishingLabel(),266,ToolkitTheme.TEXT,1);
-        label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",286,ToolkitTheme.MUTED,1);
+        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),230,ToolkitTheme.palette().accent(),1);
+        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},248,ToolkitTheme.palette().text(),1);
+        label(()->ToolkitMod.fishingLabel(),266,ToolkitTheme.palette().text(),1);
+        label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",286,ToolkitTheme.palette().muted(),1);
         label("For stack prices, divide by 64 before entering.",304);
 
     }
@@ -251,9 +271,9 @@ public final class ToolkitScreen extends Screen {
     private void initLayout(){} // Only the HUD elements and their eye controls live on this canvas.
     private int eyeX(int x,int elementWidth){return x+elementWidth+15<=width?x+elementWidth+5:Math.max(1,x-14);}
     private void eye(GuiGraphicsExtractor g,int x,int y,boolean visible){
-        int color=visible?ToolkitTheme.ACCENT:ToolkitTheme.MUTED;
+        int color=visible?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted();
         g.fill(x+2,y+3,x+8,y+7,color);g.fill(x,y+4,x+10,y+6,color);
-        g.fill(x+4,y+3,x+6,y+7,0xFF1B1D21);
+        g.fill(x+4,y+3,x+6,y+7,com.skyblocktoolkit.ToolkitTheme.palette().panel());
         if(!visible)for(int i=0;i<8;i++)g.fill(x+1+i,y+8-i,x+2+i,y+9-i,color);
     }
     private void updateControls(){
@@ -265,24 +285,26 @@ public final class ToolkitScreen extends Screen {
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mx,int my,float tick){
         if(page==5){renderLayout(g,mx,my,tick);return;}
         updateControls();int x=layout.x(),y=layout.y(),w=layout.width(),h=layout.height();
-        g.fill(0,0,width,height,0x25090B0F);
-        ToolkitTheme.rounded(g,x-2,y+3,w+4,h+2,7,0x30000000);
-        ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.PANEL);
+        g.fill(0,0,width,height,com.skyblocktoolkit.ToolkitTheme.palette().scrim());
+        ToolkitTheme.rounded(g,x-2,y+3,w+4,h+2,7,com.skyblocktoolkit.ToolkitTheme.palette().shadow());
+        ToolkitTheme.rounded(g,x-1,y-1,w+2,h+2,7,ToolkitTheme.palette().border());
+        ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
         if(page==8){
             g.blit(LOGO,layout.bodyX(),y+12,layout.bodyX()+18,y+30,0f,1f,0f,1f);
-            g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.TEXT,false);
+            g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.palette().text(),false);
         }else if(!layout.compact()){
-            ToolkitTheme.rounded(g,x,y,104,h,6,ToolkitTheme.SIDEBAR);g.fill(x+96,y,x+104,y+h,ToolkitTheme.SIDEBAR);
+            ToolkitTheme.rounded(g,x,y,104,h,6,ToolkitTheme.palette().sidebar());g.fill(x+96,y,x+104,y+h,ToolkitTheme.palette().sidebar());
             g.blit(LOGO,x+8,y+10,x+44,y+46,0f,1f,0f,1f);
-            g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.ACCENT,false);
-            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.MUTED,false);
-            g.text(font,PAGES[page],layout.bodyX(),y+18,ToolkitTheme.TEXT,false);
+            g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.palette().accent(),false);
+            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.palette().muted(),false);
+            g.text(font,PAGES[page],layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
             String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings"};
-            g.text(font,descriptions[page],layout.bodyX(),y+34,ToolkitTheme.MUTED,false);
+            g.text(font,descriptions[page],layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
-            g.text(font,"Skyblock Toolkit v"+UpdateManager.getCurrentVersion(),x+30,y+15,ToolkitTheme.TEXT,false);
+            g.text(font,"Skyblock Toolkit",x+30,y+15,ToolkitTheme.palette().text(),false);
         }
+        if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+47,layout.bodyX()+28,y+49,ToolkitTheme.palette().accent());
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
         for(var label:labels){String text=label.text().get();if(text.isEmpty())continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());
@@ -291,17 +313,17 @@ public final class ToolkitScreen extends Screen {
         }
         if(page==2&&fishEarnings){
             net.minecraft.world.item.Item[] fish={net.minecraft.world.item.Items.COD,net.minecraft.world.item.Items.SALMON,net.minecraft.world.item.Items.PUFFERFISH,net.minecraft.world.item.Items.TROPICAL_FISH};
-            for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+6,24,3,field.isFocused()?ToolkitTheme.HOVER:ToolkitTheme.SURFACE);
+            for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+6,24,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
             if(Minecraft.getInstance().level!=null)for(int i=0;i<fish.length;i++)g.item(new net.minecraft.world.item.ItemStack(fish[i]),layout.bodyX(),layout.bodyY()+55+i*28-scroll);
         }
         g.disableScissor();
-        if(layout.maxScroll(contentHeight)>0){int track=layout.viewport(),thumb=Math.max(12,track*track/contentHeight),ty=layout.bodyY()+scroll*(track-thumb)/layout.maxScroll(contentHeight);g.fill(x+w-5,ty,x+w-3,ty+thumb,0xFF555E67);}
+        if(layout.maxScroll(contentHeight)>0){int track=layout.viewport(),thumb=Math.max(12,track*track/contentHeight),ty=layout.bodyY()+scroll*(track-thumb)/layout.maxScroll(contentHeight);g.fill(x+w-5,ty,x+w-3,ty+thumb,com.skyblocktoolkit.ToolkitTheme.palette().muted());}
         super.extractRenderState(g,mx,my,tick);
 
         if(bindingTarget>0){
-            ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.PANEL);
-            g.centeredText(font,Component.literal(bindingTarget==1?"Press your menu key":"Press your black screen key"),x+w/2,y+h/2-12,0xFFE6EBF0);
-            g.centeredText(font,Component.literal("Escape cancels · Delete clears"),x+w/2,y+h/2+8,ToolkitTheme.MUTED);
+            ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
+            g.centeredText(font,Component.literal(bindingTarget==1?"Press your menu key":"Press your black screen key"),x+w/2,y+h/2-12,com.skyblocktoolkit.ToolkitTheme.palette().text());
+            g.centeredText(font,Component.literal("Escape cancels · Delete clears"),x+w/2,y+h/2+8,ToolkitTheme.palette().muted());
         }
     }
     private record HudPart(int id,String text,int x,int y,boolean visible){}
@@ -314,15 +336,21 @@ public final class ToolkitScreen extends Screen {
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
         int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc);
-        BoosterHudOverlay.renderBar(g,mc,bx,by,"+39% Booster: 0m 42s",.7f,false,false);
-        g.outline(bx-4,by-12,BoosterHudOverlay.BAR_WIDTH+8,24,ToolkitConfig.get().boosterHud?ToolkitTheme.ACCENT:ToolkitTheme.FAINT);
-        eye(g,eyeX(bx,BoosterHudOverlay.BAR_WIDTH),by-10,ToolkitConfig.get().boosterHud);
+        var cfg=ToolkitConfig.get();
+        for(var type:BoosterTimers.Type.values()){
+            int rowY=by+type.ordinal()*BoosterHudOverlay.TIMER_SPACING;
+            boolean visible=type==BoosterTimers.Type.MONEY?cfg.boosterHud:cfg.xpBoosterHud;
+            String label=type==BoosterTimers.Type.MONEY?"Money +39%: §f0m 42s":"XP +150%: §f2m 10s";
+            BoosterHudOverlay.renderTimerBar(g,mc,bx,rowY,label,type==BoosterTimers.Type.MONEY?.7f:.85f,type,false);
+            g.outline(bx-4,rowY-12,BoosterHudOverlay.BAR_WIDTH+8,22,visible?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+            eye(g,eyeX(bx,BoosterHudOverlay.BAR_WIDTH),rowY-10,visible);
+        }
         for(var part:hudParts()){
-            g.text(font,part.text(),part.x(),part.y(),ToolkitTheme.TEXT,true);
-            g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.ACCENT:ToolkitTheme.FAINT);
+            g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
+            g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
             eye(g,eyeX(part.x(),font.width(part.text())),part.y()-3,part.visible());
         }
-        if(dragging==0)g.centeredText(font,Component.literal("Drag to move · Eye to show / hide · Esc to return"),width/2,height-14,ToolkitTheme.MUTED);
+        if(dragging==0)g.centeredText(font,Component.literal("Drag to move · Eye to show / hide · Esc to return"),width/2,height-14,ToolkitPalette.DARK.muted());
         super.extractRenderState(g,mx,my,tick);
     }
     @Override public boolean mouseScrolled(double mx,double my,double horizontal,double vertical){
@@ -358,9 +386,15 @@ public final class ToolkitScreen extends Screen {
                     persist();return true;
                 }
             }
-            if(event.x()>=tx&&event.x()<tx+10&&event.y()>=by-10&&event.y()<by){cfg.boosterHud=!cfg.boosterHud;persist();return true;}
+            for(var type:BoosterTimers.Type.values()){
+                int rowY=by+type.ordinal()*BoosterHudOverlay.TIMER_SPACING;
+                if(event.x()>=tx&&event.x()<tx+10&&event.y()>=rowY-10&&event.y()<rowY){
+                    if(type==BoosterTimers.Type.MONEY)cfg.boosterHud=!cfg.boosterHud;else cfg.xpBoosterHud=!cfg.xpBoosterHud;
+                    persist();return true;
+                }
+            }
             for(var part:hudParts())if(event.x()>=part.x()-3&&event.x()<=part.x()+font.width(part.text())+3&&event.y()>=part.y()-3&&event.y()<=part.y()+12){dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;}
-            if(event.x()>=bx-4&&event.x()<=bx+BoosterHudOverlay.BAR_WIDTH+4&&event.y()>=by-12&&event.y()<=by+12){var c=ModConfig.getInstance();c.setOffset(bx-10,by-16);c.setPosition(ModConfig.Position.TOP_LEFT);dragging=1;grabX=event.x()-bx;grabY=event.y()-by;return true;}
+            if(event.x()>=bx-4&&event.x()<=bx+BoosterHudOverlay.BAR_WIDTH+4&&event.y()>=by-12&&event.y()<=by+BoosterHudOverlay.TIMER_SPACING+10){var c=ModConfig.getInstance();c.setOffset(bx-10,by-16);c.setPosition(ModConfig.Position.TOP_LEFT);dragging=1;grabX=event.x()-bx;grabY=event.y()-by;return true;}
 
         }
         return super.mouseClicked(event,handled);
@@ -369,7 +403,7 @@ public final class ToolkitScreen extends Screen {
         var cfg=ModConfig.getInstance();
         if(dragging==3){var c=ToolkitConfig.get();c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(ToolkitMod.fishingLabel())-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
-        if(dragging==1){cfg.setOffset(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.BAR_WIDTH-2))-10,Math.clamp((int)(event.y()-grabY),14,Math.max(14,height-24))-16);return true;}
+        if(dragging==1){cfg.setOffset(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.BAR_WIDTH-2))-10,Math.clamp((int)(event.y()-grabY),14,Math.max(14,height-24-BoosterHudOverlay.TIMER_SPACING))-16);return true;}
         return super.mouseDragged(event,dx,dy);
     }
     @Override public boolean mouseReleased(MouseButtonEvent event){if(dragging!=0){dragging=0;persist();return true;}persist();return super.mouseReleased(event);}

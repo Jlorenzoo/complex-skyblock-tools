@@ -1,5 +1,7 @@
 # Skyblock Toolkit
 
+This repository is `Jlorenzoo/complex-skyblock-tools`, the Fabric client mod. It is separate from the `mc-afk-oracle` server-control project. Read `DEVELOPMENT.md` for build, test and installation guidance. When present, `.local/WORKSTATION.md` records ignored workstation-specific paths and deployment state.
+
 A unified Minecraft Fabric client mod bringing together booster tracking, fishing signals, chat copying, and a Lunar Client–inspired configuration hub.
 
 ## Tech Stack & Environment
@@ -32,5 +34,6 @@ A unified Minecraft Fabric client mod bringing together booster tracking, fishin
 
 ## UI & Design Conventions
 - **Theme & Guidelines:** Follow [`DESIGN.md`](DESIGN.md) and [`ToolkitTheme.java`](src/main/java/com/skyblocktoolkit/ToolkitTheme.java). Follow the brand Crimson Red (`#E5254A`) and Crisp White (`#FFFFFF`) aesthetic inspired by `assets/logo.png` and `assets/banner.png`. Use subtle dark panels (`#1B1D21`), sidebar contrast (`#17191D`), and smooth pixel-rounded corners.
+- Use `ToolkitTheme.palette()` for every menu surface, text, control and error state; both light/red and dark/red modes must remain readable. Preserve the HUD's independent money/XP colors. Theme changes apply immediately and save in `skyblocktoolkit.json`.
 - **Widgets:** Use `ToolkitButton` for toggle switches (pill sliders), navigation tabs, and cards.
 - **Rendering:** Uses Fabric / vanilla `GuiGraphicsExtractor` APIs for screen rendering.

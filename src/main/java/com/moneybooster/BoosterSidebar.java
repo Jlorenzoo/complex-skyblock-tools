@@ -5,15 +5,20 @@ import java.util.regex.*;
 
 public final class BoosterSidebar {
     public record State(boolean active, int percentage, long remainingMs, boolean exactSeconds) {}
-    private static final Pattern LABEL = Pattern.compile("(?i)money\\s*booster\\b");
+    private static final Pattern MONEY_LABEL = Pattern.compile("(?i)\\bmoney\\s*booster\\b");
+    private static final Pattern XP_LABEL = Pattern.compile("(?i)\\b(?:experience|exp|xp)\\s*booster\\b");
     private static final Pattern PERCENT = Pattern.compile("\\+?(\\d+)\\s*[%$]");
     private static final Pattern UNITS = Pattern.compile("(?i)(\\d+)\\s*(hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)(?![a-z])");
     private static final Pattern COLON = Pattern.compile("(?<![0-9:])(\\d{1,2}):([0-5]\\d)(?::([0-5]\\d))?(?![0-9:])");
     private static final Pattern ONLY_TIME = Pattern.compile("(?i)^[\\s()\\[\\]]*(?:(?:\\d+\\s*(?:hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)\\s*)+|\\d{1,2}:[0-5]\\d(?::[0-5]\\d)?)[\\s()\\[\\]]*$");
     public static State parse(List<String> lines) {
+        return parse(lines, BoosterTimers.Type.MONEY);
+    }
+    public static State parse(List<String> lines, BoosterTimers.Type type) {
+        Pattern label = type == BoosterTimers.Type.MONEY ? MONEY_LABEL : XP_LABEL;
         for (int i = 0; i < lines.size(); i++) {
             String line = clean(lines.get(i));
-            if (!LABEL.matcher(line).find()) continue;
+            if (!label.matcher(line).find()) continue;
             Matcher pct = PERCENT.matcher(line); int percentage = -1;
             if (pct.find()) try { percentage = Integer.parseInt(pct.group(1)); } catch (NumberFormatException ignored) {}
             String timerText=PERCENT.matcher(line).replaceAll("");

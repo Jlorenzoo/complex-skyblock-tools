@@ -6,7 +6,7 @@ Welcome to the **Skyblock Toolkit** design guide. This document establishes the 
 
 ## 1. Brand Identity & Philosophy
 
-Skyblock Toolkit’s visual identity is inspired by high-performance esports HUDs and modern precision instrumentation, as seen in [`assets/logo.png`](file:///home/jeremy/projects/skyblock-toolkit/assets/logo.png) and [`assets/banner.png`](file:///home/jeremy/projects/skyblock-toolkit/assets/banner.png).
+Skyblock Toolkit’s visual identity is inspired by high-performance esports HUDs and modern precision instrumentation, as seen in [`assets/logo.png`](assets/logo.png) and [`assets/banner.png`](assets/banner.png).
 
 ```
    ┌─────────────────────────────────────────────────────────────┐
@@ -23,41 +23,40 @@ Skyblock Toolkit’s visual identity is inspired by high-performance esports HUD
 
 ### Core Principles
 1. **Separation of HUD and Menu**:
-   - **In-Game Gameplay HUD**: Clean, non-distracting colors (classic booster green `#00E600`, neutral stat pills, crisp white readouts). Red is reserved strictly for expiring warnings (<3s) or emergency cues (snapped line), never persistent status, avoiding eye fatigue or false danger alarms.
+   - **In-Game Gameplay HUD**: Green money and purple XP timers, neutral stat pills and white readouts. The optional final-five-second cue keeps the timer's identity and uses a soft outline rather than an urgent red flash.
    - **Modpack Menu & Hub**: The unified Crimson Red and Crisp White brand theme.
 2. **Dark-Room Balance (Anti-Eye Strain)**:
    - Searing, hyper-saturated neon red and blinding 100% white are strictly avoided.
    - Accents use a balanced, rich crimson (`#B82D42`) and warm burgundy fill (`#2D131A`).
    - Text and handles use soft silver-white (`#DDE1E6`, `#E2E6EA`) with gentle luminance to keep late-night sessions comfortable in completely dark rooms.
 3. **Official Modpack Branding**:
-   - The official emblem from [`assets/logo.png`](file:///home/jeremy/projects/skyblock-toolkit/assets/logo.png) (with transparent background) is embedded directly into the header/sidebar of the toolkit UI.
+   - The official emblem from [`assets/logo.png`](assets/logo.png) (with transparent background) is embedded directly into the header/sidebar of the toolkit UI.
 
 ---
 
 ## 2. Color Palette & Tokens
 
-All shared colors are defined centrally in [`ToolkitTheme.java`](file:///home/jeremy/projects/skyblock-toolkit/src/main/java/com/skyblocktoolkit/ToolkitTheme.java).
+All menu colors are defined in [`ToolkitPalette.java`](src/main/java/com/skyblocktoolkit/ToolkitPalette.java), selected through `ToolkitTheme.palette()`. Avoid fixed menu colors so both modes remain consistent.
 
-### Modpack Menu Palette (Dark-Room Balanced)
+The menu header switches between **Dark mode** and **Light mode**. Dark remains the default; the choice persists as `lightMode` in `skyblocktoolkit.json`. Changing it rebuilds the current page immediately without changing its scroll position or other module settings.
 
-| Token | Hex | ARGB Hex | Description / Usage |
+| Palette accessor | Dark / red | Light / red | Purpose |
 | :--- | :--- | :--- | :--- |
-| `RED_PRIMARY` / `ACCENT` | `#B82D42` | `0xFFB82D42` | Refined brand crimson. Active tab borders, header branding, focus frames. |
-| `RED_DARK` | `#2D131A` | `0xD02D131A` | Warm burgundy fill for selected navigation tabs. |
-| `RED_ACTIVE_TRACK` | `#962838` | `0xFF962838` | Muted crimson track for active toggle switches and sliders. |
-| `WHITE_PURE` | `#E2E6EA` | `0xFFE2E6EA` | Soft silver-white for switch knobs, slider thumbs, and emphasized text. |
-| `WHITE_TEXT` / `TEXT` | `#DDE1E6` | `0xFFDDE1E6` | Primary screen typography and modal headers. |
-| `MUTED` | `#8E95A0` | `0xFF8E95A0` | Secondary labels, descriptions, and version text. |
-| `FAINT` | `#5F6670` | `0xFF5F6670` | Inactive borders, disabled text, and dividers. |
+| `panel()` | `#1B1D22` | `#F9F9FC` | Main panel |
+| `sidebar()` | `#15171B` | `#F0F0F5` | Sidebar |
+| `surface()` | `#25282E` | `#E8E9F0` | Controls and fields |
+| `hover()` | `#30343B` | `#DDDFE8` | Hover / focus fill |
+| `text()` | `#E4E7EC` | `#232632` | Primary text |
+| `muted()` | `#A3AAB5` | `#596171` | Secondary text |
+| `accent()` | `#E6647A` | `#B41F42` | Brand, selection, focus |
+| `accentSurface()` | `#391E28` | `#F8DDE4` | Selected navigation fill |
+| `accentTrack()` | `#C33D56` | `#BF2949` | Enabled switch / slider |
+| `border()` | `#373B44` | `#CCD0DB` | Subtle panel / control edge |
+| `error()` | `#FF9EAD` | `#AA2140` | Invalid input |
 
-### Neutrals & Surfaces
+Both themes use deliberate surface contrast, restrained red accents, matching subtle borders, a small header accent, and soft shadows. Light mode uses an off-white canvas and deep ink text, rather than reversing the colors mechanically. Toggles and slider thumbs stay warm white against their tracks. History, rate tests, inputs and detail screens use the same shared palette.
 
-| Token | Hex | ARGB Hex | Description / Usage |
-| :--- | :--- | :--- | :--- |
-| `PANEL` | `#1B1D21` | `0xC91B1D21` | Main modal and window background (semi-translucent dark slate). |
-| `SIDEBAR` | `#17191D` | `0xD417191D` | Navigation sidebar background with contrasting depth. |
-| `SURFACE` | `#23262B` | `0xB823262B` | Card, container, and inactive button background. |
-| `HOVER` | `#2C3036` | `0xDA2C3036` | Interactive hover state for cards, fields, and buttons. |
+`ToolkitPaletteTest` checks at least 4.5:1 contrast for primary and secondary text across menu surfaces, selected navigation, invalid input and colored timer status. Money/XP status text uses darker semantic colors in light mode; the gameplay HUD keeps its existing green/purple identity.
 
 ---
 
@@ -65,16 +64,14 @@ All shared colors are defined centrally in [`ToolkitTheme.java`](file:///home/je
 
 HUD elements remain clean, neutral, and easy on the eyes during active gameplay, farming, and fishing.
 
-### 3.1. The Booster Progress Bar
+### 3.1. The Booster Progress Bars
+- Money and XP have independent clocks and visibility settings. Render only enabled, active effects, money first and XP beneath it with a 24px row spacing. A single visible effect occupies the first row.
+- Money uses `ToolkitTheme.MONEY_TIMER` (sage green), XP uses `ToolkitTheme.XP_TIMER` (soft purple); each has matching track/highlight/shadow tokens.
+- The optional five-second reminder starts disabled. When enabled, append a muted `· ending` cue and a slowly pulsing, low-opacity outline to that timer only. Keep its identifying color; do not flash the screen or play audio.
+- The HUD editor previews both effects, with separate eye controls and a shared draggable anchor.
 - **Dimensions**: `104px` wide × `5px` high (with 1px outer black contour).
-- **Background Track**: `0xFF052205` deep forest green.
-- **Fill Core**: Clean 3-layer booster green:
-  - Top highlight (`1px`): `0xFF38FF38`
-  - Center core: `0xFF00E600`
-  - Bottom shadow (`1px`): `0xFF009900`
-- **Expiring Warning (< 3s)**: Alternating amber (`0xFFFFBB00`) and urgency red (`0xFFEE2222`).
 - **Segment Dividers**: Quarter notches at 25%, 50%, and 75% (`0x80000000`).
-- **Label Typography**: `§a+39% Booster: §f0m 42s` (familiar green prefix + crisp white duration).
+- **Label Typography**: `Money +39%: §f0m 42s` / `XP +150%: §f2m 10s`, with a type-colored prefix and white duration.
 
 ### 3.2. Rate Test & Stat Overlays
 - **Pill Container**:
@@ -96,25 +93,23 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
 The toolkit hub (`ToolkitScreen`) uses a modern sidebar-and-card layout.
 
 ### 4.1. Navigation Tabs
-- **Default State**: Transparent surface, `ToolkitTheme.MUTED` (`#8E95A0`) text.
-- **Hover State**: `ToolkitTheme.SURFACE` (`#23262B`) rounded pill.
+- **Default State**: Transparent surface and `palette().muted()` text.
+- **Hover State**: `palette().surface()` rounded pill.
 - **Selected Tab**:
-  - Outer border: `ToolkitTheme.RED_PRIMARY` (`#B82D42`).
-  - Inner fill: `ToolkitTheme.RED_DARK` (`#2D131A`).
-  - Text: `ToolkitTheme.WHITE_PURE` (`#E2E6EA`).
+  - Outer border and text: `palette().accent()`.
+  - Inner fill: `palette().accentSurface()`.
 
 ### 4.2. Toggle Switches
 - **Track**: `24px` × `12px` rounded capsule.
-  - Off: `0xFF353940` soft dark slate.
-  - On: `ToolkitTheme.RED_ACTIVE_TRACK` (`#962838`) warm muted crimson.
+  - Off: `palette().track()`.
+  - On: `palette().accentTrack()`.
 - **Slider Thumb**: `8px` × `8px` rounded pill.
-  - Off: `ToolkitTheme.MUTED` (`#8E95A0`).
-  - On: `ToolkitTheme.WHITE_PURE` (`#E2E6EA`) soft silver-white.
+  - Both states: `palette().onAccent()`, with position indicating off/on.
 
 ### 4.3. Sliders
-- **Track Background**: `0xFF353940` (soft dark groove).
-- **Filled Track**: `ToolkitTheme.RED_ACTIVE_TRACK` (`#962838`).
-- **Slider Knob**: `4px` × `4px` rounded silver-white thumb (`#E2E6EA`).
+- **Track Background**: `palette().track()`.
+- **Filled Track**: `palette().accentTrack()`.
+- **Slider Knob**: `4px` × `4px` thumb using `palette().onAccent()`.
 
 ---
 
@@ -136,7 +131,7 @@ When writing in-game messages, tooltips, or HUD labels, adhere to this formattin
 ## 6. Implementation Checklist for New Features
 
 When creating or modifying screens and HUD widgets:
-1. **Always use [`ToolkitTheme`](file:///home/jeremy/projects/skyblock-toolkit/src/main/java/com/skyblocktoolkit/ToolkitTheme.java)** for colors rather than raw hex literals.
+1. **Always use [`ToolkitTheme`](src/main/java/com/skyblocktoolkit/ToolkitTheme.java)** for colors rather than raw hex literals.
 2. **Keep HUD rendering lightweight**: use native `GuiGraphicsExtractor` primitives (`fill`, `outline`, `text`), avoiding heavy texture loads or allocations during the render loop.
-3. **Respect the Red & White hierarchy**: primary interactive accents should use `RED_PRIMARY`, value outputs should use `WHITE_PURE` or `TEXT`, and containers should use `PANEL` / `SURFACE`.
+3. **Respect both themes**: use `palette().accent()` for interactive accents, `text()` / `muted()` for content, and the corresponding surface tokens for containers. Avoid Minecraft's dark text shadows on light menu buttons.
 4. **Ensure drag-and-drop support**: any new persistent HUD element should be registered with `ToolkitLayout` / `BoosterHudOverlay` so users can position it freely.

@@ -43,6 +43,13 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             check(saved.readySoundGain == .5 && saved.areaSoundGain == 2 && saved.snapSoundGain == 0 && saved.ahSoundGain == 1.9,
                 "all four gains survive save / reload independently");
             check(saved.ahSoundVolume == .42, "saved existing volume preserved");
+            check(cfg.boosterHud && cfg.xpBoosterHud && !cfg.boosterReminder, "independent timer defaults and optional reminder");
+            cfg.boosterHud=false;cfg.xpBoosterHud=true;cfg.boosterReminder=true;cfg.lightMode=true;cfg.save();
+            var timerSettings=constructor.newInstance();
+            check(!timerSettings.boosterHud&&timerSettings.xpBoosterHud&&timerSettings.boosterReminder&&timerSettings.lightMode,"timer visibility, reminder and theme survive reload independently");
+            Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"boosterHud\":false}");
+            var legacySettings=constructor.newInstance();
+            check(!legacySettings.boosterHud&&!legacySettings.xpBoosterHud&&!legacySettings.boosterReminder&&!legacySettings.lightMode,"legacy visibility and dark theme stay unchanged on migration");
             var unsafeClass=Class.forName("sun.misc.Unsafe");
             var unsafeField=unsafeClass.getDeclaredField("theUnsafe");unsafeField.setAccessible(true);
             Object unsafe=unsafeField.get(null);

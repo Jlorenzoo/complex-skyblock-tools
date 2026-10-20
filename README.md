@@ -45,6 +45,8 @@ Once installed, you never need to visit GitHub or drag files again:
 
 ## Controls & Shortcuts
 
+Use the **Dark mode / Light mode** button in the toolkit menu header to switch between charcoal/red and off-white/red themes. The choice applies immediately, is saved across restarts, and covers module pages, history, rate tests, sliders and price inputs. Gameplay HUD colors remain consistent.
+
 | Action | Shortcut / Command |
 | :--- | :--- |
 | **Open Toolkit Hub** | **`Right Shift`** (or `Escape` → *Skyblock Toolkit*) |
@@ -65,6 +67,8 @@ Once installed, you never need to visit GitHub or drag files again:
 - **Live Crop Earnings & HUD**: Monitor live rolling harvest rates (`$/hr`), toggle the Crop Earnings HUD overlay, and access rate tests directly.
 
 ### ⏱️ Booster & Crop Earnings HUD
+- **Separate Money & XP Timers**: Green money and purple XP countdowns track their own activations. Only active, enabled timers appear at the top; money appears above XP when both are visible, with no empty row when either is hidden or expires.
+- **Visibility & Expiry Reminder**: Open **Right Shift → Boosters** to toggle each timer independently. Enable **5-second reminder** for a subtle ending cue and soft outline during the final five seconds. It starts disabled and does not play a sound. The HUD editor has separate eye controls; drag either timer to move the stack together.
 - **Consumable Tracker**: Accurately tracks active coconut and booster item durations with countdown bars.
 - **Rolling Earnings**: Live rolling window (10-second / hourly) calculation of crop farming revenue (`$/hr`).
 - **Session History**: Detailed ledger of your past boosts, earnings, and rate tests.
@@ -88,6 +92,8 @@ Once installed, you never need to visit GitHub or drag files again:
 ## Building from Source
 
 Requirements: Python 3 and Java 25.
+
+For launcher paths, Windows setup, regression checks and safe installation, see [DEVELOPMENT.md](DEVELOPMENT.md). Machine-specific paths belong in ignored `local-settings.json`.
 
 ```bash
 # Clone the repository

@@ -1,0 +1,24 @@
+# Developing Skyblock Toolkit
+
+This is the source repository for the Minecraft 26.2 Fabric client mod, `skyblocktoolkit`. Open the repository folder as the coding project's root so its source, Git branch and `AGENTS.md` are available together.
+
+The timer model lives in `BoosterTimers.java`. Money and XP have separate clocks and sidebar parsing. The legacy `BoosterManager` accounting methods refer to money only; XP activations must never replace the money ledger or count as a money boost. Hidden HUDs continue tracking. Visible active timers pack into money-then-XP rows. The five-second reminder is optional and disabled by default.
+
+`ToolkitPalette` defines independent light/red and dark/red menu palettes. `ToolkitTheme.palette()` selects the saved preference; the menu header switches it immediately. Detail screens and controls use the same palette. Gameplay HUD colors remain independent of the menu theme.
+
+## Build and verify
+
+Use Python 3 and a Java 25 JDK. `python build.py` creates `build/skyblock-toolkit-1.0.0.jar` and never installs it. Linux Prism defaults and `PRISM_DATA`, `MC_JAR`, `FAPI_JAR`, `LOADER_JAR`, `JAVAC`, and `LIBRARIES_DIR` overrides are supported. For another launcher, configure ignored `local-settings.json` with absolute paths:
+
+- `minecraft_jar`, `fabric_api_jar`, `loader_jar`, `javac`, `libraries_dir`, `mods_dir`
+- Optional `library_jars`: the exact dependency paths for the target launcher profile.
+
+Run `python tests/run_java.py`, `python tests/test_installer.py` and `python tests/test_updater.py`. The Java runner excludes the private transaction replay dataset. It covers timer isolation, reminder boundaries, sidebar formats, ledger/history behavior and readable palette contrast.
+
+On a configured Windows workstation, `python tests/run_smoke_windows.py` checks real Fabric mixins and settings migration in a disposable profile. `python tests/run_menu_windows.py` launches an isolated offline client, exercises widgets and captures light/dark menus under `artifacts/menu-preview/`. It never signs in or joins a server. These checks require the installed launcher dependencies; the menu check also requires a graphical desktop. The existing Prism/Linux smoke scripts remain available.
+
+## Install
+
+Run `python scripts/install.py --wait` to wait for clients using the configured profile to close. `--mods PATH` and `--source PATH` override the target and built jar. Check `toolkit-installation-status.txt` before relaunching.
+
+The installer verifies backups and the installed checksum, preserves unrelated mods and settings/history, and rolls back failed replacement. Keep a rollback copy outside `mods` as the in-game updater cleans old `.bak` files. Do not force-close a player's running client to install an update. Never commit launcher tokens, workstation paths, logs, compiled jars, or private game history.
