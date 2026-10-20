@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import zipfile
+from voicechat import fetch as fetch_voicechat, control_options
 
 PROJECT = Path(__file__).resolve().parents[1]
 DEFAULT_INSTANCE = Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/instances/Complex-Skyblock-2'
@@ -28,10 +29,12 @@ def main():
             assert archive.testzip() is None, path
     with zipfile.ZipFile(jar) as archive:
         assert json.loads(archive.read('fabric.mod.json'))['id'] == 'skyblocktoolkit'
+    voicechat = fetch_voicechat()
 
     files = {
         '.minecraft/mods/' + jar.name: jar,
         '.minecraft/mods/' + api.name: api,
+        '.minecraft/mods/' + voicechat.name: voicechat,
         '.minecraft/resourcepacks/' + pack.name: pack,
     }
     for name in ('skyblocktoolkit.json', 'fishingpings.json', 'moneyboosterhud.json'):
@@ -42,7 +45,8 @@ def main():
     for path in sorted((PROJECT / 'src').rglob('*')):
         if path.is_file():
             files['toolkit-source/' + path.relative_to(PROJECT).as_posix()] = path
-    for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'build.py'):
+    for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'build.py',
+                 'modpack/voicechat.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
         files['toolkit-source/' + name] = PROJECT / name
 
     readme = '''COMPLEX SKYBLOCK - PRISM PACK
@@ -53,9 +57,15 @@ Then launch the new Complex Skyblock Toolkit instance using your own account.
 Prism downloads Minecraft 26.2 and Fabric Loader 0.19.5. Java 25 is required;
 use Prism's automatic Java management or select Java 25 if prompted.
 
-Included: Skyblock Toolkit 1.0.0, Fabric API 0.160.0+26.2,
+Included: Skyblock Toolkit 1.0.0, Fabric API 0.160.0+26.2, Simple Voice Chat 2.6.22+26.2,
 Clear Harvest crop visibility texture pack (built-in & enabled), and toolkit settings.
 Press Right Shift in-game to open the Toolkit (toggle crop textures in Right Shift > Farming).
+Simple Voice Chat is by Max Henkel: https://modrinth.com/plugin/simple-voice-chat
+Controls: V menu, hold Caps Lock to talk, hold Right Alt to whisper, F8 mute, N disable voice.
+Press V to select your own microphone/speakers and choose push-to-talk.
+On Complex, /voice opens server settings; accept its consent prompt yourself.
+Complex records/moderates voice chat. Range: 48 blocks (whisper: 24); groups disabled.
+Lunar is not required. No microphone settings or completed onboarding are bundled.
 Fish sell-price estimates use the sender's configured prices; adjust them
 in Fishing > Fish earnings if your server prices differ.
 
@@ -68,7 +78,7 @@ Toolkit GPL source and licenses are in toolkit-source.
     with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('instance.cfg', '[General]\nConfigVersion=1.3\nInstanceType=OneSix\nname=Complex Skyblock Toolkit\niconKey=default\nOverrideJavaLocation=false\nOverrideCommands=false\nOverrideMemory=false\n')
         archive.writestr('mmc-pack.json', json.dumps(components, indent=2) + '\n')
-        archive.writestr('.minecraft/options.txt', 'resourcePacks:["vanilla","skyblocktoolkit:clear_harvest","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n')
+        archive.writestr('.minecraft/options.txt', control_options('resourcePacks:["vanilla","skyblocktoolkit:clear_harvest","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n'))
         archive.writestr('READ-ME.txt', readme)
         for name, path in sorted(files.items()):
             archive.write(path, name)
@@ -76,7 +86,7 @@ Toolkit GPL source and licenses are in toolkit-source.
         assert archive.testzip() is None
         for name, path in files.items():
             assert hashlib.sha256(archive.read(name)).digest() == hashlib.sha256(path.read_bytes()).digest()
-        assert len([n for n in archive.namelist() if n.startswith('.minecraft/mods/')]) == 2
+        assert len([n for n in archive.namelist() if n.startswith('.minecraft/mods/')]) == 3
         assert all(not n.startswith('/') and '..' not in Path(n).parts for n in archive.namelist())
     temporary.replace(args.output)
     print(f'Created and byte-verified: {args.output} ({args.output.stat().st_size:,} bytes)')

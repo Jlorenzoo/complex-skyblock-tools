@@ -1,0 +1,13 @@
+{
+  "name": "Simple Voice Chat",
+  "author": "Max Henkel",
+  "project_url": "https://modrinth.com/plugin/simple-voice-chat",
+  "version_id": "DKSq5wO6",
+  "version": "2.6.22+26.2",
+  "release_type": "release",
+  "minecraft": "26.2",
+  "loader": "fabric",
+  "filename": "voicechat-fabric-2.6.22+26.2.jar",
+  "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/DKSq5wO6/voicechat-fabric-2.6.22%2B26.2.jar",
+  "sha512": "eb45e75e8b031f3bb27e178ed44fd7b78ba681f077f5972e170726b4837146efd49c7b67d63a95ec4ce87e5672cf76bed85ac8fa7790a9e7ff7309a6c3f424ee"
+}

@@ -56,6 +56,23 @@ Use the **Dark mode / Light mode** button in the toolkit menu header to switch b
 | **Check & Install Updates** | `/toolkit update` |
 | **Module Shortcuts** | `/toolkit farming`, `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
 
+### Proximity voice chat on Complex
+
+Complex uses **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** by
+Max Henkel. Lunar is not required. The Prism pack includes the Fabric version for
+Minecraft 26.2 as a separate mod. For an existing configured profile, run
+`python scripts/voicechat.py --install --wait`; restart Minecraft after installation.
+
+Press **V** to select your microphone and speakers and choose **push-to-talk**.
+Pack defaults: hold **Caps Lock** to talk, hold **Right Alt** to whisper,
+**F8** to mute your microphone, and **N** to disable/re-enable voice chat.
+These avoid Litematica's **M** menu; existing voice bindings are preserved on install.
+Use **`/voice`** on Complex for server settings and accept its consent prompt yourself.
+Complex records and moderates voice chat; proximity range is 48 blocks, whisper range
+is 24 blocks, and groups are disabled. See
+[Complex's official guide](https://www.mc-complex.com/forums/vanilla/wiki-page/3/complex-gaming-proximity-voice-chat-guide/).
+The toolkit jar by itself does not include voice chat; the installer adds the separate jar.
+
 ---
 
 ## Features
