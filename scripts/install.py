@@ -7,7 +7,7 @@ PROJECT_DIR = Path(__file__).resolve().parents[1] if Path(__file__).resolve().pa
 SOURCE = PROJECT_DIR / "build" / "skyblock-toolkit-1.0.0.jar"
 if not SOURCE.exists() and (PROJECT_DIR / "skyblock-toolkit-1.0.0.jar").exists():
     SOURCE = PROJECT_DIR / "skyblock-toolkit-1.0.0.jar"
-MODS = Path("/home/jeremy/Documents/curseforge/minecraft/Instances/Complex Skyblock/mods")
+MODS = Path(os.environ.get("MODS_DIR", Path.home() / "Documents/curseforge/minecraft/Instances/Complex Skyblock/mods"))
 STATUS = PROJECT_DIR / "toolkit-installation-status.txt"
 LOCK_FILE = PROJECT_DIR / ".toolkit-install.lock"
 IDS = {"moneyboosterhud", "fishingpings", "chattextselect", "skyblocktoolkit"}

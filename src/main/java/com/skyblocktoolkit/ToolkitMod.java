@@ -24,6 +24,8 @@ public final class ToolkitMod implements ClientModInitializer {
     private static int requestedPage;
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
+        UpdateManager.cleanOldBackups();
+        UpdateManager.checkForUpdatesAsync();
         new com.moneybooster.MoneyBoosterMod().onInitializeClient();FISHING.onInitializeClient();
         menuKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.menu",GLFW.GLFW_KEY_RIGHT_SHIFT,KeyMapping.Category.MISC));
         blackoutKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.blackout",GLFW.GLFW_KEY_F6,KeyMapping.Category.MISC));
@@ -45,7 +47,10 @@ public final class ToolkitMod implements ClientModInitializer {
         );
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
-            if(mc!=null&&mc.player!=null&&mc.player.fishing!=null)FISHING_EARNINGS.observe(System.currentTimeMillis());
+            if(mc!=null&&mc.player!=null){
+                UpdateManager.checkAndNotifyChat(mc.player);
+                if(mc.player.fishing!=null)FISHING_EARNINGS.observe(System.currentTimeMillis());
+            }
             boolean clicked=false;while(menuKey.consumeClick())clicked=true;
             boolean blackoutClicked=false;while(blackoutKey.consumeClick())blackoutClicked=true;
             if(blackoutClicked)BlackoutManager.toggle();
@@ -59,6 +64,8 @@ public final class ToolkitMod implements ClientModInitializer {
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher,access)->{
             var command=ClientCommands.literal("toolkit").executes(ctx->{requestedPage=0;requested=true;return 1;});
+            command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
+            command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
             String[] modules={"boosters","fishing","chat","auction","hud","blackout"};
             int[] pages={1,2,3,4,5,7};
             for(int i=0;i<modules.length;i++){

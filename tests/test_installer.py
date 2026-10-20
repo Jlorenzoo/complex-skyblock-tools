@@ -3,7 +3,7 @@ from pathlib import Path
 import ast,hashlib,shutil,subprocess,sys,tempfile
 BASE=Path(__file__).resolve().parents[1]
 INSTALLER=BASE/'scripts/install.py'
-LIVE=Path('/home/jeremy/Documents/curseforge/minecraft/Instances/Complex Skyblock/mods')
+LIVE=Path.home() / 'Documents/curseforge/minecraft/Instances/Complex Skyblock/mods'
 with tempfile.TemporaryDirectory() as tmp:
     root=Path(tmp);mods=root/'mods';mods.mkdir()
     copied=[]

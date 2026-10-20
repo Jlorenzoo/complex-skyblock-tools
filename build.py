@@ -12,11 +12,13 @@ BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 CLASSES_DIR = os.path.join(BUILD_DIR, "classes")
 OUTPUT_JAR = os.path.join(BUILD_DIR, "skyblock-toolkit-1.0.0.jar")
 
-MC_JAR = "/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/libraries/com/mojang/minecraft/26.2/minecraft-26.2-client.jar"
-FAPI_JAR = "/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar"
-LOADER_JAR = "/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/libraries/net/fabricmc/fabric-loader/0.19.5/fabric-loader-0.19.5.jar"
-JAVAC = "/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/java/java-runtime-epsilon/bin/javac"
-MODS_DIR = "/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/instances/Complex-Skyblock-2/.minecraft/mods"
+HOME = os.path.expanduser("~")
+PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(HOME, ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))
+MC_JAR = os.environ.get("MC_JAR", os.path.join(PRISM_DATA, "libraries/com/mojang/minecraft/26.2/minecraft-26.2-client.jar"))
+FAPI_JAR = os.environ.get("FAPI_JAR", os.path.join(PRISM_DATA, "instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar"))
+LOADER_JAR = os.environ.get("LOADER_JAR", os.path.join(PRISM_DATA, "libraries/net/fabricmc/fabric-loader/0.19.5/fabric-loader-0.19.5.jar"))
+JAVAC = os.environ.get("JAVAC", os.path.join(PRISM_DATA, "java/java-runtime-epsilon/bin/javac"))
+MODS_DIR = os.environ.get("MODS_DIR", os.path.join(PRISM_DATA, "instances/Complex-Skyblock-2/.minecraft/mods"))
 
 def main():
     print("Building Skyblock Toolkit mod...")
@@ -37,7 +39,7 @@ def main():
         jars_dir = os.path.join(temp_dir, "META-INF", "jars")
         fapi_sub_jars = [os.path.join(jars_dir, f) for f in os.listdir(jars_dir) if f.endswith(".jar")]
         
-        prism_libs = glob.glob("/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/libraries/**/*.jar", recursive=True)
+        prism_libs = glob.glob(os.path.join(PRISM_DATA, "libraries/**/*.jar"), recursive=True)
         
         classpath = ":".join([MC_JAR, LOADER_JAR] + fapi_sub_jars + prism_libs)
         

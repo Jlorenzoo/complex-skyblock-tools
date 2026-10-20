@@ -43,6 +43,23 @@ public final class ToolkitScreen extends Screen {
         }
         addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+4,layout.footerY(),96,20));
         addRenderableWidget(ToolkitButton.action("Close",b->onClose(),x+w-76,layout.footerY(),64,20));
+        if(UpdateManager.isUpdateAvailable()){
+            String updateText=UpdateManager.getState()==UpdateManager.State.DOWNLOADING?"Downloading...":
+                              UpdateManager.getState()==UpdateManager.State.READY_RESTART?"Restart Game":
+                              "Update v"+UpdateManager.getLatestVersion();
+            if(!layout.compact()){
+                addRenderableWidget(ToolkitButton.action(updateText,b->{
+                    UpdateManager.triggerUpdateFromCommand();
+                    if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
+                },x+4,y+60+5*27,96,22));
+            }else{
+                int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
+                addRenderableWidget(ToolkitButton.action(updateText,b->{
+                    UpdateManager.triggerUpdateFromCommand();
+                    if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
+                },ux,layout.footerY(),uw,20));
+            }
+        }
 
         switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 8->hudElements();}
         updateControls();
@@ -239,11 +256,11 @@ public final class ToolkitScreen extends Screen {
             g.text(font,"HUD elements",layout.bodyX(),y+16,ToolkitTheme.TEXT,false);
         }else if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,104,h,6,ToolkitTheme.SIDEBAR);g.fill(x+96,y,x+104,y+h,ToolkitTheme.SIDEBAR);
-            g.text(font,"SKYBLOCK",x+12,y+17,ToolkitTheme.TEXT,false);g.text(font,"Toolkit",x+12,y+30,ToolkitTheme.MUTED,false);
+            g.text(font,"SKYBLOCK",x+12,y+17,ToolkitTheme.TEXT,false);g.text(font,"Toolkit v"+UpdateManager.getCurrentVersion(),x+12,y+30,ToolkitTheme.MUTED,false);
             g.text(font,PAGES[page],layout.bodyX(),y+18,ToolkitTheme.TEXT,false);
             String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen"};
             g.text(font,descriptions[page],layout.bodyX(),y+34,ToolkitTheme.MUTED,false);
-        }else g.text(font,"Skyblock Toolkit",x+12,y+15,ToolkitTheme.TEXT,false);
+        }else g.text(font,"Skyblock Toolkit v"+UpdateManager.getCurrentVersion(),x+12,y+15,ToolkitTheme.TEXT,false);
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
         for(var label:labels){String text=label.text().get();if(text.isEmpty())continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());

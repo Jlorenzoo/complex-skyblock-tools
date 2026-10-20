@@ -8,7 +8,7 @@ import tempfile
 import zipfile
 
 BASE = Path(__file__).resolve().parents[1]
-PRISM = Path('/home/jeremy/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher')
+PRISM = Path(os.environ.get('PRISM_DATA', Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher'))
 JAVA = PRISM / 'java/java-runtime-epsilon/bin'
 libraries = []
 for metadata in ['net.minecraft/26.2', 'net.fabricmc.fabric-loader/0.19.5', 'org.lwjgl3/3.4.1']:

@@ -6,5 +6,10 @@ artifacts/
 __pycache__/
 *.lock
 *.tmp
+*.pending
+*.download
 toolkit-installation-status.txt
 .DS_Store
+.idea/
+.vscode/
+*.iml
