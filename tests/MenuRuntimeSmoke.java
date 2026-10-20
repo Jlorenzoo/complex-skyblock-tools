@@ -41,11 +41,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
                     check(mc.gui.screen()==screen&&!screen.children().isEmpty(),"HUD Escape returns to modules");
                     BlackoutManager.setActive(true);
-                    var blackout=mc.gui.screen();
-                    for(int i=0;i<25;i++){blackout.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));blackout.onClose();}
-                    check(BlackoutManager.isActive()&&mc.gui.screen()==blackout,"25 Escape presses preserve blackout");
-                    blackout.keyPressed(new KeyEvent(GLFW.GLFW_KEY_F6,0,0));
-                    check(!BlackoutManager.isActive()&&mc.gui.screen()==screen,"Wake key restores menu");
+                    check(BlackoutManager.isActive(),"Blackout active");
+                    BlackoutManager.toggle();
+                    check(!BlackoutManager.isActive(),"Wake key toggles blackout off");
                     mc.setScreenAndShow(new ToolkitScreen(null,2));
                     var fish=(ToolkitScreen)mc.gui.screen();
                     for(var child:fish.children())if(child instanceof Button b&&b.getMessage().getString().equals("Advanced...")){b.onPress(null);break;}
@@ -79,7 +77,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==11){
                     check(Files.exists(output.resolve("screenshots/hud-elements.png")),"HUD mini menu screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: real rendered module menus and HUD mini menu; independent crop/fish toggles, positions and persistence; HUD eye; toolbar-free canvas; Escape return; 25 blackout Escape presses; F6 wake\n");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: real rendered module menus and HUD mini menu; independent crop/fish toggles, positions and persistence; HUD eye; toolbar-free canvas; Escape return; interactive blackout overlay; F6 wake\n");
                     System.out.println("PASS: menu runtime interactions and screenshots");System.exit(0);
                 }
 

@@ -189,7 +189,7 @@ public final class ToolkitScreen extends Screen {
     }
     private void blackout(){
         var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
-        button(()->"Turn blackout on",0,0,half,()->{persist();BlackoutManager.setActive(true);});
+        button(()->"Turn blackout on",0,0,half,()->{persist();BlackoutManager.setActive(true);onClose();});
         button(()->"Wake: "+ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),0,half+10,half,()->bindingTarget=2);
         sliderAt("Opacity",36,cfg.blackoutOpacity,1,0,half,v->cfg.blackoutOpacity=v);
         advancedButton(76);

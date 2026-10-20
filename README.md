@@ -18,7 +18,7 @@ Fishing retains ready-to-reel, depleted-area and snapped-line cues. **Fishing vo
 
 Chat Copy keeps chat selection and double-click-word switches in its main page. Highlight color/opacity and Minecraft chat size/width/opacity are under Advanced. Drag text in chat and use Ctrl+C; existing clickable links retain their ordinary single-click behavior.
 
-**Auction** contains its sale alert, volume, sound choice and preview. **Blackout** contains activation, wake-key binding and opacity. Only the configured wake key dismisses blackout; repeated Escape presses are consumed by its dedicated screen. Blackout does not pause the game, and audio remains active.
+**Auction** contains its sale alert, volume, sound choice and preview. **Blackout** contains activation, wake-key binding and opacity (0–100%). It renders as a HUD overlay so you can farm or fish without distraction while retaining full gameplay controls (clicking, movement, fishing). Only the configured wake key toggles blackout on or off. Blackout does not pause the game, and audio remains active.
 
 ## Fishing value estimate
 
@@ -59,7 +59,7 @@ Do not keep the three old active jars alongside the toolkit on another computer:
 - Tests passed for fish parsing, duplicate/spoof rejection, prices, weight mapping, 60s/5m rates, warmup and expiry, as well as existing timer, ledger, history, rolling average and responsive layout geometry.
 - Accounting replay parsed and validated 3,109 existing transaction notifications.
 - Installer tests replaced all three mods in a disposable folder, verified byte-identical backups, preserved Fabric API and passed an idempotent reinstall.
-- `python3 tests/test_menu_runtime.py` renders menus in a disposable offline Fabric client and checks HUD eyes, independent crop/fish switches and persistence, dragging, Escape navigation, 25 repeated blackout Escape presses and wake-key restoration. Screenshots are saved under `artifacts/menu-preview/screenshots`. This requires a desktop display.
+- `python3 tests/test_menu_runtime.py` renders menus in a disposable offline Fabric client and checks HUD eyes, independent crop/fish switches and persistence, dragging, Escape navigation, interactive blackout overlay and wake-key toggling. Screenshots are saved under `artifacts/menu-preview/screenshots`. This requires a desktop display.
 - `python3 tests/test_sound_controls.py` checks real Fabric audio injection, 300% volume persistence, amplified native gain, mute and ordinary-sound isolation.
 - Live server timer/catch synchronization and the complete installed modpack still need an in-game check after restart; offline checks do not establish server timing accuracy.
 

@@ -38,7 +38,7 @@ public final class ToolkitMod implements ClientModInitializer {
         net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
             net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","blackout"),
             (extractor,deltaTracker)->{
-                // BlackoutScreen renders open-screen overlays; this is a HUD fallback.
+                // Non-intrusive HUD overlay: renders over gameplay while maintaining full player interaction
                 if(BlackoutManager.isActive()&&net.minecraft.client.Minecraft.getInstance().gui.screen()==null)
                     BlackoutManager.render(extractor,extractor.guiWidth(),extractor.guiHeight());
             }
