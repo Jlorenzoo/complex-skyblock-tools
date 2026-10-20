@@ -18,6 +18,44 @@
 
 ---
 
+## Quick Installation
+
+### Method 1: Fabric Mod (Recommended)
+Works seamlessly with your existing Fabric profile alongside **Litematica**, **Sodium**, **Iris**, and other client mods.
+
+1. Ensure you have **Fabric Loader (>= 0.19.0)** and **Fabric API** installed for **Minecraft 26.2**.
+2. Download **[`skyblock-toolkit-1.0.0.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
+3. Place the `.jar` directly into your `.minecraft/mods/` folder.
+4. Launch Minecraft and press **`Right Shift`** (or type `/toolkit`) to open the settings hub!
+
+### Method 2: Prism Launcher (Pre-configured Pack)
+For players who prefer an all-in-one standalone instance with texture packs and configs ready out of the box:
+
+1. Download **[`Complex-Skyblock-Prism-1.0.0.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
+2. In Prism Launcher: **Add Instance** → **Import** → select the zip file.
+3. Click Launch (Prism handles the Fabric Loader and Java setup automatically).
+
+### ⚡ Automatic Updates
+Once installed, you never need to visit GitHub or drag files again:
+- The mod automatically checks for updates in the background on startup.
+- When an update is ready, an alert appears in chat: `[Skyblock Toolkit] A new update is available! [Click to Update]`
+- Click the message or type `/toolkit update` to auto-download and install with one click.
+
+---
+
+## Controls & Shortcuts
+
+| Action | Shortcut / Command |
+| :--- | :--- |
+| **Open Toolkit Hub** | **`Right Shift`** (or `Escape` → *Skyblock Toolkit*) |
+| **Toggle Blackout** | **`F6`** *(customizable in settings)* |
+| **Main Menu** | `/toolkit` |
+| **Drag & Drop HUD Canvas** | `/toolkit hud` |
+| **Check & Install Updates** | `/toolkit update` |
+| **Module Shortcuts** | `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
+
+---
+
 ## Features
 
 ### ⏱️ Booster & Crop Earnings HUD
@@ -37,38 +75,6 @@
 ### 🔔 Auction Alerts & Blackout Mode
 - **Auction Sale Chime**: Immediate custom audio notification when an item sells on the Auction House.
 - **Blackout Focus**: Dim the screen opacity (0–100%) during long farming or fishing sessions while keeping full controls and game audio active.
-
-### ⚡ Built-in 1-Click Auto-Updater
-- **In-Game Alerts**: Receive a chat notification whenever a new update is released.
-- **1-Click Download**: Click `[Click to Update]` or run `/toolkit update` to automatically download the new jar to your mods folder. No manual browser downloads or file dragging required!
-
----
-
-## Controls & Shortcuts
-
-| Action | Shortcut / Command |
-| :--- | :--- |
-| **Open Toolkit Hub** | **`Right Shift`** (or `Escape` → *Skyblock Toolkit*) |
-| **Toggle Blackout** | **`F6`** *(customizable in settings)* |
-| **Main Menu** | `/toolkit` |
-| **Drag & Drop HUD Canvas** | `/toolkit hud` |
-| **Check & Install Updates** | `/toolkit update` |
-| **Module Shortcuts** | `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
-
----
-
-## Installation
-
-### Option A: Prism Launcher (Recommended 1-Click Pack)
-1. Download **`Complex-Skyblock-Prism-1.0.0.zip`** from [Releases](https://github.com/Jlorenzoo/complex-skyblock-tools/releases).
-2. Open Prism Launcher → **Add Instance** → **Import** → select the downloaded zip.
-3. Launch and play! (Downloads Minecraft 26.2, Fabric Loader, and dependencies automatically).
-
-### Option B: Standalone Fabric Mod
-1. Install **Fabric Loader (>= 0.19.0)** for **Minecraft 26.2** with **Fabric API**.
-2. Download **`skyblock-toolkit-1.0.0.jar`** from [Releases](https://github.com/Jlorenzoo/complex-skyblock-tools/releases).
-3. Place the `.jar` inside your `.minecraft/mods/` directory.
-4. Launch Minecraft and press **`Right Shift`** to configure.
 
 ---
 
