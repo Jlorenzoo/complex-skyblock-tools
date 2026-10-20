@@ -18,7 +18,7 @@ output.mkdir(parents=True,exist_ok=True)
 for generated in [output/'PASS.txt',*output.glob('screenshots/*.png')]: generated.unlink(missing_ok=True)
 with tempfile.TemporaryDirectory(prefix='toolkit-menu-smoke-') as tmp:
     root=Path(tmp);classes=root/'classes';classes.mkdir();mods=root/'mods';mods.mkdir()
-    toolkit=BASE/'build/skyblock-toolkit-1.0.0.jar'
+    toolkit=BASE/'build/skyblock-toolkit-1.1.0.jar'
     shutil.copy2(toolkit,mods/toolkit.name)
     shutil.copy2(PRISM/'instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar',mods)
     with zipfile.ZipFile(mods/'fabric-api-0.160.0+26.2.jar') as z:

@@ -11,7 +11,7 @@ SRC_JAVA = os.path.join(PROJECT_DIR, "src", "main", "java")
 SRC_RESOURCES = os.path.join(PROJECT_DIR, "src", "main", "resources")
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 CLASSES_DIR = os.path.join(BUILD_DIR, "classes")
-OUTPUT_JAR = os.path.join(BUILD_DIR, "skyblock-toolkit-1.0.0.jar")
+OUTPUT_JAR = os.path.join(BUILD_DIR, "skyblock-toolkit-1.1.0.jar")
 
 LOCAL = settings()
 PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(os.path.expanduser("~"), ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))

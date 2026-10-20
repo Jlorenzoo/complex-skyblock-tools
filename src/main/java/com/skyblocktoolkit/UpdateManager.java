@@ -48,7 +48,7 @@ public final class UpdateManager {
     public static String getCurrentVersion() {
         return FabricLoader.getInstance().getModContainer("skyblocktoolkit")
                 .map(c -> c.getMetadata().getVersion().getFriendlyString())
-                .orElse("1.0.0");
+                .orElse("1.1.0");
     }
 
     public static boolean isUpdateAvailable() {

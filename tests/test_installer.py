@@ -16,7 +16,7 @@ spec.loader.exec_module(installer)
 
 def jar(path, mod_id):
     with zipfile.ZipFile(path, "w") as archive:
-        archive.writestr("fabric.mod.json", json.dumps({"id": mod_id, "version": "1.0.0"}))
+        archive.writestr("fabric.mod.json", json.dumps({"id": mod_id, "version": "1.1.0"}))
         archive.writestr("fixture.txt", mod_id)
 
 class InstallerTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class InstallerTest(unittest.TestCase):
         self.root = Path(temp.name)
         self.mods = self.root / "mods"
         self.mods.mkdir()
-        self.source = self.root / "skyblock-toolkit-1.0.0.jar"
+        self.source = self.root / "skyblock-toolkit-1.1.0.jar"
         jar(self.source, "skyblocktoolkit")
         for name, mod_id in [("booster.jar", "moneyboosterhud"), ("fishing.jar", "fishingpings"),
                              ("chat.jar", "chattextselect"), ("fabric-api.jar", "fabric-api"),

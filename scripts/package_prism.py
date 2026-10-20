@@ -14,10 +14,10 @@ DEFAULT_INSTANCE = Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--instance', type=Path, default=DEFAULT_INSTANCE)
-    parser.add_argument('--output', type=Path, default=PROJECT / 'dist/Complex-Skyblock-Prism-1.0.0.zip')
+    parser.add_argument('--output', type=Path, default=PROJECT / 'dist/Complex-Skyblock-Prism-1.1.0.zip')
     args = parser.parse_args()
     game = args.instance / '.minecraft'
-    jar = PROJECT / 'build/skyblock-toolkit-1.0.0.jar'
+    jar = PROJECT / 'build/skyblock-toolkit-1.1.0.jar'
     api = game / 'mods/fabric-api-0.160.0+26.2.jar'
     pack = game / 'resourcepacks/Clear-Harvest-90pct-26.2.zip'
     components = json.loads((args.instance / 'mmc-pack.json').read_text())
@@ -28,7 +28,8 @@ def main():
         with zipfile.ZipFile(path) as archive:
             assert archive.testzip() is None, path
     with zipfile.ZipFile(jar) as archive:
-        assert json.loads(archive.read('fabric.mod.json'))['id'] == 'skyblocktoolkit'
+        metadata = json.loads(archive.read('fabric.mod.json'))
+        assert metadata['id'] == 'skyblocktoolkit' and metadata['version'] == '1.1.0'
     voicechat = fetch_voicechat()
 
     files = {
@@ -45,7 +46,7 @@ def main():
     for path in sorted((PROJECT / 'src').rglob('*')):
         if path.is_file():
             files['toolkit-source/' + path.relative_to(PROJECT).as_posix()] = path
-    for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'build.py',
+    for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'CHANGELOG.md', 'build.py',
                  'modpack/voicechat.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
         files['toolkit-source/' + name] = PROJECT / name
 
@@ -57,7 +58,7 @@ Then launch the new Complex Skyblock Toolkit instance using your own account.
 Prism downloads Minecraft 26.2 and Fabric Loader 0.19.5. Java 25 is required;
 use Prism's automatic Java management or select Java 25 if prompted.
 
-Included: Skyblock Toolkit 1.0.0, Fabric API 0.160.0+26.2, Simple Voice Chat 2.6.22+26.2,
+Included: Skyblock Toolkit 1.1.0, Fabric API 0.160.0+26.2, Simple Voice Chat 2.6.22+26.2,
 Clear Harvest crop visibility texture pack (built-in & enabled), and toolkit settings.
 Press Right Shift in-game to open the Toolkit (toggle crop textures in Right Shift > Farming).
 Simple Voice Chat is by Max Henkel: https://modrinth.com/plugin/simple-voice-chat

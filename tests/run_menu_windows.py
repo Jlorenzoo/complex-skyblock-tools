@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--voicechat', action='store_true', help='Also load and render the pinned voice chat mod')
 options = parser.parse_args()
 sys.path.insert(0, str(root / 'scripts'))
-toolkit = root / 'build/skyblock-toolkit-1.0.0.jar'
+toolkit = root / 'build/skyblock-toolkit-1.1.0.jar'
 install = Path(build.MC_JAR).parents[2]
 output = root / 'artifacts/menu-preview'
 if options.voicechat:

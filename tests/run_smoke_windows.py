@@ -4,7 +4,7 @@ import json, os, shutil, subprocess, sys, tempfile, zipfile
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 import build
-toolkit = root / 'build/skyblock-toolkit-1.0.0.jar'
+toolkit = root / 'build/skyblock-toolkit-1.1.0.jar'
 libraries = [p for p in build.LOCAL['library_jars']
              if 'natives-' not in p or p.endswith('-natives-windows.jar')]
 classpath = os.pathsep.join([build.MC_JAR, *libraries])

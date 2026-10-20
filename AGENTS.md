@@ -21,7 +21,7 @@ A unified Minecraft Fabric client mod bringing together booster tracking, fishin
   ```bash
   python3 build.py
   ```
-  Produces `build/skyblock-toolkit-1.0.0.jar`.
+  Produces `build/skyblock-toolkit-1.1.0.jar`.
 - **Run Tests:**
   ```bash
   python3 tests/test_installer.py

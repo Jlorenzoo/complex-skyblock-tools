@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='toolkit-sound-smoke-') as tmp:
     classes.mkdir()
     mods = root / 'mods'
     mods.mkdir()
-    toolkit = BASE / 'build/skyblock-toolkit-1.0.0.jar'
+    toolkit = BASE / 'build/skyblock-toolkit-1.1.0.jar'
     shutil.copy2(toolkit, mods / toolkit.name)
     shutil.copy2(PRISM / 'instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar', mods)
     subprocess.run([str(JAVA / 'javac'), '-proc:none', '-cp', str(toolkit) + ':' + classpath,

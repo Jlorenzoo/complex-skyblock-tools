@@ -6,9 +6,9 @@ from contextlib import contextmanager
 from local_paths import settings
 
 PROJECT_DIR = Path(__file__).resolve().parents[1] if Path(__file__).resolve().parent.name == "scripts" else Path(__file__).resolve().parent
-SOURCE = PROJECT_DIR / "build" / "skyblock-toolkit-1.0.0.jar"
-if not SOURCE.exists() and (PROJECT_DIR / "skyblock-toolkit-1.0.0.jar").exists():
-    SOURCE = PROJECT_DIR / "skyblock-toolkit-1.0.0.jar"
+SOURCE = PROJECT_DIR / "build" / "skyblock-toolkit-1.1.0.jar"
+if not SOURCE.exists() and (PROJECT_DIR / "skyblock-toolkit-1.1.0.jar").exists():
+    SOURCE = PROJECT_DIR / "skyblock-toolkit-1.1.0.jar"
 MODS = Path(os.environ.get("MODS_DIR", settings().get("mods_dir", str(Path.home() / "Documents/curseforge/minecraft/Instances/Complex Skyblock/mods"))))
 STATUS = PROJECT_DIR / "toolkit-installation-status.txt"
 LOCK_FILE = PROJECT_DIR / ".toolkit-install.lock"
@@ -99,11 +99,11 @@ def main():
     with installer_lock():
         with zipfile.ZipFile(SOURCE) as z:
             meta = json.loads(z.read("fabric.mod.json"))
-            assert meta["id"] == "skyblocktoolkit" and meta["version"] == "1.0.0" and z.testzip() is None
+            assert meta["id"] == "skyblocktoolkit" and meta["version"] == "1.1.0" and z.testzip() is None
 
         deadline = time.monotonic() + 86400
         while active_clients():
-            status("Queued: Skyblock Toolkit 1.0.0 replaces Booster HUD, Fishing Pings and Chat Copy after all shared Complex Skyblock clients close. Settings and history stay in place.")
+            status("Queued: Skyblock Toolkit 1.1.0 replaces Booster HUD, Fishing Pings and Chat Copy after all shared Complex Skyblock clients close. Settings and history stay in place.")
             if not args.wait:
                 raise SystemExit("Close Minecraft and run again, or use --wait.")
             if time.monotonic() > deadline:
@@ -123,8 +123,8 @@ def main():
 
         dest = MODS / SOURCE.name
         if originals == [dest] and digest(dest) == digest(SOURCE):
-            status("Skyblock Toolkit 1.0.0 is already installed. Open with Right Shift or Escape -> Skyblock Toolkit.")
-            print("Skyblock Toolkit 1.0.0 is already up to date in mods folder.")
+            status("Skyblock Toolkit 1.1.0 is already installed. Open with Right Shift or Escape -> Skyblock Toolkit.")
+            print("Skyblock Toolkit 1.1.0 is already up to date in mods folder.")
             return
 
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
@@ -157,8 +157,8 @@ def main():
             installed = True
             if digest(dest) != digest(SOURCE):
                 raise RuntimeError("Installed checksum mismatch")
-            status("Installed Skyblock Toolkit 1.0.0. Start Minecraft, then press Right Shift or Escape -> Skyblock Toolkit. Original mods backed up; settings/history preserved.")
-            print("Installed Skyblock Toolkit 1.0.0 successfully.")
+            status("Installed Skyblock Toolkit 1.1.0. Start Minecraft, then press Right Shift or Escape -> Skyblock Toolkit. Original mods backed up; settings/history preserved.")
+            print("Installed Skyblock Toolkit 1.1.0 successfully.")
         except Exception as error:
             if installed and dest.exists():
                 dest.unlink()

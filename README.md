@@ -125,7 +125,7 @@ python3 tests/test_updater.py
 python3 tests/test_installer.py
 ```
 
-Produces `build/skyblock-toolkit-1.0.0.jar`.
+Produces `build/skyblock-toolkit-1.1.0.jar`.
 
 ---
 

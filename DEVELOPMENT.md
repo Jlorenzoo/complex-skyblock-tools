@@ -8,7 +8,7 @@ The timer model lives in `BoosterTimers.java`. Money and XP have separate clocks
 
 ## Build and verify
 
-Use Python 3 and a Java 25 JDK. `python build.py` creates `build/skyblock-toolkit-1.0.0.jar` and never installs it. Linux Prism defaults and `PRISM_DATA`, `MC_JAR`, `FAPI_JAR`, `LOADER_JAR`, `JAVAC`, and `LIBRARIES_DIR` overrides are supported. For another launcher, configure ignored `local-settings.json` with absolute paths:
+Use Python 3 and a Java 25 JDK. `python build.py` creates `build/skyblock-toolkit-1.1.0.jar` and never installs it. Linux Prism defaults and `PRISM_DATA`, `MC_JAR`, `FAPI_JAR`, `LOADER_JAR`, `JAVAC`, and `LIBRARIES_DIR` overrides are supported. For another launcher, configure ignored `local-settings.json` with absolute paths:
 
 - `minecraft_jar`, `fabric_api_jar`, `loader_jar`, `javac`, `libraries_dir`, `mods_dir`
 - Optional `library_jars`: the exact dependency paths for the target launcher profile.
