@@ -60,28 +60,5 @@ public class MoneyBoosterMod implements ClientModInitializer {
             }
         });
 
-        // 5. Register Optional Keybind for menu (unbound by default so it doesn't conflict)
-        // 6. Register Client Command: /boosterhud opens the menu directly!
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            dispatcher.register(ClientCommands.literal("boostermenu").executes(ctx->{requestOpenMenu();return 1;}));
-            dispatcher.register(ClientCommands.literal("boosterhud")
-                    .executes(ctx -> {
-                        requestOpenMenu();
-                        return 1;
-                    })
-                    .then(ClientCommands.literal("menu").executes(ctx -> {
-                        requestOpenMenu();
-                        return 1;
-                    }))
-                    .then(ClientCommands.literal("stats").executes(ctx -> {
-                        requestOpenMenu();
-                        return 1;
-                    }))
-                    .then(ClientCommands.literal("reset").executes(ctx -> {
-                        BoosterManager.reset();
-                        return 1;
-                    }))
-            );
-        });
     }
 }

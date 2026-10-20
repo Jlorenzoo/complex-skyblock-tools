@@ -16,7 +16,7 @@ public final class FishingConfig {
             if(json.has("depthEnabled"))depthEnabled=json.get("depthEnabled").getAsBoolean();
             if(json.has("snapEnabled"))snapEnabled=json.get("snapEnabled").getAsBoolean();
             if(json.has("warningEnabled"))warningEnabled=json.get("warningEnabled").getAsBoolean();
-            if(json.has("volume")){float v=json.get("volume").getAsFloat();if(Float.isFinite(v))volume=Math.clamp(v,0,1);}
+            if(json.has("volume")){float v=json.get("volume").getAsFloat();if(Float.isFinite(v))volume=Math.clamp(v,0,3);}
             for(String key:new String[]{"codPrice","salmonPrice","pufferPrice","tropicalPrice"}){
                 if(!json.has(key))continue;double v=json.get(key).getAsDouble();if(!Double.isFinite(v)||v<0||v>1e12)continue;
                 switch(key){case "codPrice"->codPrice=v;case "salmonPrice"->salmonPrice=v;case "pufferPrice"->pufferPrice=v;case "tropicalPrice"->tropicalPrice=v;}

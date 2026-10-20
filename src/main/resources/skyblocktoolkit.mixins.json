@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.skyblocktoolkit.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["AlertVolumeMixin", "ChannelGainMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -171,6 +171,8 @@ public class BoosterHudOverlay implements HudElement {
 
     public static int averageX(Minecraft mc,String label) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,ModConfig.getInstance().averageX())); }
     public static int averageY(Minecraft mc) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,ModConfig.getInstance().averageY())); }
+    public static int fishX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().fishHudX));}
+    public static int fishY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().fishHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
         g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);
@@ -178,9 +180,10 @@ public class BoosterHudOverlay implements HudElement {
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker) {
         boolean boosterActive = com.skyblocktoolkit.ToolkitConfig.get().boosterHud && BoosterManager.isActive();
-        boolean rateActive = RateTracker.shouldShowHud();
+        var toolkit=com.skyblocktoolkit.ToolkitConfig.get();
+        boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
 
-        if (!boosterActive && !rateActive && !ModConfig.getInstance().isAverageEnabled()) {
+        if (!boosterActive && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud) {
             return;
         }
 
@@ -189,7 +192,8 @@ public class BoosterHudOverlay implements HudElement {
             return;
         }
 
-        if (ModConfig.getInstance().isAverageEnabled()) renderAverage(extractor, mc);
+        if(toolkit.cropEarningsHud)renderAverage(extractor,mc);
+        if(toolkit.fishEarningsHud){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
         int barX = getBarX(extractor.guiWidth());
         int barY = getBarY(mc);
 

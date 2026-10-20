@@ -6,7 +6,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import com.skyblocktoolkit.AlertSound;
+import com.skyblocktoolkit.ToolkitConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Items;
@@ -19,12 +20,12 @@ public final class FishingPingsMod implements ClientModInitializer {
     private Field bossEvents;
     private Object lastLevel;
     private long secondWarningAt=-1;
-    private boolean warnedAboutBossAccess, openMenu;
+    private boolean warnedAboutBossAccess, openMenu,warningPreview;
     public FishingConfig settings(){return config;}
     public void previewDepth(){readySound(Minecraft.getInstance());}
     public void previewSnap(){snapSound(Minecraft.getInstance());}
-    public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis());}
-    public void warningChanged(){if(!config.warningEnabled)secondWarningAt=-1;}
+    public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis());warningPreview=true;}
+    public void warningChanged(){if(!config.warningEnabled&&!warningPreview)secondWarningAt=-1;}
     @Override public void onInitializeClient(){
         config=new FishingConfig();
         try{bossEvents=BossHealthOverlay.class.getDeclaredField("events");bossEvents.setAccessible(true);}catch(Exception e){System.err.println("[FishingPings] Boss bar access unavailable; actionbar depth detection remains enabled.");}
@@ -38,12 +39,13 @@ public final class FishingPingsMod implements ClientModInitializer {
         });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             long now=System.currentTimeMillis();
-            if(mc.level!=lastLevel){signals.reset();secondWarningAt=-1;lastLevel=mc.level;}
+            if(mc.level!=lastLevel){signals.reset();secondWarningAt=-1;warningPreview=false;lastLevel=mc.level;}
             if(openMenu){openMenu=false;mc.setScreenAndShow(new com.skyblocktoolkit.ToolkitScreen(null,2));}
             // Positive deadline = middle note; negative deadline = final low note.
             if(secondWarningAt!=-1&&now>=Math.abs(secondWarningAt)){
                 boolean middle=secondWarningAt>=0;secondWarningAt=middle?-(now+200):-1;
-                if(config.warningEnabled)mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(),middle?0.9f:0.6f,Math.min(1f,config.volume*3f)));
+                if(config.warningEnabled||warningPreview)areaNote(mc,middle?0.9f:0.6f);
+                if(!middle)warningPreview=false;
             }
             if(mc.player==null||mc.level==null)return;
             signals.cast(mc.player.fishing==null?null:mc.player.fishing.getUUID(),now);
@@ -61,9 +63,7 @@ public final class FishingPingsMod implements ClientModInitializer {
                 }
             }catch(Exception e){if(!warnedAboutBossAccess){warnedAboutBossAccess=true;System.err.println("[FishingPings] Cannot read boss bars: "+e.getMessage());}}
         });
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher,access)->{
-            dispatcher.register(ClientCommands.literal("fishping").executes(ctx->{openMenu=true;return 1;}));
-        });
+
     }
     private static boolean overlaps(int x,int y,int w,int h,net.minecraft.client.gui.components.AbstractWidget widget){return widget.visible&&x<widget.getRight()&&x+w>widget.getX()&&y<widget.getBottom()&&y+h>widget.getY();}
     private void checkDepth(Minecraft mc,String text,long now){
@@ -72,7 +72,8 @@ public final class FishingPingsMod implements ClientModInitializer {
         double depth=FishingSignals.depth(text);
         if(signals.ready(mc.player.fishing.getUUID(),depth,config.target,now)&&config.depthEnabled)readySound(mc);
     }
-    private void snapSound(Minecraft mc){mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f)));}
-    private void readySound(Minecraft mc){mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,config.volume));}
-    private void warningSound(Minecraft mc,long now){mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(),1.3f,Math.min(1f,config.volume*3f)));secondWarningAt=now+200;}
+    private void snapSound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain));}
+    private void readySound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain));}
+    private void areaNote(Minecraft mc,float pitch){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_BASS.value(),pitch,Math.min(1f,config.volume*3f),Math.max(1f,config.volume)*ToolkitConfig.get().areaSoundGain));}
+    private void warningSound(Minecraft mc,long now){warningPreview=false;areaNote(mc,1.3f);secondWarningAt=now+200;}
 }

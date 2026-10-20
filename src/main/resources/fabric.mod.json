@@ -21,7 +21,8 @@
     ]
   },
   "mixins": [
-    "chattextselect.mixins.json"
+    "chattextselect.mixins.json",
+    "skyblocktoolkit.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.19.0",

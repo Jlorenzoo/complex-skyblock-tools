@@ -57,7 +57,7 @@ public class BoosterStatsScreen extends Screen {
         }).bounds(x + 12, footerY, (w - 28) / 2, 20).build());
         btnDone = addRenderableWidget(FlatButton.flat(Component.literal("Done"), b -> onClose()).bounds(x + 16 + (w - 28) / 2, footerY, (w - 28) / 2, 20).build());
         btnHistory = addRenderableWidget(FlatButton.flat(Component.literal("View item history"), b -> Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this))).bounds(x + 12, y + 157, w - 24, 20).build());
-        btnAverage=addRenderableWidget(FlatButton.flat(Component.literal("Average HUD: off"),b->{ModConfig.getInstance().toggleAverage();refresh();}).bounds(x+12,y+181,(w-28)/2,20).build());
+        btnAverage=addRenderableWidget(FlatButton.flat(Component.literal("Crop HUD: off"),b->{var cfg=com.skyblocktoolkit.ToolkitConfig.get();cfg.cropEarningsHud=!cfg.cropEarningsHud;cfg.save();refresh();}).bounds(x+12,y+181,(w-28)/2,20).build());
         btnPosition=addRenderableWidget(FlatButton.flat(Component.literal("With boosters"),b->{ModConfig.getInstance().toggleAverageBoosters();refresh();}).bounds(x+16+(w-28)/2,y+181,(w-28)/2,20).build());
         refresh();
     }
@@ -76,9 +76,9 @@ public class BoosterStatsScreen extends Screen {
         scroll=Math.max(0,Math.min(scroll,Math.max(0,cardY+224-(footerY-8))));
         btnHistory.setY(cardY+157-scroll);
         btnAverage.setY(cardY+181-scroll);btnPosition.setY(cardY+181-scroll);
-        btnAverage.setMessage(Component.literal("Average HUD: "+(ModConfig.getInstance().isAverageEnabled()?"on":"off")));
+        btnAverage.setMessage(Component.literal("Crop HUD: "+(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud?"on":"off")));
         btnAverage.visible=!showTest&&inBody(btnAverage.getY(),20);btnPosition.visible=!showTest&&inBody(btnPosition.getY(),20);
-        btnPosition.active=ModConfig.getInstance().isAverageEnabled();
+        btnPosition.active=com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud;
         btnPosition.setMessage(Component.literal(ModConfig.getInstance().includesBoostersInAverage()?"With boosters":"Without boosters"));
         btn1Min.setY(cardY+68-scroll);btn5Min.setY(cardY+68-scroll);btnFree.setY(cardY+68-scroll);
         btn1Min.visible=btn5Min.visible=btnFree.visible=showTest&&inBody(btn1Min.getY(),20);
@@ -109,7 +109,7 @@ public class BoosterStatsScreen extends Screen {
             String info=last==null?"No booster recorded yet":last.source+" / +"+last.percentage+"% / "+(last.durationSeconds<0?"?":BoosterHistoryScreen.time(last.durationSeconds));
             g.text(font,font.substrByWidth(Component.literal(info),w-24).getString(),x+12,y+105,0xFFB5BEC8,false);
             int total = BoosterStatsManager.getCoconutTotalEffects(), procs = BoosterStatsManager.getCoconutBoosterProcs();
-            row(g,y+124,"Total booster bonus","+"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),0xFFDAE0E8);
+            row(g,y+124,"Session booster bonus","+"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),0xFFDAE0E8);
             row(g,y+140,"Coconut boosts",procs+"/"+total,0xFFDAE0E8);
             g.text(font, "Drag the white average text to move it", x + 12, y + 211, 0xFF9DA4AE, false);
         } else {
@@ -133,7 +133,7 @@ public class BoosterStatsScreen extends Screen {
             BoosterHudOverlay.renderBar(g, mc, bx, by, "Booster preview / drag", 0.65f, false, false);
         }
         super.extractRenderState(g, mouseX, mouseY, partialTick);
-        if(ModConfig.getInstance().isAverageEnabled())BoosterHudOverlay.renderAverage(g,mc);
+        if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud)BoosterHudOverlay.renderAverage(g,mc);
     }
     private void row(GuiGraphicsExtractor g, int y, String label, String value, int color) {
         g.text(font, label, cardX + 12, y, 0xFF9DA4AE, false);
@@ -151,7 +151,7 @@ public class BoosterStatsScreen extends Screen {
         int barX = BoosterHudOverlay.getBarX(this.width);
         int barY = BoosterHudOverlay.getBarY(mc);
 
-        if(ModConfig.getInstance().isAverageEnabled()&&event.button()==0){
+        if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud&&event.button()==0){
             String label=BoosterStatsManager.averageLabel();int ax=BoosterHudOverlay.averageX(mc,label),ay=BoosterHudOverlay.averageY(mc);
             if(event.x()>=ax-3&&event.x()<=ax+font.width(label)+3&&event.y()>=ay-3&&event.y()<=ay+12){draggingAverage=true;averageDragX=event.x()-ax;averageDragY=event.y()-ay;return true;}
         }

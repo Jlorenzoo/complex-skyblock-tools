@@ -2,7 +2,7 @@ package com.skyblocktoolkit;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 /** Restrained shared colors and small native-pixel corner radii. */
 public final class ToolkitTheme {
-    public static final int PANEL=0xF21B1D21,SIDEBAR=0xF217191D,SURFACE=0xFF23262B,HOVER=0xFF2C3036;
+    public static final int PANEL=0xC91B1D21,SIDEBAR=0xD417191D,SURFACE=0xB823262B,HOVER=0xDA2C3036;
     public static final int TEXT=0xFFE7EAEE,MUTED=0xFF9DA4AE,ACCENT=0xFFB0CABA,FAINT=0xFF6F7782;
     private ToolkitTheme(){}
     public static void rounded(GuiGraphicsExtractor g,int x,int y,int w,int h,int radius,int color){

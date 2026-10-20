@@ -21,18 +21,19 @@ public class BoosterStatsManager {
     private static long averageUpdated;
     private static double averageRate, baseAverageRate;
     public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); averageUpdated=0;averageRate=baseAverageRate=0; }
-    public static String averageLabel() { if(com.skyblocktoolkit.ToolkitMod.showFishing())return com.skyblocktoolkit.ToolkitMod.fishingLabel(); return (ModConfig.getInstance().includesBoostersInAverage()?"Avg (10s): ":"Base avg (10s): ") + (average.ready(System.currentTimeMillis()) ? formatMoney(ModConfig.getInstance().includesBoostersInAverage()?averageRate:baseAverageRate) : "--") + "/h"; }
+    public static String averageLabel() { return (ModConfig.getInstance().includesBoostersInAverage()?"Crops (10s): ":"Crops base (10s): ") + (average.ready(System.currentTimeMillis()) ? formatMoney(ModConfig.getInstance().includesBoostersInAverage()?averageRate:baseAverageRate) : "--") + "/h"; }
     private static double lastKnownBalance = -1;
     private static final MoneyLedger ledger = new MoneyLedger(BoosterStatsManager::onSettled);
     private static int excludedTransactions;
     private static double excludedVolume;
     private static boolean wasBoosterActive = false;
 
-    // Session stats
+    // Current Minecraft process only; reconnecting does not start a new session.
     private static double sessionTotalEarned = 0;
     private static double sessionBonusEarned = 0;
     private static int sessionBoosterCount = 0;
     private static long sessionBoosterSeconds = 0;
+    // Persistent coconut totals, independent of the current session.
     private static int coconutTotalEffects = 0;
     private static int coconutBoosterProcs = 0;
 
@@ -185,7 +186,7 @@ public class BoosterStatsManager {
         return new BoosterSources.Source("Unknown source", "Detected on scoreboard", null, false);
     }
     private static void onSettled(MoneyLedger.Receipt receipt) {
-        if (ModConfig.getInstance().isAverageEnabled()) { average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs()); }
+        average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
         RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId());
         if (receipt.percentage() > 0) {
             sessionTotalEarned += receipt.earned();
@@ -228,10 +229,7 @@ public class BoosterStatsManager {
         if (!Files.exists(STATS_PATH)) return;
         try {
             String content = Files.readString(STATS_PATH);
-            sessionTotalEarned = parseDouble(content, "sessionTotalEarned", 0);
-            sessionBonusEarned = parseDouble(content, "sessionBonusEarned", 0);
-            sessionBoosterCount = (int) parseDouble(content, "sessionBoosterCount", 0);
-            sessionBoosterSeconds = (long) parseDouble(content, "sessionBoosterSeconds", 0);
+            // Ignore session fields in older files: each Minecraft launch starts at zero.
             coconutTotalEffects = (int) parseDouble(content, "coconutTotalEffects", 0);
             coconutBoosterProcs = (int) parseDouble(content, "coconutBoosterProcs", 0);
         } catch (Exception ignored) {
@@ -241,10 +239,6 @@ public class BoosterStatsManager {
     public static void save() {
         try {
             String json = "{\n" +
-                    "  \"sessionTotalEarned\": " + sessionTotalEarned + ",\n" +
-                    "  \"sessionBonusEarned\": " + sessionBonusEarned + ",\n" +
-                    "  \"sessionBoosterCount\": " + sessionBoosterCount + ",\n" +
-                    "  \"sessionBoosterSeconds\": " + sessionBoosterSeconds + ",\n" +
                     "  \"coconutTotalEffects\": " + coconutTotalEffects + ",\n" +
                     "  \"coconutBoosterProcs\": " + coconutBoosterProcs + "\n" +
                     "}\n";

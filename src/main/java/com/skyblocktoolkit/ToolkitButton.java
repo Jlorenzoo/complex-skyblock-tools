@@ -23,23 +23,28 @@ public final class ToolkitButton extends Button {
         var font=Minecraft.getInstance().font;boolean hover=isHoveredOrFocused()&&active;
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
         if(kind==1){
-            if(selected||hover)ToolkitTheme.rounded(g,x,y,w,h,3,selected?0xFF292E32:ToolkitTheme.SURFACE);
-            if(selected)g.fill(x,y+5,x+2,y+h-5,ToolkitTheme.ACCENT);
-            String clipped=font.substrByWidth(getMessage(),w-16).getString();
-            g.text(font,clipped,x+9,y+(h-8)/2,selected?ToolkitTheme.TEXT:ToolkitTheme.MUTED,false);return;
+            if(selected){
+                ToolkitTheme.rounded(g,x,y,w,h,4,0xFF6F927E);
+                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,0xFF27332D);
+            }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.SURFACE);
+            int pad=w<70?4:8;
+            String clipped=font.substrByWidth(getMessage(),w-pad*2).getString();
+            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.TEXT:ToolkitTheme.MUTED,false);return;
         }
-        ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.HOVER:ToolkitTheme.SURFACE);
+        if(kind!=2||hover)ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.HOVER:ToolkitTheme.SURFACE);
         if(kind==2){
+            g.fill(x+8,y+h-1,x+w-8,y+h,0x185E6872);
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
-            g.text(font,font.substrByWidth(Component.literal(label),w-48).getString(),x+10,y+(h-8)/2,ToolkitTheme.TEXT,false);
-            ToolkitTheme.rounded(g,x+w-34,y+(h-12)/2,24,12,6,enabled?0xFF688C78:0xFF434950);
-            ToolkitTheme.rounded(g,x+w-(enabled?20:30),y+(h-8)/2,8,8,4,0xFFE4E9E5);return;
+            g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.TEXT,false);
+            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?0xFF688C78:0xFF434950);
+            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,0xFFE4E9E5);return;
         }
         if(kind==3){
-            g.item(icon,x+(w-16)/2,y+13);
-            g.centeredText(font,Component.literal(label),x+w/2,y+37,ToolkitTheme.TEXT);
-            g.centeredText(font,font.substrByWidth(Component.literal(description),w-12).getString(),x+w/2,y+54,ToolkitTheme.MUTED);
-            g.centeredText(font,Component.literal("Settings  >"),x+w/2,y+h-20,hover?ToolkitTheme.ACCENT:ToolkitTheme.MUTED);return;
+            boolean hasIcon=!icon.isEmpty();
+            if(hasIcon)g.item(icon,x+10,y+12);
+            g.text(font,font.substrByWidth(Component.literal(label),w-(hasIcon?52:32)).getString(),x+(hasIcon?34:12),y+16,ToolkitTheme.TEXT,false);
+            g.text(font,">",x+w-16,y+16,ToolkitTheme.MUTED,false);
+            g.text(font,font.substrByWidth(Component.literal(description),w-24).getString(),x+12,y+43,ToolkitTheme.MUTED,false);return;
         }
         g.centeredText(font,font.substrByWidth(getMessage(),w-12).getString(),x+w/2,y+(h-8)/2,active?ToolkitTheme.TEXT:ToolkitTheme.FAINT);
     }

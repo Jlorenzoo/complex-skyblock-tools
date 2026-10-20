@@ -31,6 +31,13 @@ public class BoosterClockTest {
   clock.observe(true,-1,false,79000);check(clock.remaining(79000)==59000,"Hidden seconds lost local countdown");
   check(!BoosterSidebar.parse(List.of("+39% Money Booster: 2m")).exactSeconds(),"Coarse parsing");
   check(BoosterSidebar.parse(List.of("+39% Money Booster: 1m 20s")).exactSeconds(),"Precise parsing");
+  clock.reset();clock.start(36,0);
+  clock.observe(true,36000,true,250);clock.observe(true,36000,true,500);clock.observe(true,36000,true,900);
+  check(clock.remaining(1000)==35000,"Repeated scoreboard seconds extended precise chat deadline");
+  clock.observe(true,60000,false,1250);
+  check(clock.remaining(2000)==34000,"Rounded-up minute sidebar replaced coconut chat duration");
+  clock.reset();clock.observe(true,10000,true,0);clock.observe(true,10000,true,750);
+  check(clock.remaining(1000)==9000,"Stale exact sample froze countdown on joining");
   System.out.println("PASS: server-active after local expiry, hidden seconds, removal grace, server extensions, chat fallback and sidebar formats");
  }
 }

@@ -82,11 +82,6 @@ def main():
         
         print(f"Jar created at: {OUTPUT_JAR} ({os.path.getsize(OUTPUT_JAR)} bytes)")
         
-        # 7. Auto-sync directly to live modpack mods folder
-        target_mod = os.path.join(MODS_DIR, os.path.basename(OUTPUT_JAR))
-        if os.path.exists(target_mod):
-            shutil.copy2(OUTPUT_JAR, target_mod)
-            print(f"Synced directly to modpack: {target_mod}")
     finally:
         shutil.rmtree(temp_dir)
 

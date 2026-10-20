@@ -5,8 +5,9 @@ public final class BoosterClock {
     private long started = -1, end, total, lastPresent = -1, lastSample = -1, sidebarRemaining = -1;
     private boolean present;
     private long lastDuration=-1;
+    private boolean precise;
     public void start(long seconds, long now) {
-        started = now; total = seconds * 1000; end = now + total;
+        started = now; total = seconds * 1000; end = now + total; precise = true;
         lastPresent = lastSample = -1; sidebarRemaining = -1; lastDuration=-1; present = false;
     }
     public void observe(boolean found,long remainingMs,long now){observe(found,remainingMs,true,now);}
@@ -17,8 +18,14 @@ public final class BoosterClock {
         if (started < 0) started = now;
         sidebarRemaining = remainingMs;
         if (remainingMs >= 0) {
-            if(exactSeconds) end=now+remainingMs;
-            else if(remainingMs!=lastDuration){
+            if(exactSeconds){
+                // Repeated scoreboard frames are the same sample, not fresh server time.
+                // Keep a chat deadline within the server's one-second display precision.
+                if(remainingMs!=lastDuration && (!precise || Math.abs(end-(now+remainingMs))>1000))
+                    end=now+remainingMs;
+                precise=true;
+            }
+            else if(!precise && remainingMs!=lastDuration){
                 long current=Math.max(0,end-now);
                 // A minute-only sidebar is a bucket, not an exact countdown.
                 // Preserve the chat deadline when it fits; otherwise seed a local estimate once.
@@ -46,5 +53,5 @@ public final class BoosterClock {
         if (!hasTimer(now) || total <= 0) return 1;
         return Math.max(0, Math.min(1, (float) remaining(now) / total));
     }
-    public void reset() { started = lastPresent = lastSample = -1; end = total = 0; sidebarRemaining = -1; lastDuration=-1; present = false; }
+    public void reset() { started = lastPresent = lastSample = -1; end = total = 0; sidebarRemaining = -1; lastDuration=-1; present = false; precise=false; }
 }
