@@ -70,11 +70,10 @@ public final class ToolkitScreen extends Screen {
     }
     private void go(int next){persist();page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;advanced=false;rebuildWidgets();}
     private void addThemeButton(int x,int y,int w){
-        int bw=layout.compact()?64:104;
         var cfg=ToolkitConfig.get();
-        var button=addRenderableWidget(ToolkitButton.action(cfg.lightMode?"Light mode":"Dark mode",b->{
+        var button=addRenderableWidget(ToolkitButton.themeSwitch(b->{
             cfg.lightMode=!cfg.lightMode;persist();rebuildWidgets();
-        },x+w-bw-12,y+10,bw,22));
+        },x+w-72,y+10,cfg.lightMode));
         button.setTooltip(Tooltip.create(Component.literal("Switch to "+(cfg.lightMode?"dark":"light")+" theme")));
     }
     private void label(Supplier<String> text,int top,int color,float scale){labels.add(new Label(text,top,color,scale));contentHeight=Math.max(contentHeight,top+(int)(10*scale));}

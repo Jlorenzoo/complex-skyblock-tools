@@ -19,9 +19,20 @@ public final class ToolkitButton extends Button {
     public static ToolkitButton nav(String label,OnPress press,int x,int y,int w,int h,boolean selected){return new ToolkitButton(x,y,w,h,label,press,1,selected,null,null,null);}
     public static ToolkitButton toggle(String label,OnPress press,int x,int y,int w,int h,BooleanSupplier state){return new ToolkitButton(x,y,w,h,label,press,2,false,state,null,null);}
     public static ToolkitButton tile(String label,String description,ItemStack icon,OnPress press,int x,int y,int w,int h){return new ToolkitButton(x,y,w,h,label,press,3,false,null,icon,description);}
+    public static ToolkitButton themeSwitch(OnPress press,int x,int y,boolean lightMode){return new ToolkitButton(x,y,60,22,lightMode?"Light mode":"Dark mode",press,4,lightMode,null,null,null);}
     @Override protected void extractContents(GuiGraphicsExtractor g,int mx,int my,float tick){
         var font=Minecraft.getInstance().font;boolean hover=isHoveredOrFocused()&&active;
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
+        if(kind==4){
+            var palette=ToolkitTheme.palette();
+            ToolkitTheme.rounded(g,x,y,w,h,h/2,hover?palette.accent():palette.border());
+            ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,h/2-1,palette.surface());
+            int segment=(w-4)/2;
+            ToolkitTheme.rounded(g,x+2+(selected?0:segment),y+2,segment,h-4,(h-4)/2,palette.accentTrack());
+            sun(g,x+2+segment/2,y+h/2,selected?palette.onAccent():palette.muted());
+            moon(g,x+2+segment+segment/2,y+h/2,selected?palette.muted():palette.onAccent(),selected?palette.surface():palette.accentTrack());
+            return;
+        }
         if(kind==1){
             if(selected){
                 ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().accent());
@@ -51,5 +62,16 @@ public final class ToolkitButton extends Button {
         }
         String text=font.substrByWidth(getMessage(),w-12).getString();
         g.text(font,text,x+(w-font.width(text))/2,y+(h-8)/2,active?ToolkitTheme.palette().text():ToolkitTheme.palette().muted(),false);
+    }
+    private static void sun(GuiGraphicsExtractor g,int cx,int cy,int color){
+        ToolkitTheme.rounded(g,cx-3,cy-3,6,6,3,color);
+        g.fill(cx-1,cy-7,cx+1,cy-5,color);g.fill(cx-1,cy+5,cx+1,cy+7,color);
+        g.fill(cx-7,cy-1,cx-5,cy+1,color);g.fill(cx+5,cy-1,cx+7,cy+1,color);
+        g.fill(cx-5,cy-5,cx-4,cy-4,color);g.fill(cx+4,cy-5,cx+5,cy-4,color);
+        g.fill(cx-5,cy+4,cx-4,cy+5,color);g.fill(cx+4,cy+4,cx+5,cy+5,color);
+    }
+    private static void moon(GuiGraphicsExtractor g,int cx,int cy,int color,int background){
+        ToolkitTheme.rounded(g,cx-5,cy-6,11,12,5,color);
+        ToolkitTheme.rounded(g,cx-1,cy-7,9,10,4,background);
     }
 }

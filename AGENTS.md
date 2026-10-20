@@ -17,6 +17,12 @@ A unified Minecraft Fabric client mod bringing together booster tracking, fishin
 5. `com.skyblocktoolkit.ClearHarvest` - Built-in crop visibility resource pack (90% desaturation & 25% darkening for immature stages), in-game Farming tab toggle, and dynamic texture reloading.
 
 ## Commands & Workflows
+### Standing delivery rule
+- For every requested change, complete the implementation, build it, and run the relevant checks. Verify mod changes work in the configured modpack using the available isolated Fabric/runtime checks; visually inspect UI changes in both themes and compact layouts.
+- Install each updated build into the live modpack using `python scripts/install.py --wait` (`python3` where available). If Minecraft is running, queue the installer safely and report that installation is pending; never force-close the player's game. Verify the installed jar checksum once installation completes. Do not describe a queued install as completed or claim live gameplay was verified when only isolated checks ran.
+- Commit the intended changes and publish them to `Jlorenzoo/complex-skyblock-tools` on GitHub's `main` branch as part of the same task. This is standing user authorization to install and update `main` without asking again. Preserve unrelated work, fetch remote changes first, and never force-push. If branch protection requires a pull request, follow that path through merge where permitted.
+- Keep the existing version for routine changes. Bump versions, create release tags, or publish a GitHub release only when the user explicitly requests a new version/release. Routine build, verification, installation and publication to `main` do not require a separate confirmation.
+
 - **Build Mod:**
   ```bash
   python3 build.py

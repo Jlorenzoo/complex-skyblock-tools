@@ -38,7 +38,7 @@ Skyblock Toolkit’s visual identity is inspired by high-performance esports HUD
 
 All menu colors are defined in [`ToolkitPalette.java`](src/main/java/com/skyblocktoolkit/ToolkitPalette.java), selected through `ToolkitTheme.palette()`. Avoid fixed menu colors so both modes remain consistent.
 
-The menu header switches between **Dark mode** and **Light mode**. Dark remains the default; the choice persists as `lightMode` in `skyblocktoolkit.json`. Changing it rebuilds the current page immediately without changing its scroll position or other module settings.
+The menu header switches between **Dark mode** and **Light mode** using a compact pill with a sun on the left and a crescent moon on the right. Both icons remain visible; a crimson segment with a white icon marks the active mode. The control retains its current mode label for narration and a tooltip describing the next mode. Dark remains the default; the choice persists as `lightMode` in `skyblocktoolkit.json`. Changing it rebuilds the current page immediately without changing its scroll position or other module settings.
 
 | Palette accessor | Dark / red | Light / red | Purpose |
 | :--- | :--- | :--- | :--- |
