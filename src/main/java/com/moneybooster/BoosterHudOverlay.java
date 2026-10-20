@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;
+import net.minecraft.world.item.Items;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -188,18 +189,25 @@ public class BoosterHudOverlay implements HudElement {
         }
 
         Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) return;
         if (mc.gui != null && mc.gui.hud != null && mc.gui.hud.isHidden()) {
             return;
         }
 
-        if(toolkit.cropEarningsHud)renderAverage(extractor,mc);
-        if(toolkit.fishEarningsHud){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
+        long now = System.currentTimeMillis();
+        boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
+                || mc.player.getOffhandItem().is(Items.FISHING_ROD);
+        var earnings = BoosterStatsManager.earningsActivity.select(now,
+                toolkit.cropEarningsHud, toolkit.fishEarningsHud,
+                mc.player.fishing != null, holdingRod,
+                com.skyblocktoolkit.ToolkitMod.FISHING_EARNINGS.recent(now, 5));
+        if(earnings == EarningsActivity.Tracker.CROPS)renderAverage(extractor,mc);
+        if(earnings == EarningsActivity.Tracker.FISHING){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
         int barX = getBarX(extractor.guiWidth());
         int barY = getBarY(mc);
 
         // 1. Render Booster bar if active
         if (boosterActive) {
-            long now = System.currentTimeMillis();
             long remainingMs = BoosterManager.getRemainingMs(now);
             float progress = BoosterManager.getProgress(now);
 

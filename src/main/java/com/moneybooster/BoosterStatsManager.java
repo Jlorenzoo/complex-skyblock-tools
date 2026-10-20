@@ -18,9 +18,10 @@ public class BoosterStatsManager {
     );
 
     private static final RollingEarnings average = new RollingEarnings(), baseAverage = new RollingEarnings();
+    public static final EarningsActivity earningsActivity = new EarningsActivity();
     private static long averageUpdated;
     private static double averageRate, baseAverageRate;
-    public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); averageUpdated=0;averageRate=baseAverageRate=0; }
+    public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0; }
     public static String averageLabel() { return (ModConfig.getInstance().includesBoostersInAverage()?"Crops (10s): ":"Crops base (10s): ") + (average.ready(System.currentTimeMillis()) ? formatMoney(ModConfig.getInstance().includesBoostersInAverage()?averageRate:baseAverageRate) : "--") + "/h"; }
     private static double lastKnownBalance = -1;
     private static final MoneyLedger ledger = new MoneyLedger(BoosterStatsManager::onSettled);
@@ -186,6 +187,7 @@ public class BoosterStatsManager {
         return new BoosterSources.Source("Unknown source", "Detected on scoreboard", null, false);
     }
     private static void onSettled(MoneyLedger.Receipt receipt) {
+        earningsActivity.cropIncome(receipt.toMs());
         average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
         RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId());
         if (receipt.percentage() > 0) {
