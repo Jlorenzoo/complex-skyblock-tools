@@ -9,6 +9,7 @@ __pycache__/
 *.pending
 *.download
 toolkit-installation-status.txt
+voicechat-installation-status.txt
 .DS_Store
 .idea/
 .vscode/

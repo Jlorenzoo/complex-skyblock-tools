@@ -14,13 +14,28 @@ import org.lwjgl.glfw.GLFW;
 
 /** Offline disposable client: exercise real widgets, input and rendering without a server. */
 public final class MenuRuntimeSmoke implements ClientModInitializer {
-    int ticks,stage;
+    int ticks,stage=Boolean.getBoolean("toolkit.testVoicechat")?-2:0;
     Path output=Path.of(System.getProperty("toolkit.preview"));
     @Override public void onInitializeClient(){
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             try{
                 if(mc.gui.overlay()!=null||++ticks<100)return;
                 if(ticks%20!=0)return;
+                if(stage==-2){
+                    var voice=Class.forName("de.maxhenkel.voicechat.VoicechatClient");
+                    check(voice.getField("CLIENT_CONFIG").get(null)!=null,"Voice chat client initialized alongside toolkit");
+                    var keys=Class.forName("de.maxhenkel.voicechat.voice.client.KeyEvents");
+                    check(keys.getField("KEY_VOICE_CHAT").get(null)!=null&&keys.getField("KEY_PTT").get(null)!=null,"Voice chat and push-to-talk keys registered");
+                    for(var binding:new String[][]{{"KEY_VOICE_CHAT","key.keyboard.v"},{"KEY_PTT","key.keyboard.caps.lock"},{"KEY_WHISPER","key.keyboard.right.alt"},{"KEY_MUTE","key.keyboard.f8"}}){
+                        var key=(net.minecraft.client.KeyMapping)keys.getField(binding[0]).get(null);
+                        check(key.saveString().equals(binding[1]),"Loaded pack voice control: "+binding[0]);
+                    }
+                    var onboarding=Class.forName("de.maxhenkel.voicechat.gui.onboarding.OnboardingManager");
+                    onboarding.getMethod("startOnboarding",net.minecraft.client.gui.screens.Screen.class).invoke(null,mc.gui.screen());
+                    check(mc.gui.screen().getClass().getName().contains("OnboardingScreen"),"Voice chat onboarding opens");
+                    stage++;return;
+                }
+                if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
                     mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,0));stage++;return;

@@ -22,3 +22,26 @@ On a configured Windows workstation, `python tests/run_smoke_windows.py` checks 
 Run `python scripts/install.py --wait` to wait for clients using the configured profile to close. `--mods PATH` and `--source PATH` override the target and built jar. Check `toolkit-installation-status.txt` before relaunching.
 
 The installer verifies backups and the installed checksum, preserves unrelated mods and settings/history, and rolls back failed replacement. Keep a rollback copy outside `mods` as the in-game updater cleans old `.bak` files. Do not force-close a player's running client to install an update. Never commit launcher tokens, workstation paths, logs, compiled jars, or private game history.
+
+## Voice chat pack dependency
+
+Complex uses Simple Voice Chat, independently of Lunar. `modpack/voicechat.json` pins
+the stable Fabric 2.6.22+26.2 release (Minecraft 26.2, Java 25, Loader >=0.19.3;
+Fabric API, if installed, must be >=0.152.1+26.2). Optional audio mods are not required.
+
+`python scripts/voicechat.py` downloads to `build/dependencies`, verifies the upstream
+SHA-512 and Fabric metadata, and changes no live files. `python scripts/voicechat.py
+--install --wait` installs into the configured profile after Minecraft exits. It shares
+the toolkit install lock, preserves configurations, replaces only jars with mod ID
+`voicechat`, verifies backups outside `mods`, and rolls back failed replacement.
+Check `voicechat-installation-status.txt` before relaunching. The installer seeds
+only missing voice controls in `options.txt`: V menu, Caps Lock push-to-talk,
+Right Alt whisper, F8 mute, N disable, H hide icons; groups/recording stay unbound.
+Existing voice bindings are preserved and changed options are backed up outside mods.
+The toolkit updater does not update this third-party dependency. `scripts/package_prism.py` includes it
+as a separate jar, with attribution and without personal microphone settings.
+
+Run `python tests/test_voicechat.py` for checksum, preservation and rollback tests.
+On Windows, `python tests/run_menu_windows.py --voicechat` additionally checks real
+Fabric initialization, voice key registration and onboarding rendering in a disposable
+offline profile. It does not test server UDP connectivity or your microphone.
