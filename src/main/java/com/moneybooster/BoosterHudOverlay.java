@@ -7,6 +7,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.world.item.Items;
+import com.skyblocktoolkit.ToolkitTheme;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -15,6 +16,7 @@ public class BoosterHudOverlay implements HudElement {
     public static final int BAR_WIDTH = 104;
     public static final int BAR_HEIGHT = 5;
     public static final float TEXT_SCALE = 0.75f;
+    public static final int TIMER_SPACING = 24;
 
     private static Field eventsField;
 
@@ -50,26 +52,34 @@ public class BoosterHudOverlay implements HudElement {
     }
 
     public static int getBarY(Minecraft mc) {
+        return getBarY(mc, 2);
+    }
+    public static int getBarY(Minecraft mc, int rows) {
         ModConfig config = ModConfig.getInstance();
         if (config.getPosition() == ModConfig.Position.TOP_LEFT) {
-            return clampY(mc, 16 + config.getOffsetY());
+            return clampY(mc, 16 + config.getOffsetY(), rows);
         } else {
             int bossCount = getBossBarCount(mc);
             if (bossCount == 0) {
-                return clampY(mc, 20 + config.getOffsetY());
+                return clampY(mc, 20 + config.getOffsetY(), rows);
             } else {
                 int baseTextY = 12 + (bossCount - 1) * 19 + 15;
-                return clampY(mc, baseTextY + 7 + config.getOffsetY());
+                return clampY(mc, baseTextY + 7 + config.getOffsetY(), rows);
             }
         }
     }
 
-    private static int clampY(Minecraft mc, int y) {
-        return Math.max(14, Math.min(mc.getWindow().getGuiScaledHeight() - 24, y));
+    private static int clampY(Minecraft mc, int y, int rows) {
+        return Math.max(14, Math.min(mc.getWindow().getGuiScaledHeight() - 24 - Math.max(0, rows - 1) * TIMER_SPACING, y));
     }
 
     public static void renderBar(GuiGraphicsExtractor extractor, Minecraft mc, int barX, int barY, String label, float progress, boolean isLowTime, boolean flash) {
+        renderTimerBar(extractor, mc, barX, barY, label, progress, BoosterTimers.Type.MONEY, isLowTime);
+    }
+    public static void renderTimerBar(GuiGraphicsExtractor extractor, Minecraft mc, int barX, int barY, String label, float progress, BoosterTimers.Type type, boolean reminder) {
         Font font = mc.font;
+        boolean money = type == BoosterTimers.Type.MONEY;
+        int color = money ? ToolkitTheme.MONEY_TIMER : ToolkitTheme.XP_TIMER;
         float scaledTextWidth = font.width(label) * TEXT_SCALE;
         float textX = barX + (BAR_WIDTH - scaledTextWidth) / 2.0f;
         float textY = barY - 8.0f;
@@ -78,7 +88,7 @@ public class BoosterHudOverlay implements HudElement {
         extractor.pose().pushMatrix();
         extractor.pose().translate(textX, textY);
         extractor.pose().scale(TEXT_SCALE, TEXT_SCALE);
-        extractor.text(font, label, 0, 0, 0xFFFFFFFF, true);
+        extractor.text(font, label, 0, 0, color, true);
         extractor.pose().popMatrix();
 
         // 2. Boss-bar styled progress bar (5px high)
@@ -86,31 +96,15 @@ public class BoosterHudOverlay implements HudElement {
         extractor.fill(barX - 1, barY - 1, barX + BAR_WIDTH + 1, barY + BAR_HEIGHT + 1, 0xFF000000);
 
         // Empty track (deep dark green background)
-        int emptyTrackColor = isLowTime ? 0xFF2A0808 : 0xFF052205;
+        int emptyTrackColor = money ? ToolkitTheme.MONEY_TRACK : ToolkitTheme.XP_TRACK;
         extractor.fill(barX, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, emptyTrackColor);
 
         // Filled portion
         int fillWidth = Math.max(0, Math.min(BAR_WIDTH, (int) (BAR_WIDTH * progress)));
         if (fillWidth > 0) {
-            int mainColor;
-            int highlightColor;
-            int shadowColor;
-
-            if (isLowTime) {
-                if (flash) {
-                    mainColor = 0xFFFFBB00;
-                    highlightColor = 0xFFFFEE55;
-                    shadowColor = 0xFFCC8800;
-                } else {
-                    mainColor = 0xFFEE2222;
-                    highlightColor = 0xFFFF6666;
-                    shadowColor = 0xFFAA0000;
-                }
-            } else {
-                mainColor = 0xFF00E600;
-                highlightColor = 0xFF38FF38;
-                shadowColor = 0xFF009900;
-            }
+            int mainColor = color;
+            int highlightColor = money ? ToolkitTheme.MONEY_HIGHLIGHT : ToolkitTheme.XP_HIGHLIGHT;
+            int shadowColor = money ? ToolkitTheme.MONEY_SHADOW : ToolkitTheme.XP_SHADOW;
 
             // Core fill
             extractor.fill(barX, barY, barX + fillWidth, barY + BAR_HEIGHT, mainColor);
@@ -124,6 +118,11 @@ public class BoosterHudOverlay implements HudElement {
         for (int i = 1; i <= 3; i++) {
             int notchX = barX + (BAR_WIDTH * i) / 4;
             extractor.fill(notchX, barY, notchX + 1, barY + BAR_HEIGHT, 0x80000000);
+        }
+        if (reminder) {
+            // A slow, low-opacity outline; no sound, full-screen flash or chat spam.
+            int alpha = 28 + (int)(16 * (1 + Math.sin(System.currentTimeMillis() / 500.0)));
+            extractor.outline(barX - 2, barY - 2, BAR_WIDTH + 4, BAR_HEIGHT + 4, (alpha << 24) | (color & 0xFFFFFF));
         }
     }
 
@@ -180,11 +179,12 @@ public class BoosterHudOverlay implements HudElement {
     }
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker) {
-        boolean boosterActive = com.skyblocktoolkit.ToolkitConfig.get().boosterHud && BoosterManager.isActive();
         var toolkit=com.skyblocktoolkit.ToolkitConfig.get();
+        long now = System.currentTimeMillis();
+        var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
         boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
 
-        if (!boosterActive && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud) {
+        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud) {
             return;
         }
 
@@ -194,7 +194,6 @@ public class BoosterHudOverlay implements HudElement {
             return;
         }
 
-        long now = System.currentTimeMillis();
         boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
                 || mc.player.getOffhandItem().is(Items.FISHING_ROD);
         var earnings = BoosterStatsManager.earningsActivity.select(now,
@@ -204,31 +203,21 @@ public class BoosterHudOverlay implements HudElement {
         if(earnings == EarningsActivity.Tracker.CROPS)renderAverage(extractor,mc);
         if(earnings == EarningsActivity.Tracker.FISHING){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
         int barX = getBarX(extractor.guiWidth());
-        int barY = getBarY(mc);
+        int barY = getBarY(mc, timerRows.size());
 
-        // 1. Render Booster bar if active
-        if (boosterActive) {
-            long remainingMs = BoosterManager.getRemainingMs(now);
-            float progress = BoosterManager.getProgress(now);
-
-            String timeStr = BoosterManager.formatTime(remainingMs);
-            boolean isLowTime = BoosterManager.hasTimer() && remainingMs < 3000;
-            boolean flash = isLowTime && (((now / 200) % 2) == 0);
-
-            String label;
-            if (isLowTime) {
-                label = flash ? ("§c+" + BoosterManager.getPercentage() + "% Booster: §e" + timeStr)
-                              : ("§e+" + BoosterManager.getPercentage() + "% Booster: §c" + timeStr);
-            } else {
-                label = "§a+" + BoosterManager.getPercentage() + "% Booster: §f" + timeStr;
-            }
-
-            renderBar(extractor, mc, barX, barY, label, progress, isLowTime, flash);
+        // Pack active, enabled timers into consecutive rows: money first, then XP.
+        for (int row = 0; row < timerRows.size(); row++) {
+            var type = timerRows.get(row);
+            var clock = BoosterManager.timers.clock(type);
+            boolean reminder = BoosterManager.timers.reminding(type, now, toolkit.boosterReminder);
+            String label = type.label + " +" + BoosterManager.timers.percentage(type) + "%: §f"
+                + BoosterTimers.formatTime(clock.remaining(now), clock.hasTimer(now)) + (reminder ? " §7· ending" : "");
+            renderTimerBar(extractor, mc, barX, barY + row * TIMER_SPACING, label, clock.progress(now), type, reminder);
         }
 
         // 2. Render Rate Test countdown indicator if running, preparing, or recently finished
         if (rateActive) {
-            int rateY = boosterActive ? (barY + BAR_HEIGHT + 4) : barY;
+            int rateY = timerRows.isEmpty() ? barY : barY + (timerRows.size() - 1) * TIMER_SPACING + BAR_HEIGHT + 4;
             renderRateTestHud(extractor, mc, barX, rateY);
 
             // Center-screen 3-2-1 Countdown Banner during prep

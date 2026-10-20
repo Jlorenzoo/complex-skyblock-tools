@@ -38,13 +38,17 @@ public final class BoosterHistoryScreen extends Screen {
             if (selected >= 0) selected = -1; else onClose();
         }).bounds(x + (w - 90) / 2, footerY, 90, 20).build());
     }
-    private ItemStack icon(BoosterHistory.Entry e) { return icons.computeIfAbsent(e.id, key -> BoosterSources.icon(e)); }
+    private ItemStack icon(BoosterHistory.Entry e) {
+        // Item components are bound after joining a world; history is also accessible from menus.
+        if (Minecraft.getInstance().level == null) return ItemStack.EMPTY;
+        return icons.computeIfAbsent(e.id, key -> BoosterSources.icon(e));
+    }
     private void text(GuiGraphicsExtractor g, String value, int tx, int ty, int maxWidth, int color) {
         g.text(font, font.substrByWidth(Component.literal(value), Math.max(0, maxWidth)).getString(), tx, ty, color, false);
     }
     private void row(GuiGraphicsExtractor g, int yy, String label, String value) {
-        g.text(font, label, x + 12, yy, 0xFF9DA4AE, false);
-        text(g, value, x + w - 12 - font.width(value), yy, w - 24, 0xFFDAE0E8);
+        g.text(font, label, x + 12, yy, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
+        text(g, value, x + w - 12 - font.width(value), yy, w - 24, com.skyblocktoolkit.ToolkitTheme.palette().text());
     }
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float tick) {
         var list = BoosterStatsManager.history().newestFirst(ModConfig.getInstance().isHistoryMoneyOnly());
@@ -55,44 +59,44 @@ public final class BoosterHistoryScreen extends Screen {
         filter.setMessage(Component.literal(ModConfig.getInstance().isHistoryMoneyOnly()?"Show: Money boosts only":"Show: All consumables"));
         previous.visible = next.visible = !details; previous.active = page > 0; next.active = page + 1 < pages;
         for (int i = 0; i < rows.length; i++) rows[i].visible = !details && i<perPage && page * perPage + i < list.size();
-        g.fill(0, 0, width, height, 0x9906090E);
-        g.fill(x, y, x + w, y + panelH, 0xF21B1D21);
+        g.fill(0, 0, width, height, com.skyblocktoolkit.ToolkitTheme.palette().scrim());
+        g.fill(x, y, x + w, y + panelH, com.skyblocktoolkit.ToolkitTheme.palette().panel());
 
-        g.text(font, details ? "Activation details" : "Booster item history", x + 12, y + 11, 0xFFF1F4F7, false);
-        if(details)g.text(font, "Extra booster earnings / shop trades excluded", x + 12, y + 26, 0xFF9DA4AE, false);
+        g.text(font, details ? "Activation details" : "Booster item history", x + 12, y + 11, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+        if(details)g.text(font, "Extra booster earnings / shop trades excluded", x + 12, y + 26, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         super.extractRenderState(g, mx, my, tick);
         if (details) {
             detailScroll=Math.max(0,Math.min(detailScroll,Math.max(0,y+182-(footerY-18))));
             g.enableScissor(x+8,y+45,x+w-8,footerY-18);g.pose().pushMatrix();g.pose().translate(0,-detailScroll);
             g.item(icon(detail), x + 14, y + 49);
-            text(g, detail.source, x + 38, y + 49, w - 50, 0xFFF1F4F7);
-            text(g, detail.itemName, x + 38, y + 62, w - 50, 0xFF9DA4AE);
+            text(g, detail.source, x + 38, y + 49, w - 50, com.skyblocktoolkit.ToolkitTheme.palette().text());
+            text(g, detail.itemName, x + 38, y + 62, w - 50, com.skyblocktoolkit.ToolkitTheme.palette().muted());
             row(g, y + 84, "Boost", detail.percentage > 0 ? "+" + detail.percentage + "%" : "No money boost");
             row(g, y + 101, "Announced duration", detail.durationSeconds < 0 ? "Unknown" : time(detail.durationSeconds));
             row(g, y + 118, "Time tracked", time(detail.elapsedSeconds(System.currentTimeMillis())));
             row(g, y + 135, "Booster bonus (est.)", detail.excluded?"Unavailable":"+" + BoosterStatsManager.formatMoney(detail.bonus));
-            text(g, detail.status + " / " + DATE.format(Instant.ofEpochMilli(detail.started).atZone(ZoneId.systemDefault())), x + 12, y + 154, w - 24, 0xFF9DA4AE);
-            text(g, detail.excluded?detail.exclusionReason:detail.percentage == 0 ? "Effect: " + detail.effect : detail.inferredSource ? "Source matched to an item used within 5s." : "Source: " + detail.source, x + 12, y + 170, w - 24, 0xFF9DA4AE);
+            text(g, detail.status + " / " + DATE.format(Instant.ofEpochMilli(detail.started).atZone(ZoneId.systemDefault())), x + 12, y + 154, w - 24, com.skyblocktoolkit.ToolkitTheme.palette().muted());
+            text(g, detail.excluded?detail.exclusionReason:detail.percentage == 0 ? "Effect: " + detail.effect : detail.inferredSource ? "Source matched to an item used within 5s." : "Source: " + detail.source, x + 12, y + 170, w - 24, com.skyblocktoolkit.ToolkitTheme.palette().muted());
             g.pose().popMatrix();g.disableScissor();
-            if(panelH<230)g.text(font,"Scroll for details",x+12,footerY-12,0xFF87919D,false);
+            if(panelH<230)g.text(font,"Scroll for details",x+12,footerY-12,com.skyblocktoolkit.ToolkitTheme.palette().muted(),false);
         } else {
-            g.text(font, "Item / boost / time", x + 12, y + 46, 0xFF9DA4AE, false);
-            g.text(font, "Bonus", x + w - 12 - font.width("Bonus"), y + 46, 0xFF9DA4AE, false);
+            g.text(font, "Item / boost / time", x + 12, y + 46, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
+            g.text(font, "Bonus", x + w - 12 - font.width("Bonus"), y + 46, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
             for (int i = 0; i < perPage; i++) {
                 int index = page * perPage + i; if (index >= list.size()) break;
                 var e = list.get(index); int ry = y + 58 + i * 27;
                 g.item(icon(e), x + 15, ry + 5);
-                text(g, e.source, x + 38, ry + 4, w - 156, 0xFFF1F4F7);
+                text(g, e.source, x + 38, ry + 4, w - 156, com.skyblocktoolkit.ToolkitTheme.palette().text());
                 String subtitle = e.percentage > 0 ? "+" + e.percentage + "% / " + (e.durationSeconds < 0 ? "?" : time(e.durationSeconds)) : e.effect;
-                text(g, subtitle, x + 38, ry + 16, w - 156, 0xFF9DA4AE);
+                text(g, subtitle, x + 38, ry + 16, w - 156, com.skyblocktoolkit.ToolkitTheme.palette().muted());
                 String bonus = e.excluded?"Unavailable":"+" + BoosterStatsManager.formatMoney(e.bonus);
-                g.text(font, bonus, x + w - 17 - font.width(bonus), ry + 9, com.skyblocktoolkit.ToolkitTheme.ACCENT, false);
+                g.text(font, bonus, x + w - 17 - font.width(bonus), ry + 9, com.skyblocktoolkit.ToolkitTheme.palette().accent(), false);
             }
             if (list.isEmpty()) {
-                g.text(font, ModConfig.getInstance().isHistoryMoneyOnly()?"No money boosts recorded yet.":"New item uses will appear here.", x + 12, y + 83, 0xFFDAE0E8, false);
-                g.text(font, "Older totals have no per-item records.", x + 12, y + 99, 0xFF9DA4AE, false);
+                g.text(font, ModConfig.getInstance().isHistoryMoneyOnly()?"No money boosts recorded yet.":"New item uses will appear here.", x + 12, y + 83, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+                g.text(font, "Older totals have no per-item records.", x + 12, y + 99, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
             }
-            if(panelH>=132)g.text(font, "Page " + (page + 1) + "/" + pages + " / click a row for details", x + 12, footerY-12, 0xFF9DA4AE, false);
+            if(panelH>=132)g.text(font, "Page " + (page + 1) + "/" + pages + " / click a row for details", x + 12, footerY-12, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         }
     }
     @Override public boolean mouseScrolled(double mx,double my,double horizontal,double vertical){

@@ -27,6 +27,29 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==1){
                     capture(mc,"menu-0");
+                    var timerConfig=ToolkitConfig.get();
+                    boolean oldMoney=timerConfig.boosterHud,oldXp=timerConfig.xpBoosterHud,oldReminder=timerConfig.boosterReminder;
+                    var boosterScreen=mc.gui.screen();
+                    for(var child:boosterScreen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("Money timer")){b.onPress(null);break;}
+                    check(timerConfig.boosterHud!=oldMoney&&timerConfig.xpBoosterHud==oldXp,"Money toggle leaves XP visibility unchanged");
+                    for(var child:boosterScreen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("XP timer")){b.onPress(null);break;}
+                    check(timerConfig.xpBoosterHud!=oldXp&&timerConfig.boosterHud!=oldMoney,"XP toggle leaves money visibility unchanged");
+                    for(var child:boosterScreen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("5-second reminder")){b.onPress(null);break;}
+                    check(timerConfig.boosterReminder!=oldReminder,"Five-second reminder toggle works");
+                    timerConfig.save();
+                    var timerCtor=ToolkitConfig.class.getDeclaredConstructor();timerCtor.setAccessible(true);var reloaded=timerCtor.newInstance();
+                    check(reloaded.boosterHud==timerConfig.boosterHud&&reloaded.xpBoosterHud==timerConfig.xpBoosterHud&&reloaded.boosterReminder==timerConfig.boosterReminder,"Timer settings persist from real widgets");
+                    timerConfig.boosterHud=oldMoney;timerConfig.xpBoosterHud=oldXp;timerConfig.boosterReminder=oldReminder;
+                    BoosterManager.onChatMessage("⚡ You will now receive +20% Shop Money.");
+                    BoosterManager.onChatMessage("⚡ Your Booster will end in: 5 minutes.");
+                    long moneyHistory=BoosterStatsManager.history().activeId();
+                    int moneyCount=BoosterStatsManager.getSessionBoosterCount();
+                    BoosterManager.onChatMessage("⚡ You will now receive +150% EXP Gain.");
+                    BoosterManager.onChatMessage("⚡ Your Booster will end in: 5 minutes.");
+                    check(BoosterManager.isActive()&&BoosterManager.getPercentage()==20,"XP leaves money accounting percentage unchanged");
+                    check(BoosterManager.timers.percentage(BoosterTimers.Type.XP)==150,"XP server message reaches independent clock");
+                    check(BoosterStatsManager.history().activeId()==moneyHistory&&BoosterStatsManager.getSessionBoosterCount()==moneyCount,"XP leaves money ledger and activation count unchanged");
+                    BoosterManager.reset();BoosterStatsManager.resetConnection();
                     mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;
                 }
                 if(stage==2){
@@ -54,6 +77,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     int ex=bx+BoosterHudOverlay.BAR_WIDTH+15<=screen.width?bx+BoosterHudOverlay.BAR_WIDTH+5:Math.max(1,bx-14);
                     screen.mouseClicked(new MouseButtonEvent(ex+5,by-5,new MouseButtonInfo(0,0)),false);
                     check(cfg.boosterHud!=old,"HUD timer eye toggles visibility");
+                    boolean xpWasVisible=cfg.xpBoosterHud;
+                    screen.mouseClicked(new MouseButtonEvent(ex+5,by+BoosterHudOverlay.TIMER_SPACING-5,new MouseButtonInfo(0,0)),false);
+                    check(cfg.xpBoosterHud!=xpWasVisible&&cfg.boosterHud!=old,"XP HUD eye toggles independently");
                     screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
                     check(mc.gui.screen()==screen&&!screen.children().isEmpty(),"HUD Escape returns to modules");
                     BlackoutManager.setActive(true);
@@ -109,8 +135,31 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(Files.exists(output.resolve("screenshots/farming-full.png")),"Farming full screenshot written");
                     check(Files.exists(output.resolve("screenshots/hud-elements.png")),"HUD mini menu screenshot written");
                     check(Files.exists(output.resolve("screenshots/farming.png")),"Farming screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: real rendered module menus, farming hub, crop visibility toggle, and HUD mini menu; independent crop/fish toggles, positions and persistence; HUD eye; toolbar-free canvas; Escape return; interactive blackout overlay; F6 wake\n");
-                    System.out.println("PASS: menu runtime interactions, farming hub and screenshots");System.exit(0);
+                    mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
+                    ToolkitConfig.get().lightMode=false;mc.setScreenAndShow(new ToolkitScreen(null,1));stage++;return;
+                }
+                if(stage==14){capture(mc,"boosters-dark");switchTheme(mc);check(ToolkitConfig.get().lightMode,"theme button activates light mode");stage++;return;}
+                if(stage==15){capture(mc,"boosters-light");mc.setScreenAndShow(new ToolkitScreen(null,2));stage++;return;}
+                if(stage==16){
+                    capture(mc,"fishing-light");
+                    for(var child:mc.gui.screen().children())if(child instanceof Button b&&b.getMessage().getString().equals("Fish prices")){b.onPress(null);break;}
+                    stage++;return;
+                }
+                if(stage==17){capture(mc,"fish-prices-light");mc.setScreenAndShow(new BoosterHistoryScreen(null));stage++;return;}
+                if(stage==18){capture(mc,"history-light");mc.setScreenAndShow(new BoosterStatsScreen(null));stage++;return;}
+                if(stage==19){capture(mc,"stats-light");mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,1));stage++;return;}
+                if(stage==20){capture(mc,"boosters-light-compact");switchTheme(mc);check(!ToolkitConfig.get().lightMode,"theme button restores dark mode");stage++;return;}
+                if(stage==21){
+                    capture(mc,"boosters-dark-compact");
+                    var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);
+                    check(!ctor.newInstance().lightMode,"theme preference persists");
+                    stage++;return;
+                }
+                if(stage==22){
+                    check(Files.exists(output.resolve("screenshots/boosters-light-compact.png")),"light compact menu rendered");
+                    check(Files.exists(output.resolve("screenshots/boosters-dark-compact.png")),"dark compact menu rendered");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: rendered light/dark themes, live theme toggle and persistence; full/compact menus; history, rate tests and price fields; independent money/XP timer widgets, eyes and persistence; XP activation preserves money ledger; crop visibility, HUD editing, blackout and F6 wake\n");
+                    System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
             }catch(Throwable e){e.printStackTrace();System.exit(1);}
@@ -118,6 +167,10 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     }
     void capture(net.minecraft.client.Minecraft mc,String name){
         Screenshot.grab(output.toFile(),name+".png",mc.gameRenderer.mainRenderTarget(),1,msg->{});
+    }
+    void switchTheme(net.minecraft.client.Minecraft mc){
+        for(var child:mc.gui.screen().children())if(child instanceof Button b&&(b.getMessage().getString().equals("Dark mode")||b.getMessage().getString().equals("Light mode"))){b.onPress(null);return;}
+        throw new AssertionError("theme switch missing");
     }
     static void check(boolean ok,String label){if(!ok)throw new AssertionError(label);}
 }

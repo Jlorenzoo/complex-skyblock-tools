@@ -24,28 +24,32 @@ public final class ToolkitButton extends Button {
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
         if(kind==1){
             if(selected){
-                ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.RED_PRIMARY);
-                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,ToolkitTheme.RED_DARK);
-            }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.SURFACE);
+                ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().accent());
+                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,ToolkitTheme.palette().accentSurface());
+            }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().surface());
             int pad=w<70?4:8;
             String clipped=font.substrByWidth(getMessage(),w-pad*2).getString();
-            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.WHITE_PURE:ToolkitTheme.MUTED,false);return;
+            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted(),false);return;
         }
-        if(kind!=2||hover)ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.HOVER:ToolkitTheme.SURFACE);
+        if(kind!=2||hover){
+            ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.palette().accent():ToolkitTheme.palette().border());
+            ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,hover?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
+        }
         if(kind==2){
-            g.fill(x+8,y+h-1,x+w-8,y+h,0x185E6872);
+            g.fill(x+8,y+h-1,x+w-8,y+h,com.skyblocktoolkit.ToolkitTheme.palette().divider());
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
-            g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.TEXT,false);
-            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?ToolkitTheme.RED_ACTIVE_TRACK:0xFF353940);
-            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,ToolkitTheme.WHITE_PURE);return;
+            g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.palette().text(),false);
+            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?ToolkitTheme.palette().accentTrack():com.skyblocktoolkit.ToolkitTheme.palette().track());
+            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,ToolkitTheme.palette().onAccent());return;
         }
         if(kind==3){
             boolean hasIcon=!icon.isEmpty();
             if(hasIcon)g.item(icon,x+10,y+12);
-            g.text(font,font.substrByWidth(Component.literal(label),w-(hasIcon?52:32)).getString(),x+(hasIcon?34:12),y+16,ToolkitTheme.TEXT,false);
-            g.text(font,">",x+w-16,y+16,ToolkitTheme.MUTED,false);
-            g.text(font,font.substrByWidth(Component.literal(description),w-24).getString(),x+12,y+43,ToolkitTheme.MUTED,false);return;
+            g.text(font,font.substrByWidth(Component.literal(label),w-(hasIcon?52:32)).getString(),x+(hasIcon?34:12),y+16,ToolkitTheme.palette().text(),false);
+            g.text(font,">",x+w-16,y+16,ToolkitTheme.palette().muted(),false);
+            g.text(font,font.substrByWidth(Component.literal(description),w-24).getString(),x+12,y+43,ToolkitTheme.palette().muted(),false);return;
         }
-        g.centeredText(font,font.substrByWidth(getMessage(),w-12).getString(),x+w/2,y+(h-8)/2,active?ToolkitTheme.TEXT:ToolkitTheme.FAINT);
+        String text=font.substrByWidth(getMessage(),w-12).getString();
+        g.text(font,text,x+(w-font.width(text))/2,y+(h-8)/2,active?ToolkitTheme.palette().text():ToolkitTheme.palette().muted(),false);
     }
 }

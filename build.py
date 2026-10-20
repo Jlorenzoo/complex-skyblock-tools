@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import subprocess
 import tempfile
+from scripts.local_paths import settings
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_JAVA = os.path.join(PROJECT_DIR, "src", "main", "java")
@@ -12,16 +13,21 @@ BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 CLASSES_DIR = os.path.join(BUILD_DIR, "classes")
 OUTPUT_JAR = os.path.join(BUILD_DIR, "skyblock-toolkit-1.0.0.jar")
 
-HOME = os.path.expanduser("~")
-PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(HOME, ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))
-MC_JAR = os.environ.get("MC_JAR", os.path.join(PRISM_DATA, "libraries/com/mojang/minecraft/26.2/minecraft-26.2-client.jar"))
-FAPI_JAR = os.environ.get("FAPI_JAR", os.path.join(PRISM_DATA, "instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar"))
-LOADER_JAR = os.environ.get("LOADER_JAR", os.path.join(PRISM_DATA, "libraries/net/fabricmc/fabric-loader/0.19.5/fabric-loader-0.19.5.jar"))
-JAVAC = os.environ.get("JAVAC", os.path.join(PRISM_DATA, "java/java-runtime-epsilon/bin/javac"))
-MODS_DIR = os.environ.get("MODS_DIR", os.path.join(PRISM_DATA, "instances/Complex-Skyblock-2/.minecraft/mods"))
+LOCAL = settings()
+PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(os.path.expanduser("~"), ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))
+def configured(key, variable, relative):
+    return os.environ.get(variable, LOCAL.get(key, os.path.join(PRISM_DATA, relative)))
+MC_JAR = configured("minecraft_jar", "MC_JAR", "libraries/com/mojang/minecraft/26.2/minecraft-26.2-client.jar")
+FAPI_JAR = configured("fabric_api_jar", "FAPI_JAR", "instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar")
+LOADER_JAR = configured("loader_jar", "LOADER_JAR", "libraries/net/fabricmc/fabric-loader/0.19.5/fabric-loader-0.19.5.jar")
+JAVAC = configured("javac", "JAVAC", "java/java-runtime-epsilon/bin/" + ("javac.exe" if os.name == "nt" else "javac"))
+LIBRARIES_DIR = configured("libraries_dir", "LIBRARIES_DIR", "libraries")
 
 def main():
     print("Building Skyblock Toolkit mod...")
+    for path in (MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC):
+        if not os.path.isfile(path):
+            raise SystemExit(f"Missing dependency: {path}. Configure local-settings.json (see README).")
     
     # 1. Clean build directory
     if os.path.exists(BUILD_DIR):
@@ -39,9 +45,9 @@ def main():
         jars_dir = os.path.join(temp_dir, "META-INF", "jars")
         fapi_sub_jars = [os.path.join(jars_dir, f) for f in os.listdir(jars_dir) if f.endswith(".jar")]
         
-        prism_libs = glob.glob(os.path.join(PRISM_DATA, "libraries/**/*.jar"), recursive=True)
+        prism_libs = LOCAL.get("library_jars") or [p for p in glob.glob(os.path.join(LIBRARIES_DIR, "**", "*.jar"), recursive=True) if zipfile.is_zipfile(p)]
         
-        classpath = ":".join([MC_JAR, LOADER_JAR] + fapi_sub_jars + prism_libs)
+        classpath = os.pathsep.join([MC_JAR, LOADER_JAR] + fapi_sub_jars + prism_libs)
         
         # 3. Find all java source files
         java_files = []
@@ -55,7 +61,13 @@ def main():
             print(" -", os.path.relpath(jf, SRC_JAVA))
         
         # 4. Compile with javac
-        cmd = [JAVAC, "-proc:none", "-cp", classpath, "-d", CLASSES_DIR] + java_files
+        # An argument file avoids Windows' command-line length limit.
+        compiler_args = ["-encoding", "UTF-8", "--release", "25", "-proc:none", "-cp", classpath, "-d", CLASSES_DIR] + java_files
+        argfile = os.path.join(temp_dir, "javac.args")
+        with open(argfile, "w", encoding="utf-8") as output:
+            for arg in compiler_args:
+                output.write('"' + arg.replace('\\', '/').replace('"', '\\"') + '"\n')
+        cmd = [JAVAC, "@" + argfile]
         print("Running javac...")
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
@@ -84,6 +96,7 @@ def main():
         
         print(f"Jar created at: {OUTPUT_JAR} ({os.path.getsize(OUTPUT_JAR)} bytes)")
         
+        print("Run python scripts/install.py to install safely, or add --wait to queue until Minecraft closes.")
     finally:
         shutil.rmtree(temp_dir)
 

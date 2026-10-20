@@ -15,8 +15,9 @@ public final class FlatButton extends Button {
     }
     @Override protected void extractContents(GuiGraphicsExtractor g,int mx,int my,float tick) {
         boolean empty=getMessage().getString().isEmpty();
-        int fill=isHoveredOrFocused() && active ? 0xFF2C3036 : empty ? 0xFF1D2025 : 0xFF23262B;
+        int fill=isHoveredOrFocused() && active ? com.skyblocktoolkit.ToolkitTheme.palette().hover() : com.skyblocktoolkit.ToolkitTheme.palette().surface();
         com.skyblocktoolkit.ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,fill);
-        if (!empty) g.centeredText(Minecraft.getInstance().font,getMessage(),getX()+getWidth()/2,getY()+(getHeight()-8)/2,active?0xFFE7EAEE:0xFF7E8792);
+        var font=Minecraft.getInstance().font;
+        if (!empty) g.text(font,getMessage(),getX()+(getWidth()-font.width(getMessage()))/2,getY()+(getHeight()-8)/2,active?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().muted(),false);
     }
 }

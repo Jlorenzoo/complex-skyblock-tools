@@ -5,6 +5,8 @@ import java.nio.file.*;
 public final class ToolkitConfig {
     private static final ToolkitConfig INSTANCE=new ToolkitConfig();
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
+    public boolean xpBoosterHud=true,boosterReminder=false;
+    public boolean lightMode=false;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
     public boolean clearHarvest=true;
@@ -23,6 +25,9 @@ public final class ToolkitConfig {
         if(Files.exists(path))try{
             var j=JsonParser.parseString(Files.readString(path)).getAsJsonObject();
             if(j.has("boosterHud"))boosterHud=j.get("boosterHud").getAsBoolean();
+            xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
+            if(j.has("boosterReminder"))boosterReminder=j.get("boosterReminder").getAsBoolean();
+            if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("fishEarningsHud"))fishEarningsHud=j.get("fishEarningsHud").getAsBoolean();
             if(j.has("rateTestHud"))rateTestHud=j.get("rateTestHud").getAsBoolean();
@@ -53,6 +58,8 @@ public final class ToolkitConfig {
         Path temp=null;try{
             Files.createDirectories(path.getParent());temp=Files.createTempFile(path.getParent(),"toolkit-",".tmp");
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
+            j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
+            j.addProperty("lightMode",lightMode);
             j.addProperty("cropEarningsHud",cropEarningsHud);j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
             j.addProperty("clearHarvest",clearHarvest);
             j.addProperty("fishHudX",fishHudX);j.addProperty("fishHudY",fishHudY);

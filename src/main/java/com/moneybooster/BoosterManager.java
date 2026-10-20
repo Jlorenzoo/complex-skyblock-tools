@@ -9,71 +9,48 @@ import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 
 import java.util.Collection;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BoosterManager {
     private static final Pattern CHAT_OTHER_EFFECT = Pattern.compile("(?i)^(?:[✔✓]\\s*)?You have gained (?:the effect of )?(?:a )?([^!]+) for (\\d+) second");
-    private static final Pattern CHAT_GAIN_PATTERN = Pattern.compile(
-            "(?i)^(?:[✔✓]\\s*)?You have gained the effect of a (\\d+)% Money Booster for (\\d+) second"
-    );
-    private static final Pattern CHAT_SERVER_PCT_PATTERN = Pattern.compile(
-            "(?i)receive \\+(\\d+)% Shop Money"
-    );
-    private static final Pattern CHAT_SERVER_DURATION_PATTERN = Pattern.compile(
-            "(?i)Your Booster will end in:\\s*(\\d+)\\s*minute"
-    );
-    private static final BoosterClock clock = new BoosterClock();
-    private static int percentage = 0;
-    private static int pendingServerBoosterPct = 0;
+    public static final BoosterTimers timers = new BoosterTimers();
 
     private static int tickCounter = 0;
 
-    public static boolean isActive() { return clock.active(System.currentTimeMillis()); }
-    public static boolean hasTimer() { return clock.hasTimer(System.currentTimeMillis()); }
-    public static int getPercentage() { return percentage; }
-    public static long getRemainingMs(long now) { return clock.remaining(now); }
-    public static float getProgress(long now) { return clock.progress(now); }
+    // The existing accounting API always refers to MONEY, regardless of XP state.
+    public static boolean isActive() { return timers.clock(BoosterTimers.Type.MONEY).active(System.currentTimeMillis()); }
+    public static boolean hasTimer() { return timers.clock(BoosterTimers.Type.MONEY).hasTimer(System.currentTimeMillis()); }
+    public static int getPercentage() { return timers.percentage(BoosterTimers.Type.MONEY); }
+    public static long getRemainingMs(long now) { return timers.clock(BoosterTimers.Type.MONEY).remaining(now); }
+    public static float getProgress(long now) { return timers.clock(BoosterTimers.Type.MONEY).progress(now); }
 
     public static String formatTime(long remainingMs) {
-        if (!hasTimer()) return "Active";
-        if (remainingMs <= 0) return "0.0s";
-        long totalSecs = remainingMs / 1000;
-        if (totalSecs < 10) {
-            return String.format(Locale.ROOT, "%.1fs", remainingMs / 1000.0);
-        } else if (totalSecs < 60) {
-            return totalSecs + "s";
-        } else {
-            long mins = totalSecs / 60;
-            long secs = totalSecs % 60;
-            return mins + "m " + (secs < 10 ? "0" : "") + secs + "s";
-        }
+        return BoosterTimers.formatTime(remainingMs, hasTimer());
     }
 
     public static void setTestBooster(int pct, int seconds) {
-        percentage = pct; clock.start(seconds, System.currentTimeMillis());
+        timers.start(BoosterTimers.Type.MONEY, pct, seconds, System.currentTimeMillis());
         BoosterStatsManager.recordEffect(pct, seconds, "Money booster", new BoosterSources.Source("Test", "Test booster", null, false));
     }
     public static void reset() {
-        percentage = 0; clock.reset(); pendingServerBoosterPct = 0; tickCounter = 0;
+        timers.reset(); tickCounter = 0;
     }
 
     public static void onChatMessage(String text) {
         if (text == null || text.isEmpty()) return;
-        text = text.replaceAll("§.", "");
+        text = text.replaceAll("§.", "").strip();
 
         BoosterStatsManager.onChatMessage(text);
 
-        // 1. Check exact gain pattern: "You have gained the effect of a 34% Money Booster for 16 seconds!"
-        Matcher gainMatcher = CHAT_GAIN_PATTERN.matcher(text);
-        if (gainMatcher.find()) {
-            int pct = safeInt(gainMatcher.group(1));
-            int seconds = safeInt(gainMatcher.group(2));
-            if (pct <= 0 || pct > 100000 || seconds <= 0 || seconds > 86400) return;
-            percentage = pct;
-            clock.start(seconds, System.currentTimeMillis());
-            BoosterStatsManager.recordEffect(pct, seconds, "Money booster", BoosterSources.recent());
+        var activation = timers.onChat(text, System.currentTimeMillis());
+        if (activation != null) {
+            boolean money = activation.type() == BoosterTimers.Type.MONEY;
+            var source = activation.server()
+                ? new BoosterSources.Source("Server booster", "Server booster", null, false) : BoosterSources.recent();
+            // XP can be recorded as a non-money effect without replacing the active money ledger.
+            BoosterStatsManager.recordEffect(money ? activation.percentage() : 0, activation.seconds(),
+                money ? "Money booster" : activation.percentage() + "% Experience booster", source);
             return;
         }
 
@@ -84,22 +61,6 @@ public class BoosterManager {
             return;
         }
 
-        // 2. Check server-wide / shop money booster notifications
-        Matcher shopPctMatcher = CHAT_SERVER_PCT_PATTERN.matcher(text);
-        if (shopPctMatcher.find()) {
-            pendingServerBoosterPct = safeInt(shopPctMatcher.group(1));
-        }
-
-        Matcher serverDurMatcher = CHAT_SERVER_DURATION_PATTERN.matcher(text);
-        if (serverDurMatcher.find()) {
-            int minutes = safeInt(serverDurMatcher.group(1));
-            if (minutes <= 0 || minutes > 1440) return;
-            int pct = pendingServerBoosterPct > 0 ? pendingServerBoosterPct : (percentage > 0 ? percentage : 20);
-            percentage = pct;
-            clock.start(minutes * 60L, System.currentTimeMillis());
-            pendingServerBoosterPct = 0;
-            BoosterStatsManager.recordEffect(pct, minutes * 60L, "Money booster", new BoosterSources.Source("Server booster", "Server booster", null, false));
-        }
     }
 
     private static int safeInt(String value) {
@@ -134,9 +95,8 @@ public class BoosterManager {
                 PlayerTeam team = scoreboard.getPlayersTeam(entry.owner());
                 return PlayerTeam.formatNameForTeam(team, entry.ownerName()).getString();
             }).toList();
-        BoosterSidebar.State state = BoosterSidebar.parse(lines);
-        clock.observe(state.active(), state.remainingMs(), state.exactSeconds(), System.currentTimeMillis());
-        if (state.percentage() > 0) percentage = state.percentage();
+        long now = System.currentTimeMillis();
+        for (var type : BoosterTimers.Type.values()) timers.observe(type, BoosterSidebar.parse(lines, type), now);
         for (String line : lines) BoosterStatsManager.checkScoreboardLine(line);
     }
 }

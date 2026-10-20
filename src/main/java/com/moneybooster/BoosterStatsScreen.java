@@ -92,39 +92,39 @@ public class BoosterStatsScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         refresh();
         int x = cardX, y = cardY, w = cardW;
-        g.fill(0, 0, this.width, this.height, 0x9906090E);
-        g.fill(x, y, x + w, y + cardH, 0xF21B1D21);
+        g.fill(0, 0, this.width, this.height, com.skyblocktoolkit.ToolkitTheme.palette().scrim());
+        g.fill(x, y, x + w, y + cardH, com.skyblocktoolkit.ToolkitTheme.palette().panel());
         
 
-        g.text(font, "Money Booster", x + 12, y + 11, 0xFFF1F4F7, false);
-        g.text(font, showTest ? "Measure your base earnings per hour" : "Your booster bonus and item history", x + 12, y + 24, 0xFF9DA4AE, false);
+        g.text(font, "Money Booster", x + 12, y + 11, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+        g.text(font, showTest ? "Measure your base earnings per hour" : "Your booster bonus and item history", x + 12, y + 24, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         g.enableScissor(x+8,y+58,x+w-8,footerY-8);
         g.pose().pushMatrix();g.pose().translate(0,-scroll);
         if (!showTest) {
             var last=BoosterStatsManager.history().latestMoneyBooster();
-            g.text(font, "Latest booster bonus (estimated)", x + 12, y + 69, 0xFF9DA4AE, false);
+            g.text(font, "Latest booster bonus (estimated)", x + 12, y + 69, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
             g.pose().pushMatrix(); g.pose().translate(x + 12, y + 83); g.pose().scale(1.65f, 1.65f);
-            g.text(font, last==null?"--":"+" + BoosterStatsManager.formatMoney(last.bonus), 0, 0, com.skyblocktoolkit.ToolkitTheme.ACCENT, false);
+            g.text(font, last==null?"--":"+" + BoosterStatsManager.formatMoney(last.bonus), 0, 0, com.skyblocktoolkit.ToolkitTheme.palette().accent(), false);
             g.pose().popMatrix();
             String info=last==null?"No booster recorded yet":last.source+" / +"+last.percentage+"% / "+(last.durationSeconds<0?"?":BoosterHistoryScreen.time(last.durationSeconds));
-            g.text(font,font.substrByWidth(Component.literal(info),w-24).getString(),x+12,y+105,0xFFB5BEC8,false);
+            g.text(font,font.substrByWidth(Component.literal(info),w-24).getString(),x+12,y+105,com.skyblocktoolkit.ToolkitTheme.palette().text(),false);
             int total = BoosterStatsManager.getCoconutTotalEffects(), procs = BoosterStatsManager.getCoconutBoosterProcs();
-            row(g,y+124,"Session booster bonus","+"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),0xFFDAE0E8);
-            row(g,y+140,"Coconut boosts",procs+"/"+total,0xFFDAE0E8);
-            g.text(font, "Drag the white average text to move it", x + 12, y + 211, 0xFF9DA4AE, false);
+            row(g,y+124,"Session booster bonus","+"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),com.skyblocktoolkit.ToolkitTheme.palette().text());
+            row(g,y+140,"Coconut boosts",procs+"/"+total,com.skyblocktoolkit.ToolkitTheme.palette().text());
+            g.text(font, "Drag the white average text to move it", x + 12, y + 211, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         } else {
             String status = RateTracker.isPreparing() ? "Starting in " + RateTracker.getPrepCountdownSeconds() + "s"
                 : RateTracker.isRunning() ? "Running / " + RateTracker.getElapsedSeconds() + "s"
                 : RateTracker.isSettling() ? "Settling shop transactions..."
                 : RateTracker.isCompleted() ? "Completed / " + RateTracker.getElapsedSeconds() + "s" : "Ready to start";
-            g.text(font, status, x + 12, y + 101, 0xFFDAE0E8, false);
-            row(g, y + 121, "Base rate / hour", BoosterStatsManager.formatMoney(RateTracker.getCurrentRatePerHour()), com.skyblocktoolkit.ToolkitTheme.ACCENT);
-            row(g, y + 141, "Base earned", BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), 0xFFDAE0E8);
-            row(g, y + 159, "Shop trades excluded", String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.ACCENT);
-            g.text(font, "Booster bonus removed from the base rate.", x + 12, y + 177, 0xFF9DA4AE, false);
+            g.text(font, status, x + 12, y + 101, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+            row(g, y + 121, "Base rate / hour", BoosterStatsManager.formatMoney(RateTracker.getCurrentRatePerHour()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
+            row(g, y + 141, "Base earned", BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), com.skyblocktoolkit.ToolkitTheme.palette().text());
+            row(g, y + 159, "Shop trades excluded", String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
+            g.text(font, "Booster bonus removed from the base rate.", x + 12, y + 177, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         }
         g.pose().popMatrix();g.disableScissor();
-        if(cardH<248&&cardH>=148)g.text(font,"Scroll for more",x+12,footerY-12,0xFF87919D,false);
+        if(cardH<248&&cardH>=148)g.text(font,"Scroll for more",x+12,footerY-12,com.skyblocktoolkit.ToolkitTheme.palette().muted(),false);
         Minecraft mc = Minecraft.getInstance();
         int bx = BoosterHudOverlay.getBarX(this.width), by = BoosterHudOverlay.getBarY(mc);
         // Keep the draggable preview out of the menu's controls.
@@ -136,7 +136,7 @@ public class BoosterStatsScreen extends Screen {
         if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud)BoosterHudOverlay.renderAverage(g,mc);
     }
     private void row(GuiGraphicsExtractor g, int y, String label, String value, int color) {
-        g.text(font, label, cardX + 12, y, 0xFF9DA4AE, false);
+        g.text(font, label, cardX + 12, y, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         g.text(font, value, cardX + cardW - 12 - font.width(value), y, color, false);
     }
 
