@@ -13,17 +13,8 @@
 [![Java 25](https://img.shields.io/badge/Java-25-ED1C24?style=for-the-badge&logo=openjdk&logoColor=white)](#)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-white?style=for-the-badge)](#)
 [![Server: Complex Gaming](https://img.shields.io/badge/Server-Complex_Gaming-ED1C24?style=for-the-badge)](#)
-[![Fair Play](https://img.shields.io/badge/Fair_Play-100%25_Allowed_QoL-white?style=for-the-badge)](#)
 
 </div>
-
----
-
-> [!NOTE]
-> ### 100% Allowed Quality-of-Life · Zero Macros · Zero Automation
-> **Skyblock Toolkit** is strictly a client-side display HUD, audio cue, and statistics tracker tailored for players on **Complex Gaming Skyblock**.
-> 
-> It **does not** automate actions, click for you, inject gameplay hacks, or use macros. It reads only standard scoreboard text, chat messages, and client sounds to keep you informed and organized.
 
 ---
 
