@@ -13,6 +13,7 @@ public final class ToolkitMod implements ClientModInitializer {
     public static final com.fishingpings.FishingPingsMod FISHING=new com.fishingpings.FishingPingsMod();
     public static final com.fishingpings.FishingEarnings FISHING_EARNINGS=new com.fishingpings.FishingEarnings();
     private static Object previousLevel;
+    public static KeyMapping.Category CATEGORY;
     public static KeyMapping menuKey;
     public static KeyMapping blackoutKey;
     public static String fishingLabel(){
@@ -27,8 +28,9 @@ public final class ToolkitMod implements ClientModInitializer {
         UpdateManager.cleanOldBackups();
         UpdateManager.checkForUpdatesAsync();
         new com.moneybooster.MoneyBoosterMod().onInitializeClient();FISHING.onInitializeClient();
-        menuKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.menu",GLFW.GLFW_KEY_RIGHT_SHIFT,KeyMapping.Category.MISC));
-        blackoutKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.blackout",GLFW.GLFW_KEY_F6,KeyMapping.Category.MISC));
+        CATEGORY=KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","main"));
+        menuKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.menu",GLFW.GLFW_KEY_RIGHT_SHIFT,CATEGORY));
+        blackoutKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.blackout",GLFW.GLFW_KEY_F6,CATEGORY));
         net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=net.minecraft.client.Minecraft.getInstance();if(!overlay&&mc.level!=null&&mc.player!=null){
                 if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}

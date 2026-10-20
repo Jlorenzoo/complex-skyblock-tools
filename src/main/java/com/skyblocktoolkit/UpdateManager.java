@@ -97,7 +97,7 @@ public final class UpdateManager {
                             if (!el.isJsonObject()) continue;
                             JsonObject asset = el.getAsJsonObject();
                             String name = asset.has("name") ? asset.get("name").getAsString() : "";
-                            if (name.endsWith(".jar") && !name.contains("source") && !name.contains("..")) {
+                            if (name.startsWith("skyblock-toolkit-") && name.endsWith(".jar") && !name.contains("source") && !name.contains("..")) {
                                 assetUrl = asset.has("browser_download_url") ? asset.get("browser_download_url").getAsString() : "";
                                 break;
                             }
