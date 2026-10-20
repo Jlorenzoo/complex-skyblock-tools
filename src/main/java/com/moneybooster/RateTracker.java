@@ -30,6 +30,7 @@ public class RateTracker {
     }
     public static void disconnect() {
         preparing = false; running = false; completed = false; testId++;
+        xpMeasurement.reset();
     }
 
     private static Duration selectedDuration = Duration.ONE_MIN;
@@ -41,6 +42,7 @@ public class RateTracker {
     private static long stopTimeMs = 0;
     private static double baseEarned = 0;
     private static double totalEarned = 0;
+    private static final XpRateMeasurement xpMeasurement = new XpRateMeasurement();
     private static double finalRatePerHour = 0;
     private static long showFinishedUntilMs = 0;
 
@@ -89,6 +91,7 @@ public class RateTracker {
         stopTimeMs = 0;
         baseEarned = 0;
         totalEarned = 0;
+        xpMeasurement.reset();
         finalRatePerHour = 0;
         showFinishedUntilMs = 0;
     }
@@ -102,6 +105,7 @@ public class RateTracker {
         stopTimeMs = 0;
         baseEarned = 0;
         totalEarned = 0;
+        xpMeasurement.start(startTimeMs, selectedDuration.seconds);
         finalRatePerHour = 0;
 
         Minecraft mc = Minecraft.getInstance();
@@ -119,6 +123,7 @@ public class RateTracker {
         BoosterStatsManager.markContext();
         completed = true;
         stopTimeMs = System.currentTimeMillis();
+        xpMeasurement.stop(stopTimeMs);
         showFinishedUntilMs = System.currentTimeMillis() + 6000L;
 
         long elapsedSec = getElapsedSeconds();
@@ -132,7 +137,7 @@ public class RateTracker {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
             mc.player.sendOverlayMessage(
-                    Component.literal("§a[Test stopped; results settling] §fBase Rate: §a§l" + BoosterStatsManager.formatMoney(finalRatePerHour) + " / hr")
+                    Component.literal("§a[Test stopped] §fRate: §a§l" + formatDisplayedRate() + " / hr")
             );
         }
     }
@@ -171,6 +176,19 @@ public class RateTracker {
         long sec = getElapsedSeconds();
         if (sec < 2) return 0;
         return baseEarned / ((System.currentTimeMillis() - startTimeMs) / 1000.0) * 3600.0;
+    }
+
+    public static boolean isXpSelected() { return com.skyblocktoolkit.ToolkitConfig.get().rateTestXp; }
+    public static double getXpEarned(boolean boosted) { return xpMeasurement.earned(boosted); }
+    public static double getXpRatePerHour(boolean boosted) {
+        return xpMeasurement.perHour(System.currentTimeMillis(), boosted);
+    }
+    public static String formatDisplayedRate() {
+        return isXpSelected() ? XpTracker.format(getXpRatePerHour(com.skyblocktoolkit.ToolkitConfig.get().xpIncludesBoosters))
+                : BoosterStatsManager.formatMoney(getCurrentRatePerHour());
+    }
+    public static void onXpGain(XpEarnings.Gain gain) {
+        xpMeasurement.add(gain);
     }
 
     public static void onSettledDelta(double diff, int percentage, int id) {

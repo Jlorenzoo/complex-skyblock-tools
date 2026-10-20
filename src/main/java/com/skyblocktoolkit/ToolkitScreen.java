@@ -136,6 +136,7 @@ public final class ToolkitScreen extends Screen {
         toggleCell("Crop earnings",34,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
         toggleCell("Fishing earnings",34,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
         toggleCell("Rate test info",68,0,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
+        toggleCell("XP per hour",68,1,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
         pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),108);
     }
     private void money(){
@@ -149,7 +150,7 @@ public final class ToolkitScreen extends Screen {
         label(()->timerStatus(BoosterTimers.Type.XP),104,ToolkitTheme.palette().xpText(),1);
         label(()->"Session money bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),124,ToolkitTheme.palette().text(),1);
         label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest money bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},142,ToolkitTheme.palette().muted(),1);
-        actionRow(168,new String[]{"History",advanced?"Less settings":"Advanced..."},new Runnable[]{()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->{advanced=!advanced;rebuildWidgets();}});
+        actionRow(168,new String[]{"History","Rate tests",advanced?"Less settings":"Advanced..."},new Runnable[]{()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->{advanced=!advanced;rebuildWidgets();}});
         if(advanced){
             button("HUD elements...",202,()->{hudReturnPage=page;go(8);});
             pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),238);
@@ -170,7 +171,10 @@ public final class ToolkitScreen extends Screen {
         label(()->com.moneybooster.BoosterStatsManager.averageLabel(),95,ToolkitTheme.palette().text(),1.2f);
         toggleCell("Crop earnings HUD",118,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
         button(()->"HUD elements...",118,half+10,half,()->{hudReturnPage=9;go(8);});
-        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new com.moneybooster.BoosterStatsScreen(this)),()->"Edit HUD",()->go(5),148);
+        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new com.moneybooster.BoosterStatsScreen(this,true)),()->"Edit HUD",()->go(5),148);
+        label(()->XpTracker.averageLabel(),184,ToolkitTheme.palette().xpText(),1.2f);
+        toggle("XP per hour HUD",206,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
+        toggle("Include XP boosters",240,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
@@ -330,7 +334,8 @@ public final class ToolkitScreen extends Screen {
         var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
         String crops=BoosterStatsManager.averageLabel(),fish=ToolkitMod.fishingLabel();
         return List.of(new HudPart(2,crops,BoosterHudOverlay.averageX(mc,crops),BoosterHudOverlay.averageY(mc),cfg.cropEarningsHud),
-            new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud));
+            new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud),
+            new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud));
     }
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
@@ -381,7 +386,7 @@ public final class ToolkitScreen extends Screen {
             for(var part:hudParts()){
                 int ex=eyeX(part.x(),font.width(part.text()));
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
-                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;else cfg.fishEarningsHud=!cfg.fishEarningsHud;
+                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;else if(part.id()==3)cfg.fishEarningsHud=!cfg.fishEarningsHud;else cfg.xpEarningsHud=!cfg.xpEarningsHud;
                     persist();return true;
                 }
             }
@@ -400,6 +405,7 @@ public final class ToolkitScreen extends Screen {
     }
     @Override public boolean mouseDragged(MouseButtonEvent event,double dx,double dy){
         var cfg=ModConfig.getInstance();
+        if(dragging==4){var c=ToolkitConfig.get();c.xpHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(XpTracker.averageLabel())-2));c.xpHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==3){var c=ToolkitConfig.get();c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(ToolkitMod.fishingLabel())-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
         if(dragging==1){cfg.setOffset(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.BAR_WIDTH-2))-10,Math.clamp((int)(event.y()-grabY),14,Math.max(14,height-24-BoosterHudOverlay.TIMER_SPACING))-16);return true;}

@@ -84,7 +84,9 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
 
 - **Crop Average**: `Crops (10s): ${rate}/h` in clean neutral white `0xFFFFFFFF`.
 - **Fishing Estimate**: `Fishing est. ({window}): ${rate}/h` in clean neutral white `0xFFFFFFFF`.
-- Both HUD elements support click-and-drag re-positioning via the HUD Layout Canvas (`Shift` menu → **Edit HUD**).
+- **XP Average**: `XP (10s): {rate} XP/h` or `XP base (10s): {rate} XP/h`, with independent visibility and position. It can appear alongside either money HUD; the XP booster preference is shared with the Minecraft XP rate-test view.
+- All three HUD elements support click-and-drag re-positioning via the HUD Layout Canvas (`Shift` menu → **Edit HUD**).
+- Rate tests offer Money and Minecraft XP tabs, the existing duration choices, and a palette-backed **Include XP boosters** pill for XP. Both measures share the same sample clock. The XP view shows actual or base XP/hour, XP gained and booster bonus. Compact screens scroll the body while keeping Start/Stop and Done fixed. HUD previews stay outside the rate-test controls.
 
 ---
 

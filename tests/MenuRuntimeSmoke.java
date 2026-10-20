@@ -173,7 +173,58 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==22){
                     check(Files.exists(output.resolve("screenshots/boosters-light-compact.png")),"light compact menu rendered");
                     check(Files.exists(output.resolve("screenshots/boosters-dark-compact.png")),"dark compact menu rendered");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: rendered light/dark themes, live theme toggle and persistence; full/compact menus; history, rate tests and price fields; independent money/XP timer widgets, eyes and persistence; XP activation preserves money ledger; crop visibility, HUD editing, blackout and F6 wake\n");
+                    mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
+                    mc.setScreenAndShow(new BoosterStatsScreen(null,true));
+                    press(mc,"Minecraft XP");
+                    check(RateTracker.isXpSelected(),"XP measurement selector works");
+                    boolean wasBoosted=ToolkitConfig.get().xpIncludesBoosters;
+                    press(mc,"Include XP boosters");
+                    check(ToolkitConfig.get().xpIncludesBoosters!=wasBoosted,"XP booster toggle works");
+                    var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);var saved=ctor.newInstance();
+                    check(saved.rateTestXp&&saved.xpIncludesBoosters==ToolkitConfig.get().xpIncludesBoosters,"XP selection and booster preference persist");
+                    stage++;return;
+                }
+                if(stage==23){capture(mc,"xp-rates-dark");ToolkitConfig.get().lightMode=true;mc.setScreenAndShow(new BoosterStatsScreen(null,true));stage++;return;}
+                if(stage==24){capture(mc,"xp-rates-light");mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();mc.setScreenAndShow(new BoosterStatsScreen(null,true));stage++;return;}
+                if(stage==25){
+                    capture(mc,"xp-rates-light-compact");
+                    var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,-10);
+                    stage++;return;
+                }
+                if(stage==26){capture(mc,"xp-rates-light-compact-scrolled");ToolkitConfig.get().lightMode=false;mc.setScreenAndShow(new BoosterStatsScreen(null,true));stage++;return;}
+                if(stage==27){capture(mc,"xp-rates-dark-compact");mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;}
+                if(stage==28){
+                    capture(mc,"xp-rates-dark-compact-scrolled");
+                    var cfg=ToolkitConfig.get();cfg.xpHudX=20;cfg.xpHudY=110;cfg.xpEarningsHud=true;
+                    mc.setScreenAndShow(new ToolkitScreen(null,5));var screen=mc.gui.screen();
+                    int fishX=cfg.fishHudX,fishY=cfg.fishHudY;
+                    screen.mouseClicked(new MouseButtonEvent(25,114,new MouseButtonInfo(0,0)),false);
+                    screen.mouseDragged(new MouseButtonEvent(45,134,new MouseButtonInfo(0,0)),20,20);
+                    screen.mouseReleased(new MouseButtonEvent(45,134,new MouseButtonInfo(0,0)));
+                    check(cfg.xpHudX==40&&cfg.xpHudY==130,"XP HUD drags independently");
+                    check(cfg.fishHudX==fishX&&cfg.fishHudY==fishY,"XP drag preserves fishing HUD");
+                    int eye=cfg.xpHudX+mc.font.width(XpTracker.averageLabel())+5;
+                    screen.mouseClicked(new MouseButtonEvent(eye+2,cfg.xpHudY,new MouseButtonInfo(0,0)),false);
+                    check(!cfg.xpEarningsHud,"XP HUD eye toggles independently");
+                    var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);var saved=ctor.newInstance();
+                    check(!saved.xpEarningsHud&&saved.xpHudX==40&&saved.xpHudY==130,"XP HUD position/visibility persist");
+                    mc.setScreenAndShow(new BoosterStatsScreen(null,true));press(mc,"Money");check(!RateTracker.isXpSelected(),"Money rate selection remains available");
+                    stage++;return;
+                }
+                if(stage==29){
+                    capture(mc,"money-rates-dark-compact");
+                    mc.setScreenAndShow(new ToolkitScreen(null,9));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;
+                }
+                if(stage==30){capture(mc,"xp-hud-settings-dark-compact");switchTheme(mc);stage++;return;}
+                if(stage==31){capture(mc,"xp-hud-settings-light-compact");mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,9));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;}
+                if(stage==32){capture(mc,"xp-hud-settings-light");switchTheme(mc);stage++;return;}
+                if(stage==33){
+                    capture(mc,"xp-hud-settings-dark");
+                    stage++;return;
+                }
+                if(stage==34){
+                    check(Files.exists(output.resolve("screenshots/xp-hud-settings-dark.png")),"XP HUD settings screenshot written");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: rendered light/dark themes, full/compact menus; XP/money rate selection, XP booster toggle and saved preferences; independent XP HUD visibility/drag/position; money/XP timers, ledger isolation, crop visibility, HUD editing, blackout and F6 wake\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
@@ -186,6 +237,10 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     void switchTheme(net.minecraft.client.Minecraft mc){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&(b.getMessage().getString().equals("Dark mode")||b.getMessage().getString().equals("Light mode"))){b.onPress(null);return;}
         throw new AssertionError("theme switch missing");
+    }
+    void press(net.minecraft.client.Minecraft mc,String text){
+        for(var child:mc.gui.screen().children())if(child instanceof Button b&&b.visible&&b.active&&b.getMessage().getString().startsWith(text)){b.onPress(null);return;}
+        throw new AssertionError("button missing: "+text);
     }
     static void check(boolean ok,String label){if(!ok)throw new AssertionError(label);}
 }

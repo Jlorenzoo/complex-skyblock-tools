@@ -4,6 +4,8 @@ This is the source repository for the Minecraft 26.2 Fabric client mod, `skybloc
 
 The timer model lives in `BoosterTimers.java`. Money and XP have separate clocks and sidebar parsing. The legacy `BoosterManager` accounting methods refer to money only; XP activations must never replace the money ledger or count as a money boost. Hidden HUDs continue tracking. Visible active timers pack into money-then-XP rows. The five-second reminder is optional and disabled by default.
 
+Hourly rate tests collect both money and Minecraft XP during the same 1-minute, 5-minute or free-run sample. Open **Boosters → Rate tests**, select **Minecraft XP**, and use **Include XP boosters** to switch between actual gains and estimated base XP. XP uses the vanilla level/progress bar converted to points across level-ups; initial values, losses, death and reconnects establish new baselines rather than income. Base XP divides each gain by the XP booster multiplier active when observed. It removes the detected XP booster only. Spending and withdrawing XP are reflected as bar changes; XP gained from a withdrawal or command cannot be distinguished from earned XP. The optional 10-second XP/hour HUD and its booster preference are available under Farming, with independent visibility and placement in Edit HUD. Money accounting and its shop reconciliation remain independent.
+
 `ToolkitPalette` defines independent light/red and dark/red menu palettes. `ToolkitTheme.palette()` selects the saved preference; the menu header switches it immediately. Detail screens and controls use the same palette. Gameplay HUD colors remain independent of the menu theme.
 
 ## Build and verify

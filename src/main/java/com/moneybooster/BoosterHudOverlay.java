@@ -132,21 +132,19 @@ public class BoosterHudOverlay implements HudElement {
             int count = RateTracker.getPrepCountdownSeconds();
             label = "§eStarting in §c§l" + count + "s...";
         } else if (RateTracker.isRunning()) {
-            double rate = RateTracker.getCurrentRatePerHour();
-            String rateStr = rate > 0 ? (" §7(" + BoosterStatsManager.formatMoney(rate) + "/h)") : "";
+            String rateStr = " §7(" + RateTracker.formatDisplayedRate() + "/h)";
 
             if (RateTracker.getSelectedDuration().seconds > 0) {
                 long rem = RateTracker.getRemainingSeconds();
                 String timeStr = rem >= 60 ? String.format("%02d:%02d", rem / 60, rem % 60) : (rem + "s");
-                label = "§eRate Test: §f" + timeStr + rateStr;
+                label = (RateTracker.isXpSelected() ? "§eXP Test: §f" : "§eRate Test: §f") + timeStr + rateStr;
             } else {
                 long el = RateTracker.getElapsedSeconds();
                 String timeStr = String.format("%02d:%02d", el / 60, el % 60);
-                label = "§eRate Test: §f" + timeStr + rateStr;
+                label = (RateTracker.isXpSelected() ? "§eXP Test: §f" : "§eRate Test: §f") + timeStr + rateStr;
             }
         } else if (RateTracker.isCompleted()) {
-            double finalRate = RateTracker.getFinalRatePerHour();
-            label = (RateTracker.isSettling() ? "§eSettling: " : "§aTest Done: §a§l") + BoosterStatsManager.formatMoney(finalRate) + "/h";
+            label = (RateTracker.isSettling() && !RateTracker.isXpSelected() ? "§eSettling: " : "§aTest Done: §a§l") + RateTracker.formatDisplayedRate() + "/h";
         } else {
             return;
         }
@@ -173,6 +171,8 @@ public class BoosterHudOverlay implements HudElement {
     public static int averageY(Minecraft mc) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,ModConfig.getInstance().averageY())); }
     public static int fishX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().fishHudX));}
     public static int fishY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().fishHudY));}
+    public static int xpX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().xpHudX));}
+    public static int xpY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().xpHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
         g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);
@@ -184,7 +184,7 @@ public class BoosterHudOverlay implements HudElement {
         var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
         boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
 
-        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud) {
+        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud && !toolkit.xpEarningsHud) {
             return;
         }
 
@@ -193,6 +193,7 @@ public class BoosterHudOverlay implements HudElement {
         if (mc.gui != null && mc.gui.hud != null && mc.gui.hud.isHidden()) {
             return;
         }
+        if (toolkit.xpEarningsHud) { String label=XpTracker.averageLabel();extractor.text(mc.font,label,xpX(mc,label),xpY(mc),0xFFFFFFFF,true); }
 
         boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
                 || mc.player.getOffhandItem().is(Items.FISHING_ROD);

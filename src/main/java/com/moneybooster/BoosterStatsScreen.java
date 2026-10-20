@@ -28,24 +28,29 @@ public class BoosterStatsScreen extends Screen {
     private Button btnResetStats;
     private Button btnDone;
     private Button btnHistory;
+    private Button btnMoney,btnXp,btnXpBoosters;
 
     public BoosterStatsScreen() { this(null); }
     public BoosterStatsScreen(Screen parent) {
         super(Component.literal("Money Booster & Hourly Rate Tracker"));this.parent=parent;
     }
+    public BoosterStatsScreen(Screen parent, boolean showTest) { this(parent);this.showTest=showTest; }
 
     @Override
     protected void init() {
         super.init();
-        var layout=MenuLayout.of(width,height,260);
+        var layout=MenuLayout.of(width,height,304);
         cardW=layout.width();cardX=layout.x();cardY=layout.y();cardH=layout.height();footerY=layout.footerY();
         int x = cardX, y = cardY, w = cardW;
         tabStats = addRenderableWidget(FlatButton.flat(Component.literal("Earnings"), b -> { showTest = false; scroll=0; refresh(); }).bounds(x + 12, y + 38, (w - 28) / 2, 20).build());
         tabTest = addRenderableWidget(FlatButton.flat(Component.literal("Rate test"), b -> { showTest = true; scroll=0; refresh(); }).bounds(x + 16 + (w - 28) / 2, y + 38, (w - 28) / 2, 20).build());
         int third = (w - 32) / 3;
-        btn1Min = addRenderableWidget(FlatButton.flat(Component.literal("1 min"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.ONE_MIN)).bounds(x + 12, y + 68, third, 20).build());
-        btn5Min = addRenderableWidget(FlatButton.flat(Component.literal("5 min"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.FIVE_MIN)).bounds(x + 16 + third, y + 68, third, 20).build());
-        btnFree = addRenderableWidget(FlatButton.flat(Component.literal("Free run"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.FREE_RUN)).bounds(x + 20 + third * 2, y + 68, third, 20).build());
+        btnMoney=addRenderableWidget(com.skyblocktoolkit.ToolkitButton.nav("Money",b->{com.skyblocktoolkit.ToolkitConfig.get().rateTestXp=false;com.skyblocktoolkit.ToolkitConfig.get().save();rebuildWidgets();},x+12,y+68,(w-28)/2,20,!RateTracker.isXpSelected()));
+        btnXp=addRenderableWidget(com.skyblocktoolkit.ToolkitButton.nav("Minecraft XP",b->{com.skyblocktoolkit.ToolkitConfig.get().rateTestXp=true;com.skyblocktoolkit.ToolkitConfig.get().save();rebuildWidgets();},x+16+(w-28)/2,y+68,(w-28)/2,20,RateTracker.isXpSelected()));
+        btnXpBoosters=addRenderableWidget(com.skyblocktoolkit.ToolkitButton.toggle("Include XP boosters",b->{var cfg=com.skyblocktoolkit.ToolkitConfig.get();cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters;cfg.save();refresh();},x+12,y+120,w-24,24,()->com.skyblocktoolkit.ToolkitConfig.get().xpIncludesBoosters));
+        btn1Min = addRenderableWidget(FlatButton.flat(Component.literal("1 min"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.ONE_MIN)).bounds(x + 12, y + 94, third, 20).build());
+        btn5Min = addRenderableWidget(FlatButton.flat(Component.literal("5 min"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.FIVE_MIN)).bounds(x + 16 + third, y + 94, third, 20).build());
+        btnFree = addRenderableWidget(FlatButton.flat(Component.literal("Free run"), b -> RateTracker.setSelectedDuration(RateTracker.Duration.FREE_RUN)).bounds(x + 20 + third * 2, y + 94, third, 20).build());
         btnStartStop = addRenderableWidget(FlatButton.flat(Component.literal("Start test"), b -> {
             if (RateTracker.isRunning() || RateTracker.isPreparing()) RateTracker.stop();
             else { RateTracker.startCountdown(); Minecraft.getInstance().setScreenAndShow(null); }
@@ -73,14 +78,18 @@ public class BoosterStatsScreen extends Screen {
         btnFree.setMessage(Component.literal(d == RateTracker.Duration.FREE_RUN ? "[Free run]" : "Free run"));
         btnStartStop.setMessage(Component.literal(RateTracker.isPreparing() ? "Cancel countdown" : busy ? "Stop test" : "Start test"));
         btnStartStop.active = !RateTracker.isSettling() && Minecraft.getInstance().level != null;
-        scroll=Math.max(0,Math.min(scroll,Math.max(0,cardY+224-(footerY-8))));
+        scroll=Math.max(0,Math.min(scroll,Math.max(0,cardY+(showTest?246:224)-(footerY-8))));
+        btnMoney.setY(cardY+68-scroll);btnXp.setY(cardY+68-scroll);btnXpBoosters.setY(cardY+120-scroll);
+        btnMoney.visible=btnXp.visible=showTest&&inBody(btnMoney.getY(),20);
+        btnMoney.active=RateTracker.isXpSelected();btnXp.active=!RateTracker.isXpSelected();
+        btnXpBoosters.visible=showTest&&RateTracker.isXpSelected()&&inBody(btnXpBoosters.getY(),24);
         btnHistory.setY(cardY+157-scroll);
         btnAverage.setY(cardY+181-scroll);btnPosition.setY(cardY+181-scroll);
         btnAverage.setMessage(Component.literal("Crop HUD: "+(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud?"on":"off")));
         btnAverage.visible=!showTest&&inBody(btnAverage.getY(),20);btnPosition.visible=!showTest&&inBody(btnPosition.getY(),20);
         btnPosition.active=com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud;
         btnPosition.setMessage(Component.literal(ModConfig.getInstance().includesBoostersInAverage()?"With boosters":"Without boosters"));
-        btn1Min.setY(cardY+68-scroll);btn5Min.setY(cardY+68-scroll);btnFree.setY(cardY+68-scroll);
+        btn1Min.setY(cardY+94-scroll);btn5Min.setY(cardY+94-scroll);btnFree.setY(cardY+94-scroll);
         btn1Min.visible=btn5Min.visible=btnFree.visible=showTest&&inBody(btn1Min.getY(),20);
         btnHistory.visible = !showTest&&inBody(btnHistory.getY(),20);
         btnHistory.setMessage(Component.literal("View item history (" + BoosterStatsManager.history().newestFirst().size() + ")"));
@@ -96,8 +105,8 @@ public class BoosterStatsScreen extends Screen {
         g.fill(x, y, x + w, y + cardH, com.skyblocktoolkit.ToolkitTheme.palette().panel());
         
 
-        g.text(font, "Money Booster", x + 12, y + 11, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
-        g.text(font, showTest ? "Measure your base earnings per hour" : "Your booster bonus and item history", x + 12, y + 24, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
+        g.text(font, showTest ? "Hourly rates" : "Money Booster", x + 12, y + 11, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+        g.text(font, showTest ? "Measure money or Minecraft XP per hour" : "Your booster bonus and item history", x + 12, y + 24, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         g.enableScissor(x+8,y+58,x+w-8,footerY-8);
         g.pose().pushMatrix();g.pose().translate(0,-scroll);
         if (!showTest) {
@@ -115,16 +124,18 @@ public class BoosterStatsScreen extends Screen {
         } else {
             String status = RateTracker.isPreparing() ? "Starting in " + RateTracker.getPrepCountdownSeconds() + "s"
                 : RateTracker.isRunning() ? "Running / " + RateTracker.getElapsedSeconds() + "s"
-                : RateTracker.isSettling() ? "Settling shop transactions..."
+                : RateTracker.isSettling() && !RateTracker.isXpSelected() ? "Settling shop transactions..."
                 : RateTracker.isCompleted() ? "Completed / " + RateTracker.getElapsedSeconds() + "s" : "Ready to start";
-            g.text(font, status, x + 12, y + 101, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
-            row(g, y + 121, "Base rate / hour", BoosterStatsManager.formatMoney(RateTracker.getCurrentRatePerHour()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
-            row(g, y + 141, "Base earned", BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), com.skyblocktoolkit.ToolkitTheme.palette().text());
-            row(g, y + 159, "Shop trades excluded", String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
-            g.text(font, "Booster bonus removed from the base rate.", x + 12, y + 177, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
+            boolean xp=RateTracker.isXpSelected(),boosted=com.skyblocktoolkit.ToolkitConfig.get().xpIncludesBoosters;
+            g.text(font, status, x + 12, y + 154, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
+            row(g, y + 174, xp?(boosted?"XP rate / hour":"Base XP / hour"):"Base rate / hour", RateTracker.formatDisplayedRate(), com.skyblocktoolkit.ToolkitTheme.palette().accent());
+            row(g, y + 194, xp?(boosted?"XP gained":"Base XP gained"):"Base earned", xp?XpTracker.format(RateTracker.getXpEarned(boosted)):BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), com.skyblocktoolkit.ToolkitTheme.palette().text());
+            row(g, y + 212, xp?"XP booster bonus":"Shop trades excluded", xp?XpTracker.format(RateTracker.getXpEarned(true)-RateTracker.getXpEarned(false)):String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
+            g.text(font, xp?"XP bar points; losses are ignored.":"Booster bonus removed from the base rate.", x + 12, y + 234, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         }
         g.pose().popMatrix();g.disableScissor();
-        if(cardH<248&&cardH>=148)g.text(font,"Scroll for more",x+12,footerY-12,com.skyblocktoolkit.ToolkitTheme.palette().muted(),false);
+        int maxScroll=Math.max(0,cardY+(showTest?246:224)-(footerY-8));
+        if(maxScroll>0){int track=footerY-8-(cardY+58),thumb=Math.max(12,track*track/(track+maxScroll));int top=cardY+58+scroll*(track-thumb)/maxScroll;g.fill(x+w-5,top,x+w-3,top+thumb,com.skyblocktoolkit.ToolkitTheme.palette().muted());}
         Minecraft mc = Minecraft.getInstance();
         int bx = BoosterHudOverlay.getBarX(this.width), by = BoosterHudOverlay.getBarY(mc);
         // Keep the draggable preview out of the menu's controls.
@@ -133,7 +144,11 @@ public class BoosterStatsScreen extends Screen {
             BoosterHudOverlay.renderBar(g, mc, bx, by, "§a+39% Booster: §f0m 42s", 0.65f, false, false);
         }
         super.extractRenderState(g, mouseX, mouseY, partialTick);
-        if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud)BoosterHudOverlay.renderAverage(g,mc);
+        if(!showTest&&com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud&&averageOutsidePanel(mc))BoosterHudOverlay.renderAverage(g,mc);
+    }
+    private boolean averageOutsidePanel(Minecraft mc){
+        String label=BoosterStatsManager.averageLabel();int x=BoosterHudOverlay.averageX(mc,label),y=BoosterHudOverlay.averageY(mc);
+        return x+font.width(label)+3<cardX||x-3>cardX+cardW||y+12<cardY||y-3>cardY+cardH;
     }
     private void row(GuiGraphicsExtractor g, int y, String label, String value, int color) {
         g.text(font, label, cardX + 12, y, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
@@ -151,7 +166,7 @@ public class BoosterStatsScreen extends Screen {
         int barX = BoosterHudOverlay.getBarX(this.width);
         int barY = BoosterHudOverlay.getBarY(mc);
 
-        if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud&&event.button()==0){
+        if(!showTest&&com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud&&averageOutsidePanel(mc)&&event.button()==0){
             String label=BoosterStatsManager.averageLabel();int ax=BoosterHudOverlay.averageX(mc,label),ay=BoosterHudOverlay.averageY(mc);
             if(event.x()>=ax-3&&event.x()<=ax+font.width(label)+3&&event.y()>=ay-3&&event.y()<=ay+12){draggingAverage=true;averageDragX=event.x()-ax;averageDragY=event.y()-ay;return true;}
         }
@@ -171,7 +186,7 @@ public class BoosterStatsScreen extends Screen {
     @Override
     public boolean mouseScrolled(double x,double y,double horizontal,double vertical){
         if(x>=cardX&&x<=cardX+cardW&&y>=cardY+58&&y<footerY){int previous=scroll;int desired=scroll+(int)(-vertical*8);
-            for(int top:new int[]{68,157,181}){
+            for(int top:new int[]{68,94,120,157,181}){
                 int entering=cardY+top-(footerY-28);
                 if(desired>previous&&previous<entering&&desired>entering)desired=entering;
             }

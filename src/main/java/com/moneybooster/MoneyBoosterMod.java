@@ -48,6 +48,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             }
             BoosterManager.onClientTick(client);
             BoosterStatsManager.tick();
+            XpTracker.tick(client);
             RateTracker.onClientTick();
 
             if (openMenuRequested) {

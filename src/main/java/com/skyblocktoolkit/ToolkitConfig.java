@@ -7,6 +7,8 @@ public final class ToolkitConfig {
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
     public boolean xpBoosterHud=true,boosterReminder=false;
     public boolean lightMode=false;
+    public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
+    public int xpHudX=12,xpHudY=74;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
     public boolean clearHarvest=true;
@@ -28,6 +30,11 @@ public final class ToolkitConfig {
             xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
             if(j.has("boosterReminder"))boosterReminder=j.get("boosterReminder").getAsBoolean();
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
+            if(j.has("xpEarningsHud"))xpEarningsHud=j.get("xpEarningsHud").getAsBoolean();
+            if(j.has("xpIncludesBoosters"))xpIncludesBoosters=j.get("xpIncludesBoosters").getAsBoolean();
+            if(j.has("rateTestXp"))rateTestXp=j.get("rateTestXp").getAsBoolean();
+            if(j.has("xpHudX"))xpHudX=Math.clamp(j.get("xpHudX").getAsInt(),0,10000);
+            if(j.has("xpHudY"))xpHudY=Math.clamp(j.get("xpHudY").getAsInt(),0,10000);
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("fishEarningsHud"))fishEarningsHud=j.get("fishEarningsHud").getAsBoolean();
             if(j.has("rateTestHud"))rateTestHud=j.get("rateTestHud").getAsBoolean();
@@ -60,6 +67,8 @@ public final class ToolkitConfig {
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
             j.addProperty("lightMode",lightMode);
+            j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);
+            j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
             j.addProperty("clearHarvest",clearHarvest);
             j.addProperty("fishHudX",fishHudX);j.addProperty("fishHudY",fishHudY);

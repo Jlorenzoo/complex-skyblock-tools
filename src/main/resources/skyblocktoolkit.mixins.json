@@ -6,6 +6,7 @@
     "AlertVolumeMixin",
     "ChannelGainMixin",
     "ChatScreenMixin",
+    "ExperienceSyncMixin",
     "ChatComponentAccessor"
   ],
   "injectors": {

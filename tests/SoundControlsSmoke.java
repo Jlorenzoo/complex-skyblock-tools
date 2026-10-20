@@ -23,6 +23,8 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             var channel = Class.forName("com.mojang.blaze3d.audio.Channel", false, getClass().getClassLoader());
             check(Arrays.stream(engine.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$alertGain")), "sound engine injection");
             check(Arrays.stream(channel.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$gainCeiling")), "OpenAL channel injection");
+            var packets=Class.forName("net.minecraft.client.multiplayer.ClientPacketListener",false,getClass().getClassLoader());
+            check(Arrays.stream(packets.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$experienceSync")),"XP synchronization injection");
 
             var configDir = FabricLoader.getInstance().getConfigDir();
             Files.createDirectories(configDir);
@@ -50,6 +52,7 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"boosterHud\":false}");
             var legacySettings=constructor.newInstance();
             check(!legacySettings.boosterHud&&!legacySettings.xpBoosterHud&&!legacySettings.boosterReminder&&!legacySettings.lightMode,"legacy visibility and dark theme stay unchanged on migration");
+            check(!legacySettings.xpEarningsHud&&legacySettings.xpIncludesBoosters&&!legacySettings.rateTestXp,"legacy XP rate defaults");
             var unsafeClass=Class.forName("sun.misc.Unsafe");
             var unsafeField=unsafeClass.getDeclaredField("theUnsafe");unsafeField.setAccessible(true);
             Object unsafe=unsafeField.get(null);

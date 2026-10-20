@@ -88,6 +88,7 @@ The toolkit jar by itself does not include voice chat; the installer adds the se
 - **Visibility & Expiry Reminder**: Open **Right Shift → Boosters** to toggle each timer independently. Enable **5-second reminder** for a subtle ending cue and soft outline during the final five seconds. It starts disabled and does not play a sound. The HUD editor has separate eye controls; drag either timer to move the stack together.
 - **Consumable Tracker**: Accurately tracks active coconut and booster item durations with countdown bars.
 - **Rolling Earnings**: Live rolling window (10-second / hourly) calculation of crop farming revenue (`$/hr`).
+- **Minecraft XP per Hour**: Open **Boosters → Rate tests → Minecraft XP** for 1-minute, 5-minute or free-run tests. **Include XP boosters** switches between actual XP and estimated base XP with the detected booster removed. Rates use XP points across level-ups; losses do not count as income. Farming also offers a separate rolling XP/hour HUD, with its own visibility and draggable position in **Edit HUD**.
 - **Session History**: Detailed ledger of your past boosts, earnings, and rate tests.
 
 ### 🎣 Fishing Signals & Value Estimates
