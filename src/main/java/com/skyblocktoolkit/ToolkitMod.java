@@ -25,6 +25,7 @@ public final class ToolkitMod implements ClientModInitializer {
     private static int requestedPage;
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
+        ClearHarvest.init();
         UpdateManager.cleanOldBackups();
         UpdateManager.checkForUpdatesAsync();
         new com.moneybooster.MoneyBoosterMod().onInitializeClient();FISHING.onInitializeClient();
@@ -68,8 +69,8 @@ public final class ToolkitMod implements ClientModInitializer {
             var command=ClientCommands.literal("toolkit").executes(ctx->{requestedPage=0;requested=true;return 1;});
             command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
             command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
-            String[] modules={"boosters","fishing","chat","auction","hud","blackout"};
-            int[] pages={1,2,3,4,5,7};
+            String[] modules={"boosters","fishing","chat","auction","hud","blackout","farming","farm"};
+            int[] pages={1,2,3,4,5,7,9,9};
             for(int i=0;i<modules.length;i++){
                 final int target=pages[i];
                 command.then(ClientCommands.literal(modules[i]).executes(ctx->{requestedPage=target;requested=true;return 1;}));

@@ -5,10 +5,9 @@
   "name": "Skyblock Toolkit",
   "description": "One menu for booster earnings, fishing cues, chat copy and HUD layouts.",
   "authors": [
-    "Jeremy",
-    "xpncvr (Chat Copy)"
+    "Jeremy"
   ],
-  "license": "GPL-3.0",
+  "license": "MIT",
   "environment": "client",
   "provides": [
     "moneyboosterhud",
@@ -21,7 +20,6 @@
     ]
   },
   "mixins": [
-    "chattextselect.mixins.json",
     "skyblocktoolkit.mixins.json"
   ],
   "depends": {

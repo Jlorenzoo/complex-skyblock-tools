@@ -54,8 +54,8 @@ Prism downloads Minecraft 26.2 and Fabric Loader 0.19.5. Java 25 is required;
 use Prism's automatic Java management or select Java 25 if prompted.
 
 Included: Skyblock Toolkit 1.0.0, Fabric API 0.160.0+26.2,
-Clear Harvest 90% texture pack (enabled), and toolkit settings.
-Press Right Shift in-game to open the Toolkit.
+Clear Harvest crop visibility texture pack (built-in & enabled), and toolkit settings.
+Press Right Shift in-game to open the Toolkit (toggle crop textures in Right Shift > Farming).
 Fish sell-price estimates use the sender's configured prices; adjust them
 in Fishing > Fish earnings if your server prices differ.
 
@@ -68,7 +68,7 @@ Toolkit GPL source and licenses are in toolkit-source.
     with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('instance.cfg', '[General]\nConfigVersion=1.3\nInstanceType=OneSix\nname=Complex Skyblock Toolkit\niconKey=default\nOverrideJavaLocation=false\nOverrideCommands=false\nOverrideMemory=false\n')
         archive.writestr('mmc-pack.json', json.dumps(components, indent=2) + '\n')
-        archive.writestr('.minecraft/options.txt', 'resourcePacks:["vanilla","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n')
+        archive.writestr('.minecraft/options.txt', 'resourcePacks:["vanilla","skyblocktoolkit:clear_harvest","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n')
         archive.writestr('READ-ME.txt', readme)
         for name, path in sorted(files.items()):
             archive.write(path, name)

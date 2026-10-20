@@ -2,6 +2,13 @@
   "required": true,
   "package": "com.skyblocktoolkit.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": ["AlertVolumeMixin", "ChannelGainMixin"],
-  "injectors": {"defaultRequire": 1}
+  "client": [
+    "AlertVolumeMixin",
+    "ChannelGainMixin",
+    "ChatScreenMixin",
+    "ChatComponentAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

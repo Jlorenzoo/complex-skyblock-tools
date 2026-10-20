@@ -24,14 +24,14 @@
 Works seamlessly with your existing Fabric profile alongside **Litematica**, **Sodium**, **Iris**, and other client mods.
 
 1. Ensure you have **Fabric Loader (>= 0.19.0)** and **Fabric API** installed for **Minecraft 26.2**.
-2. Download **[`skyblock-toolkit-1.0.0.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
+2. Download **[Skyblock Toolkit (Latest Release)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
 3. Place the `.jar` directly into your `.minecraft/mods/` folder.
 4. Launch Minecraft and press **`Right Shift`** (or type `/toolkit`) to open the settings hub!
 
 ### Method 2: Prism Launcher (Pre-configured Pack)
 For players who prefer an all-in-one standalone instance with texture packs and configs ready out of the box:
 
-1. Download **[`Complex-Skyblock-Prism-1.0.0.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
+1. Download **[Complex-Skyblock-Prism (Latest Release)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
 2. In Prism Launcher: **Add Instance** → **Import** → select the zip file.
 3. Click Launch (Prism handles the Fabric Loader and Java setup automatically).
 
@@ -52,11 +52,17 @@ Once installed, you never need to visit GitHub or drag files again:
 | **Main Menu** | `/toolkit` |
 | **Drag & Drop HUD Canvas** | `/toolkit hud` |
 | **Check & Install Updates** | `/toolkit update` |
-| **Module Shortcuts** | `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
+| **Module Shortcuts** | `/toolkit farming`, `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
 
 ---
 
 ## Features
+
+### 🌾 Farming Hub & Clear Harvest Textures
+- **Built-in Crop Visibility**: Immature wheat, carrots, potatoes, nether wart, and beetroots are desaturated and dimmed so fully grown crops are instantly distinguishable.
+- **Zero-Setup & Auto-Updating**: Included directly inside the mod JAR as a built-in Fabric resource pack. Updates automatically whenever the mod updates.
+- **Quick In-Game Toggle**: Switch between Clear Harvest and vanilla textures with one click under the **Farming** tab (`Right Shift` or `/toolkit farming`).
+- **Live Crop Earnings & HUD**: Monitor live rolling harvest rates (`$/hr`), toggle the Crop Earnings HUD overlay, and access rate tests directly.
 
 ### ⏱️ Booster & Crop Earnings HUD
 - **Consumable Tracker**: Accurately tracks active coconut and booster item durations with countdown bars.
@@ -69,8 +75,9 @@ Once installed, you never need to visit GitHub or drag files again:
 - **Estimated Hourly Catch Value**: Calculates rolling 60s / 5m catch rates and projected `$/hr` based on your server fish prices.
 
 ### 💬 Chat Text Selection & Copy
-- **Drag-to-Select**: Click and drag your mouse across in-game chat text to highlight lines or words.
-- **Clipboard Copy**: Press **Ctrl + C** to copy text directly to your OS clipboard. Clickable links remain functional.
+- **Drag-to-Select**: Click and drag your mouse across in-game chat text to highlight text seamlessly.
+- **Multi-Click Selection**: Double-click to select a word; triple-click to select an entire message line.
+- **Cross-Platform Copy**: Press **Ctrl + C** (or **Cmd + C** on macOS) to copy text directly to your clipboard. Clickable links and commands remain fully functional.
 
 ### 🔔 Auction Alerts & Blackout Mode
 - **Auction Sale Chime**: Immediate custom audio notification when an item sells on the Auction House.
@@ -101,6 +108,5 @@ Produces `build/skyblock-toolkit-1.0.0.jar`.
 
 ## License & Credits
 
-- Distributed under the [GNU General Public License v3.0](LICENSE).
-- Chat Copy derived from `chattextselect` 1.3.0 by **xpncvr** (GPL-3.0). See [THIRD-PARTY.md](THIRD-PARTY.md).
+- Distributed under the [MIT License](LICENSE).
 - Designed with ❤️ for the **Complex Gaming** community.

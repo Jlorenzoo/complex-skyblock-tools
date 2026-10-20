@@ -86,7 +86,7 @@ public final class BoosterHistoryScreen extends Screen {
                 String subtitle = e.percentage > 0 ? "+" + e.percentage + "% / " + (e.durationSeconds < 0 ? "?" : time(e.durationSeconds)) : e.effect;
                 text(g, subtitle, x + 38, ry + 16, w - 156, 0xFF9DA4AE);
                 String bonus = e.excluded?"Unavailable":"+" + BoosterStatsManager.formatMoney(e.bonus);
-                g.text(font, bonus, x + w - 17 - font.width(bonus), ry + 9, 0xFFB0CABA, false);
+                g.text(font, bonus, x + w - 17 - font.width(bonus), ry + 9, com.skyblocktoolkit.ToolkitTheme.ACCENT, false);
             }
             if (list.isEmpty()) {
                 g.text(font, ModConfig.getInstance().isHistoryMoneyOnly()?"No money boosts recorded yet.":"New item uses will appear here.", x + 12, y + 83, 0xFFDAE0E8, false);

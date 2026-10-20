@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.*;
 import java.util.function.*;
@@ -15,6 +16,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** One navigation surface for all modules and their live HUD placement. */
 public final class ToolkitScreen extends Screen {
+    private static final Identifier LOGO=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/logo.png");
     private final Screen parent;
     private int page,scroll,contentHeight,dragging,soundReturnPage=2,hudReturnPage=1;
     private double grabX,grabY;
@@ -28,18 +30,19 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,8);}
+    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming"};
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,9);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==6?286:250);controls.clear();labels.clear();priceFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         if(page==8){hudElements();updateControls();return;}
-        int[] targets={1,2,3,4,7};String[] names={"Boosters","Fishing","Chat Copy","Auction","Blackout"};
+        int[] targets={1,9,2,3,4,7};String[] names={"Boosters","Farming","Fishing","Chat Copy","Auction","Blackout"};
+        String[] compactNames={"Boost","Farm","Fish","Chat","AH","Dim"};
         for(int i=0;i<targets.length;i++){
-            final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/5):x+4;
-            int by=layout.compact()?y+34:y+60+i*27,bw=layout.compact()?(w-12)/5-2:96;
-            addRenderableWidget(ToolkitButton.nav(layout.compact()?new String[]{"Boost","Fish","Chat","Auction","Blackout"}[i]:names[i],button->go(target),bx,by,bw,23,page==target));
+            final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
+            int by=layout.compact()?y+34:y+54+i*23,bw=layout.compact()?(w-12)/targets.length-2:96;
+            addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,layout.compact()?22:20,page==target));
         }
         addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+4,layout.footerY(),96,20));
         addRenderableWidget(ToolkitButton.action("Close",b->onClose(),x+w-76,layout.footerY(),64,20));
@@ -51,7 +54,7 @@ public final class ToolkitScreen extends Screen {
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
                     UpdateManager.triggerUpdateFromCommand();
                     if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },x+4,y+60+5*27,96,22));
+                },x+4,y+54+6*23+2,96,20));
             }else{
                 int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
@@ -61,7 +64,7 @@ public final class ToolkitScreen extends Screen {
             }
         }
 
-        switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 8->hudElements();}
+        switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 8->hudElements();case 9->farming();}
         updateControls();
     }
     private void go(int next){persist();page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;advanced=false;rebuildWidgets();}
@@ -94,8 +97,8 @@ public final class ToolkitScreen extends Screen {
                 ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,ToolkitTheme.SURFACE);
                 g.text(font,getMessage(),getX()+8,getY()+5,ToolkitTheme.TEXT,false);
                 int start=getX()+8,end=getRight()-8,knob=start+(int)((end-start)*value);
-                g.fill(start,getBottom()-5,end,getBottom()-3,0xFF454B53);g.fill(start,getBottom()-5,knob,getBottom()-3,0xFF8CA798);
-                ToolkitTheme.rounded(g,knob-2,getBottom()-6,4,4,2,ToolkitTheme.TEXT);
+                g.fill(start,getBottom()-5,end,getBottom()-3,0xFF353940);g.fill(start,getBottom()-5,knob,getBottom()-3,ToolkitTheme.RED_ACTIVE_TRACK);
+                ToolkitTheme.rounded(g,knob-2,getBottom()-6,4,4,2,ToolkitTheme.WHITE_PURE);
             }
         });slider.setMessage(Component.literal(name+": "+Math.round(setting*100)+"%"));controls.add(new Control(slider,top,22));contentHeight=Math.max(contentHeight,top+22);
     }
@@ -137,6 +140,19 @@ public final class ToolkitScreen extends Screen {
         if(advanced){
             pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),164);
         }
+    }
+    private void farming(){
+        var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
+        label("Crop Visibility",0);
+        label("Dim & desaturate immature crops for easy spotting.",15);
+        toggle("Clear Harvest textures",30,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
+        label(()->ClearHarvest.isEnabled()?"Status: Active (Clear Harvest)":"Status: Vanilla textures",58,ClearHarvest.isEnabled()?ToolkitTheme.ACCENT:ToolkitTheme.MUTED,1);
+
+        label("Crop Earnings",80);
+        label(()->com.moneybooster.BoosterStatsManager.averageLabel(),95,ToolkitTheme.TEXT,1.2f);
+        toggleCell("Crop earnings HUD",118,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        button(()->"HUD elements...",118,half+10,half,()->{hudReturnPage=9;go(8);});
+        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new com.moneybooster.BoosterStatsScreen(this)),()->"Edit HUD",()->go(5),148);
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
@@ -253,14 +269,20 @@ public final class ToolkitScreen extends Screen {
         ToolkitTheme.rounded(g,x-2,y+3,w+4,h+2,7,0x30000000);
         ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.PANEL);
         if(page==8){
-            g.text(font,"HUD elements",layout.bodyX(),y+16,ToolkitTheme.TEXT,false);
+            g.blit(LOGO,layout.bodyX(),y+12,layout.bodyX()+18,y+30,0f,1f,0f,1f);
+            g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.TEXT,false);
         }else if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,104,h,6,ToolkitTheme.SIDEBAR);g.fill(x+96,y,x+104,y+h,ToolkitTheme.SIDEBAR);
-            g.text(font,"SKYBLOCK",x+12,y+17,ToolkitTheme.TEXT,false);g.text(font,"Toolkit v"+UpdateManager.getCurrentVersion(),x+12,y+30,ToolkitTheme.MUTED,false);
+            g.blit(LOGO,x+8,y+10,x+44,y+46,0f,1f,0f,1f);
+            g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.ACCENT,false);
+            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.MUTED,false);
             g.text(font,PAGES[page],layout.bodyX(),y+18,ToolkitTheme.TEXT,false);
-            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen"};
+            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings"};
             g.text(font,descriptions[page],layout.bodyX(),y+34,ToolkitTheme.MUTED,false);
-        }else g.text(font,"Skyblock Toolkit v"+UpdateManager.getCurrentVersion(),x+12,y+15,ToolkitTheme.TEXT,false);
+        }else{
+            g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
+            g.text(font,"Skyblock Toolkit v"+UpdateManager.getCurrentVersion(),x+30,y+15,ToolkitTheme.TEXT,false);
+        }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
         for(var label:labels){String text=label.text().get();if(text.isEmpty())continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());

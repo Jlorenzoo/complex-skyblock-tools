@@ -1,0 +1,14 @@
+{
+  "pack": {
+    "description": "Clear Harvest: immature crops 90% gray and 25% darker; ripe crops keep their colors.",
+    "pack_format": 88,
+    "min_format": [
+      88,
+      0
+    ],
+    "max_format": [
+      88,
+      0
+    ]
+  }
+}

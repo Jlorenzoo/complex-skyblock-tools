@@ -24,20 +24,20 @@ public final class ToolkitButton extends Button {
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
         if(kind==1){
             if(selected){
-                ToolkitTheme.rounded(g,x,y,w,h,4,0xFF6F927E);
-                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,0xFF27332D);
+                ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.RED_PRIMARY);
+                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,ToolkitTheme.RED_DARK);
             }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.SURFACE);
             int pad=w<70?4:8;
             String clipped=font.substrByWidth(getMessage(),w-pad*2).getString();
-            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.TEXT:ToolkitTheme.MUTED,false);return;
+            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.WHITE_PURE:ToolkitTheme.MUTED,false);return;
         }
         if(kind!=2||hover)ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.HOVER:ToolkitTheme.SURFACE);
         if(kind==2){
             g.fill(x+8,y+h-1,x+w-8,y+h,0x185E6872);
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
             g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.TEXT,false);
-            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?0xFF688C78:0xFF434950);
-            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,0xFFE4E9E5);return;
+            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?ToolkitTheme.RED_ACTIVE_TRACK:0xFF353940);
+            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,ToolkitTheme.WHITE_PURE);return;
         }
         if(kind==3){
             boolean hasIcon=!icon.isEmpty();

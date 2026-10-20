@@ -7,6 +7,7 @@ public final class ToolkitConfig {
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
+    public boolean clearHarvest=true;
     public int fishHudX=12,fishHudY=58;
     public boolean ahSoundEnabled=true;
     public int ahSoundType=0; // 0=Pling, 1=Level Up, 2=Orb, 3=Amethyst, 4=Bell
@@ -25,6 +26,7 @@ public final class ToolkitConfig {
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("fishEarningsHud"))fishEarningsHud=j.get("fishEarningsHud").getAsBoolean();
             if(j.has("rateTestHud"))rateTestHud=j.get("rateTestHud").getAsBoolean();
+            if(j.has("clearHarvest"))clearHarvest=j.get("clearHarvest").getAsBoolean();
             if(j.has("fishHudX"))fishHudX=Math.clamp(j.get("fishHudX").getAsInt(),0,10000);
             if(j.has("fishHudY"))fishHudY=Math.clamp(j.get("fishHudY").getAsInt(),0,10000);
             if(j.has("chatEnabled"))chatEnabled=j.get("chatEnabled").getAsBoolean();
@@ -52,6 +54,7 @@ public final class ToolkitConfig {
             Files.createDirectories(path.getParent());temp=Files.createTempFile(path.getParent(),"toolkit-",".tmp");
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
             j.addProperty("cropEarningsHud",cropEarningsHud);j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
+            j.addProperty("clearHarvest",clearHarvest);
             j.addProperty("fishHudX",fishHudX);j.addProperty("fishHudY",fishHudY);
             j.addProperty("ahSoundEnabled",ahSoundEnabled);j.addProperty("ahSoundType",ahSoundType);j.addProperty("ahSoundVolume",ahSoundVolume);
             j.addProperty("readySoundGain",readySoundGain);j.addProperty("areaSoundGain",areaSoundGain);

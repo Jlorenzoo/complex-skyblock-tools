@@ -104,7 +104,7 @@ public class BoosterStatsScreen extends Screen {
             var last=BoosterStatsManager.history().latestMoneyBooster();
             g.text(font, "Latest booster bonus (estimated)", x + 12, y + 69, 0xFF9DA4AE, false);
             g.pose().pushMatrix(); g.pose().translate(x + 12, y + 83); g.pose().scale(1.65f, 1.65f);
-            g.text(font, last==null?"--":"+" + BoosterStatsManager.formatMoney(last.bonus), 0, 0, 0xFFB0CABA, false);
+            g.text(font, last==null?"--":"+" + BoosterStatsManager.formatMoney(last.bonus), 0, 0, com.skyblocktoolkit.ToolkitTheme.ACCENT, false);
             g.pose().popMatrix();
             String info=last==null?"No booster recorded yet":last.source+" / +"+last.percentage+"% / "+(last.durationSeconds<0?"?":BoosterHistoryScreen.time(last.durationSeconds));
             g.text(font,font.substrByWidth(Component.literal(info),w-24).getString(),x+12,y+105,0xFFB5BEC8,false);
@@ -118,9 +118,9 @@ public class BoosterStatsScreen extends Screen {
                 : RateTracker.isSettling() ? "Settling shop transactions..."
                 : RateTracker.isCompleted() ? "Completed / " + RateTracker.getElapsedSeconds() + "s" : "Ready to start";
             g.text(font, status, x + 12, y + 101, 0xFFDAE0E8, false);
-            row(g, y + 121, "Base rate / hour", BoosterStatsManager.formatMoney(RateTracker.getCurrentRatePerHour()), 0xFFB0CABA);
+            row(g, y + 121, "Base rate / hour", BoosterStatsManager.formatMoney(RateTracker.getCurrentRatePerHour()), com.skyblocktoolkit.ToolkitTheme.ACCENT);
             row(g, y + 141, "Base earned", BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), 0xFFDAE0E8);
-            row(g, y + 159, "Shop trades excluded", String.valueOf(RateTracker.getExcludedTransactions()), 0xFFB0CABA);
+            row(g, y + 159, "Shop trades excluded", String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.ACCENT);
             g.text(font, "Booster bonus removed from the base rate.", x + 12, y + 177, 0xFF9DA4AE, false);
         }
         g.pose().popMatrix();g.disableScissor();
@@ -129,8 +129,8 @@ public class BoosterStatsScreen extends Screen {
         int bx = BoosterHudOverlay.getBarX(this.width), by = BoosterHudOverlay.getBarY(mc);
         // Keep the draggable preview out of the menu's controls.
         if (by + 17 < y || by - 12 > y + cardH || bx + BoosterHudOverlay.BAR_WIDTH < x || bx > x + w) {
-            g.outline(bx - 3, by - 11, BoosterHudOverlay.BAR_WIDTH + 6, BoosterHudOverlay.BAR_HEIGHT + 14, 0xFF687C70);
-            BoosterHudOverlay.renderBar(g, mc, bx, by, "Booster preview / drag", 0.65f, false, false);
+            g.outline(bx - 3, by - 11, BoosterHudOverlay.BAR_WIDTH + 6, BoosterHudOverlay.BAR_HEIGHT + 14, 0xFF455A4F);
+            BoosterHudOverlay.renderBar(g, mc, bx, by, "§a+39% Booster: §f0m 42s", 0.65f, false, false);
         }
         super.extractRenderState(g, mouseX, mouseY, partialTick);
         if(com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud)BoosterHudOverlay.renderAverage(g,mc);

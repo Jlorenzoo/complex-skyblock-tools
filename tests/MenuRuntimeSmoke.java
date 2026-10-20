@@ -25,9 +25,25 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,0));stage++;return;
                 }
-                if(stage<=5){
-                    capture(mc,"menu-"+(stage-1));
-                    mc.setScreenAndShow(new ToolkitScreen(null,stage));stage++;return;
+                if(stage==1){
+                    capture(mc,"menu-0");
+                    mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;
+                }
+                if(stage==2){
+                    capture(mc,"farming-full");
+                    mc.setScreenAndShow(new ToolkitScreen(null,2));stage++;return;
+                }
+                if(stage==3){
+                    capture(mc,"menu-1");
+                    mc.setScreenAndShow(new ToolkitScreen(null,3));stage++;return;
+                }
+                if(stage==4){
+                    capture(mc,"menu-2");
+                    mc.setScreenAndShow(new ToolkitScreen(null,4));stage++;return;
+                }
+                if(stage==5){
+                    capture(mc,"menu-3");
+                    mc.setScreenAndShow(new ToolkitScreen(null,5));stage++;return;
                 }
                 if(stage==6){
                     capture(mc,"hud-layout");
@@ -76,9 +92,25 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage==11){
+                    mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;
+                }
+                if(stage==12){
+                    capture(mc,"farming");
+                    var screen=mc.gui.screen();
+                    var cfg=ToolkitConfig.get();
+                    boolean oldHarvest=ClearHarvest.isEnabled();
+                    for(var child:screen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("Clear Harvest textures")){b.onPress(null);break;}
+                    check(ClearHarvest.isEnabled()!=oldHarvest,"Clear Harvest toggle switches state");
+                    for(var child:screen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("Clear Harvest textures")){b.onPress(null);break;}
+                    check(ClearHarvest.isEnabled()==oldHarvest,"Clear Harvest toggle reverts state");
+                    stage++;return;
+                }
+                if(stage==13){
+                    check(Files.exists(output.resolve("screenshots/farming-full.png")),"Farming full screenshot written");
                     check(Files.exists(output.resolve("screenshots/hud-elements.png")),"HUD mini menu screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: real rendered module menus and HUD mini menu; independent crop/fish toggles, positions and persistence; HUD eye; toolbar-free canvas; Escape return; interactive blackout overlay; F6 wake\n");
-                    System.out.println("PASS: menu runtime interactions and screenshots");System.exit(0);
+                    check(Files.exists(output.resolve("screenshots/farming.png")),"Farming screenshot written");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: real rendered module menus, farming hub, crop visibility toggle, and HUD mini menu; independent crop/fish toggles, positions and persistence; HUD eye; toolbar-free canvas; Escape return; interactive blackout overlay; F6 wake\n");
+                    System.out.println("PASS: menu runtime interactions, farming hub and screenshots");System.exit(0);
                 }
 
             }catch(Throwable e){e.printStackTrace();System.exit(1);}
