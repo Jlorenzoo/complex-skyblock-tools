@@ -86,6 +86,9 @@ public final class UpdateManager {
                     JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
                     String tagName = json.has("tag_name") ? json.get("tag_name").getAsString() : "";
                     String version = tagName.replaceFirst("^[vV]", "").trim();
+                    if (!version.matches("^[0-9]+(\\.[0-9]+)*(-[a-zA-Z0-9.]+)?$")) {
+                        throw new SecurityException("Untrusted release tag format: " + tagName);
+                    }
                     String body = json.has("body") ? json.get("body").getAsString() : "";
 
                     String assetUrl = "";
@@ -94,11 +97,15 @@ public final class UpdateManager {
                             if (!el.isJsonObject()) continue;
                             JsonObject asset = el.getAsJsonObject();
                             String name = asset.has("name") ? asset.get("name").getAsString() : "";
-                            if (name.endsWith(".jar") && !name.contains("source")) {
+                            if (name.endsWith(".jar") && !name.contains("source") && !name.contains("..")) {
                                 assetUrl = asset.has("browser_download_url") ? asset.get("browser_download_url").getAsString() : "";
                                 break;
                             }
                         }
+                    }
+
+                    if (!assetUrl.isEmpty() && !assetUrl.startsWith("https://github.com/" + DEFAULT_REPO + "/releases/download/")) {
+                        throw new SecurityException("Untrusted download URL domain: " + assetUrl);
                     }
 
                     synchronized (LOCK) {
@@ -302,9 +309,14 @@ public final class UpdateManager {
     private static void scheduleWindowsDeletion(Path jarToDelete) {
         String os = System.getProperty("os.name", "").toLowerCase();
         if (os.contains("win")) {
+            String absPath = jarToDelete.toAbsolutePath().toString();
+            if (absPath.contains("\"") || absPath.contains("&") || absPath.contains("|") || absPath.contains(";") || absPath.contains("%")) {
+                jarToDelete.toFile().deleteOnExit();
+                return;
+            }
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
-                    new ProcessBuilder("cmd.exe", "/c", "timeout /t 2 /nobreak >nul & del /f /q \"" + jarToDelete.toAbsolutePath() + "\"").start();
+                    new ProcessBuilder("cmd.exe", "/c", "timeout /t 2 /nobreak >nul & del /f /q \"" + absPath + "\"").start();
                 } catch (Exception ignored) {}
             }));
         }
