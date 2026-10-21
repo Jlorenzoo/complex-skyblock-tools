@@ -7,13 +7,16 @@ import java.util.Locale;
 /** Observes the player's XP even when both XP HUDs are hidden. */
 public final class XpTracker {
     private static final XpEarnings earnings = new XpEarnings();
-    private static final RollingEarnings total = new RollingEarnings(), base = new RollingEarnings();
+    private static final RollingEarnings total = new RollingEarnings(60000, 0), base = new RollingEarnings(60000, 0);
     private static Object player;
     private static boolean synced;
+    private static long averageUpdated;
+    private static double averageRate, baseAverageRate;
 
     public static void reset() {
         earnings.reset(); player = null; synced = false;
         long now = System.currentTimeMillis(); total.reset(now); base.reset(now);
+        averageUpdated = 0; averageRate = baseAverageRate = 0;
     }
 
     public static void onExperienceSync() {
@@ -36,16 +39,28 @@ public final class XpTracker {
         int pct = BoosterManager.timers.clock(BoosterTimers.Type.XP).active(now)
                 ? BoosterManager.timers.percentage(BoosterTimers.Type.XP) : 0;
         var gain = earnings.observe(mc.player.experienceLevel, mc.player.experienceProgress, pct, now);
-        if (gain == null) return;
-        total.add(gain.total(), gain.from(), gain.to()); base.add(gain.base(), gain.from(), gain.to());
-        RateTracker.onXpGain(gain);
+        if (gain != null) {
+            total.add(gain.total(), gain.from(), gain.to()); base.add(gain.base(), gain.from(), gain.to());
+            RateTracker.onXpGain(gain);
+        }
+        if (now - averageUpdated >= 1000) {
+            averageRate = total.perHour(now);
+            baseAverageRate = base.perHour(now);
+            averageUpdated = now;
+        }
     }
 
     public static String averageLabel() {
         long now = System.currentTimeMillis();
+        if (now - averageUpdated >= 1000) {
+            averageRate = total.perHour(now);
+            baseAverageRate = base.perHour(now);
+            averageUpdated = now;
+        }
         boolean boosted = ToolkitConfig.get().xpIncludesBoosters;
-        return (boosted ? "XP (10s): " : "XP base (10s): ")
-                + (total.ready(now) ? format((boosted ? total : base).perHour(now)) : "-- XP") + "/h";
+        double rate = boosted ? averageRate : baseAverageRate;
+        return (boosted ? "XP (60s): " : "XP base (60s): ")
+                + (total.ready(now) ? format(rate) : "-- XP") + "/h";
     }
 
     public static String format(double value) {

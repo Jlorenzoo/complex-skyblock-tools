@@ -2,7 +2,7 @@ package com.moneybooster;
 public class RollingEarningsTest {
  static void expect(double got,double wanted){if(Math.abs(got-wanted)>.01)throw new AssertionError(got+" expected "+wanted);}
  public static void main(String[] args){
-  var avg=new RollingEarnings();avg.reset(0);avg.add(10000,0,10000);expect(avg.perHour(12000),3600000);expect(avg.perHour(17000),1800000);expect(avg.perHour(22000),0);
+  var avg=new RollingEarnings();avg.reset(0);avg.add(10000,0,10000);expect(avg.perHour(12000),3600000);expect(avg.perHour(22000),1800000);expect(avg.perHour(32000),1200000);expect(avg.perHour(62000),600000);expect(avg.perHour(72000),0);
   avg.reset(0);avg.add(5000,5000,10000);expect(avg.perHour(12000),1800000);
   avg.reset(0);avg.add(1000,0,1000);expect(avg.perHour(3000),3600000);expect(avg.perHour(1000),0);
   avg.reset(0);avg.add(Double.NaN,0,1000);avg.add(100,1,1);expect(avg.perHour(12000),0);

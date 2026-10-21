@@ -22,7 +22,7 @@ public class BoosterStatsManager {
     private static long averageUpdated;
     private static double averageRate, baseAverageRate;
     public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0; }
-    public static String averageLabel() { return (ModConfig.getInstance().includesBoostersInAverage()?"Crops (10s): ":"Crops base (10s): ") + (average.ready(System.currentTimeMillis()) ? formatMoney(ModConfig.getInstance().includesBoostersInAverage()?averageRate:baseAverageRate) : "--") + "/h"; }
+    public static String averageLabel() { return (ModConfig.getInstance().includesBoostersInAverage()?"Crops (60s): ":"Crops base (60s): ") + (average.ready(System.currentTimeMillis()) ? formatMoney(ModConfig.getInstance().includesBoostersInAverage()?averageRate:baseAverageRate) : "--") + "/h"; }
     private static double lastKnownBalance = -1;
     private static final MoneyLedger ledger = new MoneyLedger(BoosterStatsManager::onSettled);
     private static int excludedTransactions;

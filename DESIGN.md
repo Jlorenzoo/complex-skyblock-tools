@@ -82,9 +82,9 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
   - Prep Countdown: `§eStarting in §c§l{n}s...`
   - Completed: `§aTest Done: §a§l{rate}/h`
 
-- **Crop Average**: `Crops (10s): ${rate}/h` in clean neutral white `0xFFFFFFFF`.
+- **Crop Average**: `Crops (60s): ${rate}/h` in clean neutral white `0xFFFFFFFF`, adaptively calculating over active duration up to 60s.
 - **Fishing Estimate**: `Fishing est. ({window}): ${rate}/h` in clean neutral white `0xFFFFFFFF`.
-- **XP Average**: `XP (10s): {rate} XP/h` or `XP base (10s): {rate} XP/h`, with independent visibility and position. It can appear alongside either money HUD; the XP booster preference is shared with the Minecraft XP rate-test view.
+- **XP Average**: `XP (60s): {rate} XP/h` or `XP base (60s): {rate} XP/h`, with independent visibility and position, throttled to 1-second display updates and adaptively calculating over active duration up to 60s. It can appear alongside either money HUD; the XP booster preference is shared with the Minecraft XP rate-test view.
 - All three HUD elements support click-and-drag re-positioning via the HUD Layout Canvas (`Shift` menu → **Edit HUD**).
 - Rate tests offer Money and Minecraft XP tabs, the existing duration choices, and a palette-backed **Include XP boosters** pill for XP. Both measures share the same sample clock. The XP view shows actual or base XP/hour, XP gained and booster bonus. Compact screens scroll the body while keeping Start/Stop and Done fixed. HUD previews stay outside the rate-test controls.
 
@@ -123,7 +123,7 @@ When writing in-game messages, tooltips, or HUD labels, adhere to this formattin
 | :--- | :--- | :--- |
 | `§c` | Red (Crimson) | Brand tags, active multipliers (`§c+39%`), alert headers. |
 | `§f` | White | Quantities, countdown timers, earnings amounts (`§f$1.2M/h`). |
-| `§7` | Gray | Unit suffixes, secondary annotations (`§7/h`, `§7(10s)`). |
+| `§7` | Gray | Unit suffixes, secondary annotations (`§7/h`, `§7(60s)`). |
 | `§8` | Dark Gray | Dividers, subtle brackets (`§8|`, `§8[`). |
 | `§e` | Yellow | Temporary warnings or pending countdowns. |
 | `§l` | Bold | Emphasized numbers or critical alerts. |
