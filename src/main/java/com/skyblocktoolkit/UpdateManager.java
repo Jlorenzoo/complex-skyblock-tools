@@ -204,11 +204,17 @@ public final class UpdateManager {
 
                 // Handle old jar cleanup safely
                 Path currentJar = getCurrentJarPath();
-                if (currentJar != null && Files.exists(currentJar) && !currentJar.equals(targetJar)) {
+                if (currentJar != null && Files.exists(currentJar)) {
+                    boolean same = false;
                     try {
-                        Files.deleteIfExists(currentJar);
-                    } catch (Exception ex) {
-                        scheduleWindowsDeletion(currentJar);
+                        same = Files.isSameFile(currentJar, targetJar) || currentJar.toRealPath().equals(targetJar.toRealPath());
+                    } catch (Exception ignored) {}
+                    if (!same && !currentJar.equals(targetJar)) {
+                        try {
+                            Files.deleteIfExists(currentJar);
+                        } catch (Exception ex) {
+                            scheduleWindowsDeletion(currentJar);
+                        }
                     }
                 }
 
@@ -279,13 +285,27 @@ public final class UpdateManager {
             Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
             if (!Files.isDirectory(modsDir)) return;
             Path currentJar = getCurrentJarPath();
+            String currentVersion = getCurrentVersion();
+            String activeJarName = "skyblock-toolkit-" + currentVersion + ".jar";
             try (var stream = Files.list(modsDir)) {
                 for (Path p : stream.toList()) {
                     String name = p.getFileName().toString();
                     if (name.endsWith(".download") || name.endsWith(".pending") || name.contains(".bak.")) {
                         try { Files.deleteIfExists(p); } catch (Exception ignored) {}
+                        continue;
                     }
-                    if (currentJar != null && !p.equals(currentJar) && name.startsWith("skyblock-toolkit-") && name.endsWith(".jar")) {
+                    if (name.equals(activeJarName)) {
+                        // Current version jar: never delete under any circumstance
+                        continue;
+                    }
+                    if (currentJar != null) {
+                        try {
+                            if (Files.isSameFile(p, currentJar) || p.toRealPath().equals(currentJar.toRealPath())) {
+                                continue;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    if (name.startsWith("skyblock-toolkit-") && name.endsWith(".jar")) {
                         try { Files.deleteIfExists(p); } catch (Exception ignored) {}
                     }
                 }
@@ -299,7 +319,9 @@ public final class UpdateManager {
                     var paths = c.getOrigin().getPaths();
                     if (!paths.isEmpty()) {
                         Path p = paths.get(0);
-                        if (Files.isRegularFile(p)) return p;
+                        if (Files.isRegularFile(p)) {
+                            try { return p.toRealPath(); } catch (Exception e) { return p.toAbsolutePath().normalize(); }
+                        }
                     }
                     return null;
                 })
