@@ -20,6 +20,14 @@
 
 ## Quick Installation
 
+### Minecraft 1.21.11 teammates
+
+Use the separate **[Fabric 1.21.11 download](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0-mc1.21.11)**:
+`skyblock-toolkit-1.1.0+mc1.21.11.jar`. It requires Java 21, Fabric Loader >=0.18.4
+and Fabric API for 1.21.11. Place it in your 1.21.11 profile's `mods` folder and
+press **Right Shift**. See [installation and build instructions](versions/1.21.11/README.md).
+The instructions and Prism pack below target Minecraft 26.2.
+
 ### Method 1: Fabric Mod (Recommended)
 Works seamlessly with your existing Fabric profile alongside **Litematica**, **Sodium**, **Iris**, and other client mods.
 

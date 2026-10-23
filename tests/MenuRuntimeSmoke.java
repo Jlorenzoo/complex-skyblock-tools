@@ -37,6 +37,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
+                    check(((com.skyblocktoolkit.mixin.BossHealthOverlayAccessor)mc.gui.hud.getBossOverlay()).toolkit$getEvents().isEmpty(),"Production boss-bar accessor is remapped");
+                    check(((com.skyblocktoolkit.mixin.ChatComponentAccessor)mc.gui.hud.getChat()).toolkit$getTrimmedMessages().isEmpty(),"Production chat accessor is remapped");
+                    check(java.util.Arrays.stream(net.minecraft.client.gui.screens.ChatScreen.class.getDeclaredMethods()).anyMatch(m->m.getName().contains("toolkit$onMouseClicked")),"Production chat selection mixin applies");
                     mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,0));stage++;return;
                 }

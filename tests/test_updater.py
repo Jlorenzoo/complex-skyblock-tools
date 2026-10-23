@@ -138,7 +138,15 @@ def test_clean_old_backups_with_symlinked_mods():
         instance_dir = temp / "instance"
         instance_dir.mkdir()
         symlink_mods = instance_dir / "mods"
-        symlink_mods.symlink_to(real_mods)
+        try:
+            symlink_mods.symlink_to(real_mods, target_is_directory=True)
+        except OSError as error:
+            if os.name != "nt" or error.winerror != 1314:
+                raise
+            # Windows junctions exercise canonical paths without Developer Mode.
+            import subprocess
+            subprocess.run(["cmd.exe", "/c", "mklink", "/J", str(symlink_mods), str(real_mods)],
+                           check=True, capture_output=True)
         
         # Populate real_mods with active jar, old version jar, and temporary junk
         active_jar = real_mods / "skyblock-toolkit-1.1.0.jar"

@@ -1,0 +1,126 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
+}
+
+version = '1.1.0'
+group = 'com.skyblocktoolkit'
+base { archivesName = 'skyblock-toolkit' }
+repositories { mavenCentral() }
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings loom.officialMojangMappings()
+    modImplementation 'net.fabricmc:fabric-loader:0.18.4'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
+}
+
+// Keep features and bug fixes shared. Only the API names below and the small
+// version-specific overrides differ from the primary 26.2 sources.
+def portSource = { String source ->
+    source = source.replace('\r\n', '\n')
+    [
+        'GuiGraphicsExtractor': 'GuiGraphics',
+        'extractWidgetRenderState': 'renderWidget',
+        'extractContents': 'renderContents',
+        'extractRenderState': 'render',
+        'setScreenAndShow': 'setScreen',
+        'ClientCommands': 'ClientCommandManager',
+        'net.minecraft.client.multiplayer.chat.GuiMessage': 'net.minecraft.client.GuiMessage',
+        'net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper': 'net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper',
+        'KeyMappingHelper.registerKeyMapping': 'KeyBindingHelper.registerKeyBinding',
+        '.gui.hud.getChat()': '.gui.getChat()',
+        '.gui.hud.getBossOverlay()': '.gui.getBossOverlay()',
+        '.gui.hud != null': '.gui != null',
+        '.gui.hud==null': '.gui==null',
+        '.gui.hud.isHidden()': '.options.hideGui',
+        '.gui.hud': '.gui',
+        '.gui.screen()': '.screen',
+        '.gui.overlay()': '.getOverlay()',
+        '.resizeGui()': '.resizeDisplay()',
+        '.gameRenderer.mainRenderTarget()': '.getMainRenderTarget()',
+        '.centeredText(': '.drawCenteredString(',
+        'Screens.getWidgets(': 'Screens.getButtons(',
+        '    @Shadow\n    private ChatComponent.DisplayMode displayMode;': '',
+        'this.displayMode': 'true',
+        '.outline(': '.renderOutline(',
+        '.item(': '.renderItem('
+    ].each { from, to -> source = source.replace(from, to) }
+    source = source.replaceAll(/\b(g|graphics|extractor)\.text\(/, '$1.drawString(')
+    source = source.replaceAll(/(\b(?:mc|m)\.player|\bplayer)\.sendSystemMessage\(/, 'com.skyblocktoolkit.ClientMessages.system($1, ')
+    source = source.replaceAll(/(\bmc\.player)\.sendOverlayMessage\(/, 'com.skyblocktoolkit.ClientMessages.overlay($1, ')
+    return source
+}
+
+def generated = layout.buildDirectory.dir('generated/shared')
+tasks.register('prepareSharedSources') {
+    inputs.dir('../../src/main')
+    inputs.dir('../../tests')
+    inputs.dir('src/main/java')
+    outputs.dir(generated)
+    doLast {
+        delete generated
+        ['main': file('../../src/main/java'), 'test': file('../../tests')].each { kind, sourceRoot ->
+            fileTree(sourceRoot).matching { include '**/*.java' }.each { source ->
+                def relative = sourceRoot.toPath().relativize(source.toPath()).toString()
+                if (kind == 'main' && file("src/main/java/${relative}").exists()) return
+                def target = generated.get().file("${kind}/${relative}").asFile
+                target.parentFile.mkdirs()
+                target.setText(portSource(source.getText('UTF-8')), 'UTF-8')
+            }
+        }
+    }
+}
+sourceSets {
+    main.java.srcDir generated.map { it.dir('main') }
+    test.java.srcDir generated.map { it.dir('test') }
+    main.resources.srcDir '../../src/main/resources'
+}
+tasks.withType(JavaCompile).configureEach {
+    dependsOn prepareSharedSources
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+tasks.named('processResources') {
+    filesMatching('fabric.mod.json') {
+        filter { it.replace('~26.2', '~1.21.11').replace('>=25', '>=21').replace('>=0.19.0', '>=0.18.4') }
+    }
+    filesMatching('skyblocktoolkit.mixins.json') { filter { it.replace('JAVA_25', 'JAVA_21') } }
+    filesMatching('resourcepacks/clear_harvest/pack.mcmeta') { filter { it.replace('88', '75') } }
+}
+tasks.named('jar') { archiveVersion = "${project.version}+mc1.21.11"; from('../../LICENSE') }
+tasks.named('remapJar') { archiveVersion = "${project.version}+mc1.21.11" }
+tasks.named('test') { enabled = false } // Suites use standalone main methods.
+def regressionClasses = [
+    'com.moneybooster.BoosterClockTest', 'com.moneybooster.BoosterHistoryTest',
+    'com.moneybooster.BoosterTimersTest', 'com.moneybooster.CoconutAlertTest',
+    'FishingEarningsTest', 'com.fishingpings.FishingSignalsTest',
+    'com.moneybooster.MenuLayoutTest', 'com.moneybooster.MoneyLedgerTest',
+    'com.moneybooster.RollingEarningsTest', 'com.moneybooster.XpEarningsTest',
+    'com.moneybooster.EarningsActivityTest', 'ToolkitLayoutTest',
+    'ToolkitPaletteTest', 'com.skyblocktoolkit.AhSaleNotifierTest',
+    'com.skyblocktoolkit.UpdateChannelTest'
+]
+regressionClasses.each { className ->
+    def suite = tasks.register('run' + className.tokenize('.').last(), JavaExec) {
+        dependsOn testClasses
+        classpath = sourceSets.test.runtimeClasspath
+        mainClass = className
+        if (className.endsWith('BoosterHistoryTest')) args layout.buildDirectory.file('test-history.json').get().asFile.absolutePath
+    }
+    tasks.named('check') { dependsOn suite }
+}
+
+// Package the existing offline UI exercise as a real intermediary mod so the
+// production smoke check validates the distributed jar, not only named classes.
+tasks.register('menuSmokeJar', Jar) {
+    dependsOn testClasses
+    archiveClassifier = 'menu-smoke-dev'
+    from(sourceSets.test.output) { include 'com/skyblocktoolkit/MenuRuntimeSmoke*.class' }
+    from('src/smoke')
+}
+tasks.register('remapMenuSmoke', net.fabricmc.loom.task.RemapJarTask) {
+    dependsOn menuSmokeJar
+    inputFile = menuSmokeJar.archiveFile
+    classpath.from(sourceSets.main.output, sourceSets.main.compileClasspath)
+    archiveClassifier = 'menu-smoke'
+    addNestedDependencies = false
+}

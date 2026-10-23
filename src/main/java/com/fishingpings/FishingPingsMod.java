@@ -11,13 +11,12 @@ import com.skyblocktoolkit.ToolkitConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Items;
-import java.lang.reflect.Field;
+import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
     private final FishingSignals signals=new FishingSignals();
     private FishingConfig config;
-    private Field bossEvents;
     private Object lastLevel;
     private long secondWarningAt=-1;
     private boolean warnedAboutBossAccess, openMenu,warningPreview;
@@ -28,7 +27,6 @@ public final class FishingPingsMod implements ClientModInitializer {
     public void warningChanged(){if(!config.warningEnabled&&!warningPreview)secondWarningAt=-1;}
     @Override public void onInitializeClient(){
         config=new FishingConfig();
-        try{bossEvents=BossHealthOverlay.class.getDeclaredField("events");bossEvents.setAccessible(true);}catch(Exception e){System.err.println("[FishingPings] Boss bar access unavailable; actionbar depth detection remains enabled.");}
         ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
@@ -49,18 +47,15 @@ public final class FishingPingsMod implements ClientModInitializer {
             }
             if(mc.player==null||mc.level==null)return;
             signals.cast(mc.player.fishing==null?null:mc.player.fishing.getUUID(),now);
-            if((!config.depthEnabled&&!config.snapEnabled)||bossEvents==null||mc.gui==null||mc.gui.hud==null)return;
+            if((!config.depthEnabled&&!config.snapEnabled)||mc.gui==null||mc.gui.hud==null)return;
             try{
                 var overlay=mc.gui.hud.getBossOverlay();
                 if(overlay==null)return;
-                Object value=bossEvents.get(overlay);
-                if(value instanceof Map<?,?> events){for(Object event:events.values()){
-                    if(event instanceof net.minecraft.client.gui.components.LerpingBossEvent bar)checkDepth(mc,bar.getName().getString(),now);
-                }
-                    if(config.snapEnabled&&mc.player.fishing!=null
-                        &&(mc.player.getMainHandItem().is(Items.FISHING_ROD)||mc.player.getOffhandItem().is(Items.FISHING_ROD))
-                        &&signals.snapped(null,now))snapSound(mc);
-                }
+                var events=((BossHealthOverlayAccessor)overlay).toolkit$getEvents();
+                for(var bar:events.values())checkDepth(mc,bar.getName().getString(),now);
+                if(config.snapEnabled&&mc.player.fishing!=null
+                    &&(mc.player.getMainHandItem().is(Items.FISHING_ROD)||mc.player.getOffhandItem().is(Items.FISHING_ROD))
+                    &&signals.snapped(null,now))snapSound(mc);
             }catch(Exception e){if(!warnedAboutBossAccess){warnedAboutBossAccess=true;System.err.println("[FishingPings] Cannot read boss bars: "+e.getMessage());}}
         });
 

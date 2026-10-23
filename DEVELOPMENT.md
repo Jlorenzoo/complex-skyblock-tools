@@ -12,6 +12,15 @@ Hourly rate tests collect both money and Minecraft XP during the same 1-minute, 
 
 ## Build and verify
 
+The additional Fabric **1.21.11 / Java 21** target lives in
+[`versions/1.21.11`](versions/1.21.11/README.md). Run its Gradle wrapper with
+`build` to compile/remap the shared features and run the Java regression suites.
+Its jar has a `+mc1.21.11` filename suffix; the root Python builder continues to
+produce the 26.2 jar. Never install the backport into the configured 26.2 profile.
+The updater selects release assets by Minecraft version and checks the downloaded
+jar metadata before installation. The `Fabric 1.21.11` GitHub workflow publishes
+build artifacts and checksums on relevant pushes and pull requests.
+
 Use Python 3 and a Java 25 JDK. `python build.py` creates `build/skyblock-toolkit-1.1.0.jar` and never installs it. Linux Prism defaults and `PRISM_DATA`, `MC_JAR`, `FAPI_JAR`, `LOADER_JAR`, `JAVAC`, and `LIBRARIES_DIR` overrides are supported. For another launcher, configure ignored `local-settings.json` with absolute paths:
 
 - `minecraft_jar`, `fabric_api_jar`, `loader_jar`, `javac`, `libraries_dir`, `mods_dir`

@@ -9,8 +9,7 @@ import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.world.item.Items;
 import com.skyblocktoolkit.ToolkitTheme;
 
-import java.lang.reflect.Field;
-import java.util.Map;
+import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 
 public class BoosterHudOverlay implements HudElement {
     public static final int BAR_WIDTH = 104;
@@ -18,26 +17,10 @@ public class BoosterHudOverlay implements HudElement {
     public static final float TEXT_SCALE = 0.75f;
     public static final int TIMER_SPACING = 24;
 
-    private static Field eventsField;
-
-    static {
-        try {
-            eventsField = BossHealthOverlay.class.getDeclaredField("events");
-            eventsField.setAccessible(true);
-        } catch (Exception ignored) {
-        }
-    }
-
     public static int getBossBarCount(Minecraft mc) {
-        if (mc.gui != null && mc.gui.hud != null && eventsField != null) {
-            try {
-                BossHealthOverlay overlay = mc.gui.hud.getBossOverlay();
-                if (overlay != null) {
-                    Map<?, ?> map = (Map<?, ?>) eventsField.get(overlay);
-                    if (map != null) return map.size();
-                }
-            } catch (Exception ignored) {
-            }
+        if (mc.gui != null && mc.gui.hud != null) {
+            BossHealthOverlay overlay = mc.gui.hud.getBossOverlay();
+            if (overlay != null) return ((BossHealthOverlayAccessor) overlay).toolkit$getEvents().size();
         }
         return 0;
     }

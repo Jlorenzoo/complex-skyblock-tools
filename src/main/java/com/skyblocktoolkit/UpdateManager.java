@@ -28,7 +28,7 @@ public final class UpdateManager {
     }
 
     private static final String DEFAULT_REPO = "Jlorenzoo/complex-skyblock-tools";
-    private static final String GITHUB_API_URL = "https://api.github.com/repos/" + DEFAULT_REPO + "/releases/latest";
+    private static final String GITHUB_API_URL = "https://api.github.com/repos/" + DEFAULT_REPO + "/releases?per_page=30";
 
     private static volatile State state = State.IDLE;
     private static volatile String latestVersion = "";
@@ -39,6 +39,11 @@ public final class UpdateManager {
     private static final Object LOCK = new Object();
 
     private UpdateManager() {}
+
+    private static String minecraftVersion() {
+        return FabricLoader.getInstance().getModContainer("minecraft")
+            .orElseThrow().getMetadata().getVersion().getFriendlyString();
+    }
 
     public static State getState() { return state; }
     public static String getLatestVersion() { return latestVersion; }
@@ -83,23 +88,26 @@ public final class UpdateManager {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {
-                    JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
-                    String tagName = json.has("tag_name") ? json.get("tag_name").getAsString() : "";
-                    String version = tagName.replaceFirst("^[vV]", "").trim();
-                    if (!version.matches("^[0-9]+(\\.[0-9]+)*(-[a-zA-Z0-9.]+)?$")) {
-                        throw new SecurityException("Untrusted release tag format: " + tagName);
-                    }
-                    String body = json.has("body") ? json.get("body").getAsString() : "";
-
+                    String version = current;
+                    String body = "";
                     String assetUrl = "";
-                    if (json.has("assets") && json.get("assets").isJsonArray()) {
-                        for (JsonElement el : json.getAsJsonArray("assets")) {
-                            if (!el.isJsonObject()) continue;
-                            JsonObject asset = el.getAsJsonObject();
-                            String name = asset.has("name") ? asset.get("name").getAsString() : "";
-                            if (name.startsWith("skyblock-toolkit-") && name.endsWith(".jar") && !name.contains("source") && !name.contains("..")) {
-                                assetUrl = asset.has("browser_download_url") ? asset.get("browser_download_url").getAsString() : "";
-                                break;
+                    for (JsonElement release : JsonParser.parseString(response.body()).getAsJsonArray()) {
+                        JsonObject json = release.getAsJsonObject();
+                        if ((json.has("prerelease") && json.get("prerelease").getAsBoolean())
+                            || (json.has("draft") && json.get("draft").getAsBoolean())) continue;
+                        String candidate = UpdateChannel.releaseVersion(json.has("tag_name") ? json.get("tag_name").getAsString() : "");
+                        if (candidate.isEmpty() || compareVersions(candidate, version) < 0) continue;
+                        if (json.has("assets") && json.get("assets").isJsonArray()) {
+                            for (JsonElement el : json.getAsJsonArray("assets")) {
+                                if (!el.isJsonObject()) continue;
+                                JsonObject asset = el.getAsJsonObject();
+                                String name = asset.has("name") ? asset.get("name").getAsString() : "";
+                                if (UpdateChannel.matches(name, candidate, minecraftVersion())) {
+                                    assetUrl = asset.has("browser_download_url") ? asset.get("browser_download_url").getAsString() : "";
+                                    version = candidate;
+                                    body = json.has("body") ? json.get("body").getAsString() : "";
+                                    break;
+                                }
                             }
                         }
                     }
@@ -164,7 +172,8 @@ public final class UpdateManager {
                     Files.createDirectories(modsDir);
                 }
 
-                tempDownload = modsDir.resolve("skyblock-toolkit-" + latestVersion + ".jar.download");
+                String jarName = UpdateChannel.jarName(latestVersion, minecraftVersion());
+                tempDownload = modsDir.resolve(jarName + ".download");
 
                 HttpClient client = HttpClient.newBuilder()
                         .followRedirects(HttpClient.Redirect.NORMAL)
@@ -196,10 +205,20 @@ public final class UpdateManager {
                     if (entry == null) {
                         throw new IOException("Downloaded archive does not contain fabric.mod.json.");
                     }
+                    try (Reader reader = new InputStreamReader(zip.getInputStream(entry), java.nio.charset.StandardCharsets.UTF_8)) {
+                        JsonObject metadata = JsonParser.parseReader(reader).getAsJsonObject();
+                        if (!metadata.get("id").getAsString().equals("skyblocktoolkit")
+                            || !metadata.get("version").getAsString().equals(latestVersion)
+                            || !net.fabricmc.loader.api.metadata.version.VersionPredicate.parse(
+                                metadata.getAsJsonObject("depends").get("minecraft").getAsString())
+                                .test(net.fabricmc.loader.api.Version.parse(minecraftVersion()))) {
+                            throw new IOException("Downloaded toolkit does not match this Minecraft version.");
+                        }
+                    }
                 }
 
                 // Install the new jar into mods/
-                Path targetJar = modsDir.resolve("skyblock-toolkit-" + latestVersion + ".jar");
+                Path targetJar = modsDir.resolve(jarName);
                 Files.move(tempDownload, targetJar, StandardCopyOption.REPLACE_EXISTING);
 
                 // Handle old jar cleanup safely
@@ -286,7 +305,7 @@ public final class UpdateManager {
             if (!Files.isDirectory(modsDir)) return;
             Path currentJar = getCurrentJarPath();
             String currentVersion = getCurrentVersion();
-            String activeJarName = "skyblock-toolkit-" + currentVersion + ".jar";
+            String activeJarName = UpdateChannel.jarName(currentVersion, minecraftVersion());
             try (var stream = Files.list(modsDir)) {
                 for (Path p : stream.toList()) {
                     String name = p.getFileName().toString();
