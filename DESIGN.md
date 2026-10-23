@@ -92,26 +92,30 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
 
 ## 4. Menu & Lunar-Style Navigation Hub
 
-The toolkit hub (`ToolkitScreen`) uses a modern sidebar-and-card layout.
+The toolkit hub (`ToolkitScreen`) uses a sidebar with compact settings rows. Categories follow the activity order: Boosters, Farming, Fishing, Chat Copy, Auction, Blackout, then General. General collects keyboard shortcuts and HUD management. Each category groups controls under named sections; settings are no longer hidden behind an Advanced toggle.
+
+Use 20px control rows, small gaps between related settings and extra space before section headings. Most settings have a left-aligned label and a right-aligned switch, short value field or slider. Actions use small, flat surfaces without an outline; paired actions have equal widths. Do not stretch numeric fields, key bindings or sliders across the entire content area. Input text has no shadow in either theme. The hub is at most 480 × 330 GUI pixels, and moves navigation to a compact top row on narrow or short screens.
+
+Search stays above the scrolling content. It searches section titles, categories and setting keywords across every category, ignoring case and matching all entered words. Results show a category / section path and open that section directly. Ctrl+F / Cmd+F focuses search; Escape clears the query first, restoring the previous scroll position. Theme changes retain the query. Page Up / Page Down scroll the body when an input is not focused. Close and Edit HUD stay in the footer; leaving the HUD canvas returns to its originating category.
 
 ### 4.1. Navigation Tabs
 - **Default State**: Transparent surface and `palette().muted()` text.
 - **Hover State**: `palette().surface()` rounded pill.
 - **Selected Tab**:
-  - Outer border and text: `palette().accent()`.
+  - Text: `palette().accent()`, without an outer outline.
   - Inner fill: `palette().accentSurface()`.
 
 ### 4.2. Toggle Switches
-- **Track**: `24px` × `12px` rounded capsule.
+- **Track**: `20px` × `10px` rounded capsule.
   - Off: `palette().track()`.
   - On: `palette().accentTrack()`.
-- **Slider Thumb**: `8px` × `8px` rounded pill.
+- **Slider Thumb**: `6px` × `6px` rounded pill.
   - Both states: `palette().onAccent()`, with position indicating off/on.
 
 ### 4.3. Sliders
 - **Track Background**: `palette().track()`.
 - **Filled Track**: `palette().accentTrack()`.
-- **Slider Knob**: `4px` × `4px` thumb using `palette().onAccent()`.
+- **Slider Knob**: `4px` × `6px` thumb using `palette().accent()`. Keep the track and percentage on the right, aligned with other setting values; mouse input must map to the visible track.
 
 ---
 

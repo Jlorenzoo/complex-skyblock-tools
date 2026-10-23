@@ -21,7 +21,10 @@ public final class ToolkitScreen extends Screen {
     private int page,scroll,contentHeight,dragging,soundReturnPage=2,hudReturnPage=1;
     private double grabX,grabY;
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
-    private boolean fishEarnings,advanced;
+    private boolean fishEarnings;
+    private String query="",jumpSection="";
+    private EditBox searchBox;
+    private int savedScroll,layoutReturnPage=1;
     private final List<EditBox> priceFields=new ArrayList<>();
     private final List<EditBox> settingFields=new ArrayList<>();
     private ToolkitLayout layout;
@@ -31,20 +34,21 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,9);}
+    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General"};
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,10);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==1||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
         if(page==8){hudElements();updateControls();return;}
-        int[] targets={1,9,2,3,4,7};String[] names={"Boosters","Farming","Fishing","Chat Copy","Auction","Blackout"};
-        String[] compactNames={"Boost","Farm","Fish","Chat","AH","Dim"};
+        int[] targets={1,9,2,3,4,7,10};String[] names={"Boosters","Farming","Fishing","Chat Copy","Auction","Blackout","General"};
+        String[] compactNames={"Boost","Farm","Fish","Chat","Sales","Dim","Keys"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
-            int by=layout.compact()?y+34:y+54+i*23,bw=layout.compact()?(w-12)/targets.length-2:96;
-            addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,layout.compact()?22:20,page==target));
+            int by=layout.compact()?y+36:y+54+i*25,bw=layout.compact()?(w-12)/targets.length-2:104;
+            var nav=addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,20,page==target));
+            nav.setTooltip(Tooltip.create(Component.literal(names[i])));
         }
         addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+4,layout.footerY(),96,20));
         addRenderableWidget(ToolkitButton.action("Close",b->onClose(),x+w-76,layout.footerY(),64,20));
@@ -56,7 +60,7 @@ public final class ToolkitScreen extends Screen {
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
                     UpdateManager.triggerUpdateFromCommand();
                     if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },x+4,y+54+6*23+2,96,20));
+                },x+4,y+54+7*25+2,104,20));
             }else{
                 int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
@@ -66,10 +70,48 @@ public final class ToolkitScreen extends Screen {
             }
         }
 
-        switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 8->hudElements();case 9->farming();}
-        updateControls();
+        initSearch();
+        buildBody();
     }
-    private void go(int next){persist();page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;advanced=false;rebuildWidgets();}
+    private void go(int next){persist();if(next==5)layoutReturnPage=page==8?hudReturnPage:page;page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;fishEarnings=false;query="";jumpSection="";rebuildWidgets();}
+    private void initSearch(){
+        int top=layout.y()+(layout.compact()?68:50);
+        searchBox=addRenderableWidget(new EditBox(font,layout.bodyX()+8,top+6,layout.bodyWidth()-54,14,Component.literal("Search all settings")));
+        searchBox.setBordered(false);searchBox.setTextShadow(false);searchBox.setMaxLength(80);
+        searchBox.setTextColor(ToolkitTheme.palette().text());
+        searchBox.setTooltip(Tooltip.create(Component.literal("Search every category · Ctrl+F / Cmd+F")));
+        searchBox.setValue(query);
+        searchBox.setResponder(text->{
+            if(query.isBlank()&&!text.isBlank())savedScroll=scroll;
+            query=text;scroll=text.isBlank()?savedScroll:0;
+            clearBody();buildBody();
+        });
+        var clear=addRenderableWidget(ToolkitButton.action("X",b->{searchBox.setValue("");setFocused(searchBox);},layout.bodyX()+layout.bodyWidth()-28,top,28,20));
+        clear.setTooltip(Tooltip.create(Component.literal("Clear search (Escape)")));
+    }
+    private void clearBody(){
+        for(var control:controls)removeWidget(control.widget());
+        controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+    }
+    private void buildBody(){
+        if(!query.isBlank()){
+            var results=ToolkitSearch.find(query);
+            label(results.isEmpty()?"No settings found. Try sound, HUD or key.":results.size()+" sections found · select to open",0);
+            int top=18;
+            for(var result:results){
+                button(()->result.title(),top,0,layout.bodyWidth(),()->{
+                    persist();page=result.page();fishEarnings=false;query="";scroll=0;
+                    jumpSection=result.section();rebuildWidgets();
+                });
+                top+=24;
+            }
+        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();}
+        jumpSection="";updateControls();
+    }
+    private void section(String title,int top){
+        label(()->title,top,ToolkitTheme.palette().accent(),1);
+        if(title.equals(jumpSection))scroll=top;
+    }
     private void addThemeButton(int x,int y,int w){
         var cfg=ToolkitConfig.get();
         var button=addRenderableWidget(ToolkitButton.themeSwitch(b->{
@@ -79,15 +121,15 @@ public final class ToolkitScreen extends Screen {
     }
     private void label(Supplier<String> text,int top,int color,float scale){labels.add(new Label(text,top,color,scale));contentHeight=Math.max(contentHeight,top+(int)(10*scale));}
     private void label(String text,int top){label(()->text,top,ToolkitTheme.palette().muted(),1);}
-    private void button(String text,int top,Runnable action){button(()->text,top,0,Math.min(Math.max(90,font.width(text)+24),layout.bodyWidth()),action);}
+    private void button(String text,int top,Runnable action){button(()->text,top,0,Math.min(144,layout.bodyWidth()),action);}
     private void button(Supplier<String> text,int top,int offset,int w,Runnable action){
-        Button b=addRenderableWidget(ToolkitButton.action(text.get(),unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,w,24));
-        controls.add(new Control(b,top,24));contentHeight=Math.max(contentHeight,top+24);
+        Button b=addRenderableWidget(ToolkitButton.action(text.get(),unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,w,20));
+        controls.add(new Control(b,top,20));contentHeight=Math.max(contentHeight,top+20);
         // Button labels are refreshed through the same render-time supplier list.
         labels.add(new Label(()->{b.setMessage(Component.literal(text.get()));return "";},top,0,1));
     }
     private void pair(Supplier<String> a,Runnable aa,Supplier<String> b,Runnable bb,int top){
-        int max=(layout.bodyWidth()-8)/2,aw=Math.min(max,font.width(a.get())+24),bw=Math.min(max,font.width(b.get())+24);
+        int aw=Math.min(144,(layout.bodyWidth()-8)/2),bw=aw;
         button(a,top,0,aw,aa);button(b,top,aw+8,bw,bb);
     }
     private void slider(String name,int top,double value,DoubleConsumer apply){
@@ -98,37 +140,35 @@ public final class ToolkitScreen extends Screen {
     }
     private void sliderAt(String name,int top,double setting,double maximum,int offset,int fieldWidth,DoubleConsumer apply){
         double normalized=setting/maximum;
-        AbstractSliderButton slider=addRenderableWidget(new AbstractSliderButton(layout.bodyX()+offset,layout.bodyY()+top-scroll,fieldWidth,22,Component.literal(name),normalized){
+        labels.add(new Label(()->name,top+6,ToolkitTheme.palette().text(),1,offset+6));
+        AbstractSliderButton slider=addRenderableWidget(new AbstractSliderButton(layout.bodyX()+offset+fieldWidth-148,layout.bodyY()+top-scroll,148,20,Component.literal(name),normalized){
             protected void updateMessage(){setMessage(Component.literal(name+": "+Math.round(value*maximum*100)+"%"));}
             protected void applyValue(){apply.accept(value*maximum);updateMessage();}
+            private void moveKnob(double mouseX){
+                value=Math.clamp((mouseX-getX()-4)/(getWidth()-48),0,1);applyValue();updateMessage();
+            }
+            public void onClick(MouseButtonEvent e,boolean doubleClick){moveKnob(e.x());}
+            protected void onDrag(MouseButtonEvent e,double dx,double dy){moveKnob(e.x());}
             public void onRelease(MouseButtonEvent e){super.onRelease(e);persist();}
             public void extractWidgetRenderState(GuiGraphicsExtractor g,int mx,int my,float tick){
-                ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,ToolkitTheme.palette().surface());
-                g.text(font,getMessage(),getX()+8,getY()+5,ToolkitTheme.palette().text(),false);
-                int start=getX()+8,end=getRight()-8,knob=start+(int)((end-start)*value);
-                g.fill(start,getBottom()-5,end,getBottom()-3,com.skyblocktoolkit.ToolkitTheme.palette().track());g.fill(start,getBottom()-5,knob,getBottom()-3,ToolkitTheme.palette().accentTrack());
-                ToolkitTheme.rounded(g,knob-2,getBottom()-6,4,4,2,ToolkitTheme.palette().onAccent());
+                var palette=ToolkitTheme.palette();
+                if(isHoveredOrFocused())ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,palette.surface());
+                String percent=Math.round(value*maximum*100)+"%";
+                g.text(font,percent,getRight()-6-font.width(percent),getY()+6,palette.muted(),false);
+                int end=getRight()-44,start=getX()+4,knob=start+(int)((end-start)*value),cy=getY()+10;
+                g.fill(start,cy-1,end,cy+1,palette.track());g.fill(start,cy-1,knob,cy+1,palette.accentTrack());
+                ToolkitTheme.rounded(g,knob-2,cy-3,4,6,2,palette.accent());
+
             }
-        });slider.setMessage(Component.literal(name+": "+Math.round(setting*100)+"%"));controls.add(new Control(slider,top,22));contentHeight=Math.max(contentHeight,top+22);
+        });slider.setMessage(Component.literal(name+": "+Math.round(setting*100)+"%"));controls.add(new Control(slider,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
     private void toggle(String text,int top,BooleanSupplier state,Runnable action){toggleAt(text,top,0,layout.bodyWidth(),state,action);}
     private void toggleCell(String text,int top,int column,BooleanSupplier state,Runnable action){
         int half=(layout.bodyWidth()-10)/2;toggleAt(text,top,column*(half+10),half,state,action);
     }
     private void toggleAt(String text,int top,int offset,int width,BooleanSupplier state,Runnable action){
-        var b=addRenderableWidget(ToolkitButton.toggle(text,unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,width,24,state));
-        controls.add(new Control(b,top,24));contentHeight=Math.max(contentHeight,top+24);
-    }
-    private void actionRow(int top,String[] titles,Runnable[] actions){
-        int offset=0,remaining=layout.bodyWidth()-8*(titles.length-1);
-        for(int i=0;i<titles.length;i++){
-            int requested=font.width(titles[i])+24,w=Math.min(requested,remaining/(titles.length-i));
-            final String text=titles[i];button(()->text,top,offset,w,actions[i]);offset+=w+8;remaining-=w;
-        }
-    }
-    private void advancedButton(int top){
-        button(advanced?"Less settings":"Advanced...",top,()->{advanced=!advanced;rebuildWidgets();});
-        if(advanced)button(()->"HUD elements...",top,112,Math.min(120,layout.bodyWidth()-112),()->{hudReturnPage=page;go(8);});
+        var b=addRenderableWidget(ToolkitButton.toggle(text,unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,width,20,state));
+        controls.add(new Control(b,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
     private void hudElements(){
         var cfg=ToolkitConfig.get();
@@ -141,33 +181,32 @@ public final class ToolkitScreen extends Screen {
         pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),108);
     }
     private void money(){
-        var cfg=ModConfig.getInstance();
-        var toolkit=ToolkitConfig.get();
-        toggleCell("Money timer",0,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
-        toggleCell("XP timer",0,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
-        toggle("5-second reminder",34,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
-        label("Soft highlight + ending cue on visible timers.",64);
-        label(()->timerStatus(BoosterTimers.Type.MONEY),86,ToolkitTheme.palette().moneyText(),1);
-        label(()->timerStatus(BoosterTimers.Type.XP),104,ToolkitTheme.palette().xpText(),1);
-        label(()->"Session money bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),124,ToolkitTheme.palette().text(),1);
-        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest money bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},142,ToolkitTheme.palette().muted(),1);
-        actionRow(168,new String[]{"History","Rate tests",advanced?"Less settings":"Advanced..."},new Runnable[]{()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->{advanced=!advanced;rebuildWidgets();}});
-        int half=(layout.bodyWidth()-10)/2;
-        toggleCell("Coconut sound",202,0,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
-        button(()->"Preview sound",202,half+10,half,CoconutNotifier::preview);
-        thresholdField(238);
-        label("Alert for money boosts at or above this %.",266);
-        sellAllBinding(286);
-        if(advanced){
-            button("HUD elements...",322,()->{hudReturnPage=page;go(8);});
-            pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),358);
-        }
+        var cfg=ModConfig.getInstance();var toolkit=ToolkitConfig.get();
+        section("Timers",0);
+        toggleCell("Money timer",16,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
+        toggleCell("XP timer",16,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
+        toggle("5-second reminder",40,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
+        label("Soft highlight when a visible timer is ending.",62);
+        label(()->timerStatus(BoosterTimers.Type.MONEY),78,ToolkitTheme.palette().moneyText(),1);
+        label(()->timerStatus(BoosterTimers.Type.XP),90,ToolkitTheme.palette().xpText(),1);
+        section("Earnings & history",116);
+        pair(()->"History",()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),132);
+        toggle("Include boosters in crop average",154,cfg::includesBoostersInAverage,cfg::toggleAverageBoosters);
+        label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),180,ToolkitTheme.palette().text(),1);
+        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},194,ToolkitTheme.palette().muted(),1);
+        section("Coconut alerts",218);
+        toggle("Coconut sound",234,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
+        thresholdField(258);
+        label("Alert at or above this %. 0 = every money boost.",286);
+        button("Preview sound",302,CoconutNotifier::preview);
+        section("Quick selling",338);
+        sellAllBinding(354);
     }
     private void thresholdField(int top){
         var cfg=ToolkitConfig.get();
-        labels.add(new Label(()->"Minimum boost (%)",top+7,ToolkitTheme.palette().text(),1));
-        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+124,layout.bodyY()+top+7-scroll,Math.max(34,layout.bodyWidth()-132),14,Component.literal("Minimum coconut money booster percentage")));
-        field.setBordered(false);field.setTextColorUneditable(ToolkitTheme.palette().muted());
+        labels.add(new Label(()->"Minimum boost (%)",top+5,ToolkitTheme.palette().text(),1,6));
+        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-64,layout.bodyY()+top+5-scroll,58,14,Component.literal("Minimum coconut money booster percentage")));
+        field.setBordered(false);field.setTextShadow(false);field.setTextColorUneditable(ToolkitTheme.palette().muted());
         field.setMaxLength(6);field.setValue(Integer.toString(cfg.coconutSoundThreshold));
         field.setTextColor(ToolkitTheme.palette().text());
         field.setResponder(text->{
@@ -178,125 +217,132 @@ public final class ToolkitScreen extends Screen {
             }catch(NumberFormatException e){field.setTextColor(ToolkitTheme.palette().error());}
         });
         field.setTooltip(Tooltip.create(Component.literal("0 alerts for every coconut money boost. Enter 0 to 100000; invalid input keeps the last valid value.")));
-        settingFields.add(field);controls.add(new Control(field,top+7,14));contentHeight=Math.max(contentHeight,top+22);
+        settingFields.add(field);controls.add(new Control(field,top+5,14));contentHeight=Math.max(contentHeight,top+22);
     }
-    private void sellAllBinding(int top){
-        button(()->"Sell all key: "+ToolkitMod.sellAllKey.getTranslatedKeyMessage().getString(),top,0,layout.bodyWidth(),()->bindingTarget=3);
+    private void setting(String name,int top,Supplier<String> value,Runnable action){
+        var button=addRenderableWidget(ToolkitButton.setting(name,value,b->{action.run();persist();},layout.bodyX(),layout.bodyY()+top-scroll,layout.bodyWidth()));
+        controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
+    private void sellAllBinding(int top){setting("Sell all key",top,()->ToolkitMod.sellAllKey.getTranslatedKeyMessage().getString(),()->bindingTarget=3);}
     private String timerStatus(BoosterTimers.Type type){
         long now=System.currentTimeMillis();var timers=BoosterManager.timers;var clock=timers.clock(type);
         return type.label+": "+(clock.active(now)?"+"+timers.percentage(type)+"% · "+BoosterTimers.formatTime(clock.remaining(now),clock.hasTimer(now)):"Inactive");
     }
     private void farming(){
-        var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
-        label("Crop Visibility",0);
-        label("Dim & desaturate immature crops for easy spotting.",15);
-        toggle("Clear Harvest textures",30,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-        label(()->ClearHarvest.isEnabled()?"Status: Active (Clear Harvest)":"Status: Vanilla textures",58,ClearHarvest.isEnabled()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted(),1);
-
-        label("Crop Earnings",80);
-        label(()->com.moneybooster.BoosterStatsManager.averageLabel(),95,ToolkitTheme.palette().text(),1.2f);
-        toggleCell("Crop earnings HUD",118,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        button(()->"HUD elements...",118,half+10,half,()->{hudReturnPage=9;go(8);});
-        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new com.moneybooster.BoosterStatsScreen(this,true)),()->"Edit HUD",()->go(5),148);
-        label(()->XpTracker.averageLabel(),184,ToolkitTheme.palette().xpText(),1.2f);
-        toggle("XP per hour HUD",206,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        toggle("Include XP boosters",240,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
-        sellAllBinding(274);
+        var cfg=ToolkitConfig.get();var money=ModConfig.getInstance();
+        section("Crop visibility",0);
+        toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
+        label("Dim immature crops to spot harvest-ready plants.",42);
+        section("Crop earnings",68);
+        toggle("Crop earnings HUD",82,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        toggle("Include boosters in crop average",106,money::includesBoostersInAverage,money::toggleAverageBoosters);
+        label(()->BoosterStatsManager.averageLabel(),132,ToolkitTheme.palette().text(),1);
+        section("Minecraft XP",158);
+        toggle("XP per hour HUD",174,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
+        toggle("Include XP boosters",196,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
+        label(()->XpTracker.averageLabel(),224,ToolkitTheme.palette().xpText(),1);
+        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},240);
+        section("Quick selling",278);
+        sellAllBinding(294);
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
         var mod=ToolkitMod.FISHING;var cfg=mod.settings();
-        toggleCell("Ready to reel",0,0,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
-        toggleCell("Depleted area",0,1,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
-        toggleCell("Snapped line",34,0,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
-        int half=(layout.bodyWidth()-10)/2;
-        sliderAt("Volume",34,cfg.volume,3,half+10,half,v->cfg.volume=(float)v);
-        actionRow(76,new String[]{"Preview","Fish prices",advanced?"Less settings":"Advanced..."},new Runnable[]{mod::previewDepth,()->{fishEarnings=true;advanced=false;scroll=0;rebuildWidgets();},()->{advanced=!advanced;rebuildWidgets();}});
-        if(advanced){
-            label(()->"Reel depth: "+(int)cfg.target+" blocks",116,ToolkitTheme.palette().muted(),1);
-            button(()->"-",136,0,32,()->cfg.target=Math.max(1,cfg.target-1));
-            button(()->"+",136,40,32,()->cfg.target=Math.min(1000,cfg.target+1));
-            button(()->"Alert sounds",112,half+10,half,()->{soundReturnPage=2;go(6);});
-            button(()->"HUD elements...",144,half+10,half,()->{hudReturnPage=page;go(8);});
-        }
+        section("Catch alerts",0);
+        toggle("Ready to reel",16,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
+        toggle("Depleted area",40,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
+        toggle("Snapped line",62,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
+        slider("Volume",86,cfg.volume,3,v->cfg.volume=(float)v);
+        pair(()->"Preview",mod::previewDepth,()->"Alert sounds",()->{soundReturnPage=2;go(6);},110);
+        label(()->"Reel depth: "+(int)cfg.target+" blocks",138,ToolkitTheme.palette().text(),1);
+        pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),154);
+        section("Earnings & prices",192);
+        toggle("Fishing earnings HUD",208,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
+        button("Fish prices",230,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
     }
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
-        labels.add(new Label(()->name,top+6,ToolkitTheme.palette().text(),1,22));
-        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+112,layout.bodyY()+top+6-scroll,Math.max(40,layout.bodyWidth()-112),14,Component.literal(name+" price per fish")));
-        field.setBordered(false);field.setMaxLength(24);field.setValue(String.format(java.util.Locale.ROOT,"%.2f",read.getAsDouble()));
+        labels.add(new Label(()->name,top+5,ToolkitTheme.palette().text(),1,6));
+        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name+" price per fish")));
+        field.setBordered(false);field.setTextShadow(false);field.setMaxLength(24);field.setValue(String.format(java.util.Locale.ROOT,"%.2f",read.getAsDouble()));
         field.setTextColor(ToolkitTheme.palette().text());
         field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().error());if(Double.isFinite(value))write.accept(value);});
-        priceFields.add(field);controls.add(new Control(field,top+6,14));contentHeight=Math.max(contentHeight,top+22);
+        priceFields.add(field);controls.add(new Control(field,top+5,14));contentHeight=Math.max(contentHeight,top+22);
     }
     private void fishPrices(){
         var cfg=ToolkitMod.FISHING.settings();
         button("Back to fishing",0,()->{fishEarnings=false;scroll=0;rebuildWidgets();});
-        label("Sell price per fish ($ each; accepts 1.5k / 2m)",32);
-        priceField("Cod · 60%",52,()->cfg.codPrice,v->cfg.codPrice=v);
-        priceField("Salmon · 25%",80,()->cfg.salmonPrice,v->cfg.salmonPrice=v);
-        priceField("Puffer · 13%",108,()->cfg.pufferPrice,v->cfg.pufferPrice=v);
-        priceField("Tropical · 2%",136,()->cfg.tropicalPrice,v->cfg.tropicalPrice=v);
-        button(()->"Window: "+(cfg.earningsWindow==60?"60s":"5m"),168,0,Math.min(160,layout.bodyWidth()),()->cfg.earningsWindow=cfg.earningsWindow==60?300:60);
+        label("Sell price per fish ($ each; accepts 1.5k / 2m)",24);
+        priceField("Cod · 60%",40,()->cfg.codPrice,v->cfg.codPrice=v);
+        priceField("Salmon · 25%",62,()->cfg.salmonPrice,v->cfg.salmonPrice=v);
+        priceField("Puffer · 13%",84,()->cfg.pufferPrice,v->cfg.pufferPrice=v);
+        priceField("Tropical · 2%",106,()->cfg.tropicalPrice,v->cfg.tropicalPrice=v);
+        setting("Earnings window",132,()->cfg.earningsWindow==60?"60 seconds":"5 minutes",()->cfg.earningsWindow=cfg.earningsWindow==60?300:60);
 
-        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),230,ToolkitTheme.palette().accent(),1);
-        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},248,ToolkitTheme.palette().text(),1);
-        label(()->ToolkitMod.fishingLabel(),266,ToolkitTheme.palette().text(),1);
-        label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",286,ToolkitTheme.palette().muted(),1);
-        label("For stack prices, divide by 64 before entering.",304);
+        section("Estimate",164);
+        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),180,ToolkitTheme.palette().accent(),1);
+        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},194,ToolkitTheme.palette().text(),1);
+        label(()->ToolkitMod.fishingLabel(),208,ToolkitTheme.palette().text(),1);
+        label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",224,ToolkitTheme.palette().muted(),1);
+        label("For stack prices, divide by 64 before entering.",238);
 
     }
     private void chat(){
         var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
-        label("Drag to select in chat. Ctrl+C to copy.",0);
-        toggleCell("Chat selection",24,0,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
-        toggleCell("Select word",24,1,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
-        advancedButton(64);
-        if(advanced){
-            int half=(layout.bodyWidth()-10)/2;
-            button(()->"Color: "+cfg.highlightName(),104,0,half,()->cfg.highlight=(cfg.highlight+1)%3);
-            sliderAt("Highlight",104,(cfg.highlightOpacity-.1)/.7,1,half+10,half,v->cfg.highlightOpacity=.1+v*.7);
-            sliderAt("Chat size",140,options.chatScale().get(),1,0,half,v->options.chatScale().set(Math.max(.1,v)));
-            sliderAt("Chat width",140,options.chatWidth().get(),1,half+10,half,v->options.chatWidth().set(v));
-            sliderAt("Chat opacity",176,options.chatOpacity().get(),1,0,half,v->options.chatOpacity().set(v));
-        }
+        section("Selection",0);
+        toggle("Chat selection",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
+        toggle("Select word",40,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
+        label("Drag to select · Ctrl+C / Cmd+C to copy",66);
+        label("Double-click a word · Triple-click a line",78);
+        section("Appearance",102);
+        setting("Highlight color",118,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
+        slider("Highlight strength",142,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
+        slider("Chat size",166,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
+        slider("Chat width",188,options.chatWidth().get(),1,v->options.chatWidth().set(v));
+        slider("Chat opacity",212,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
     }
-
     private void utilities(){
-        var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
-        toggleCell("Sale alert",0,0,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
-        button(()->"Sound: "+cfg.ahSoundName(),0,half+10,half,()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
-        sliderAt("Volume",36,cfg.ahSoundVolume,1,0,half,v->cfg.ahSoundVolume=v);
-        button(()->"Preview",36,half+10,half,AhSaleNotifier::playPreviewSound);
-        advancedButton(76);
-        if(advanced)button("Sound amplification",112,()->{soundReturnPage=4;go(6);});
+        var cfg=ToolkitConfig.get();
+        section("Sale notifications",0);
+        toggle("Sale alert",16,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
+        setting("Sound",40,cfg::ahSoundName,()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
+        slider("Volume",62,cfg.ahSoundVolume,1,v->cfg.ahSoundVolume=v);
+        slider("Sound amplification",86,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
+        button("Preview",110,AhSaleNotifier::playPreviewSound);
     }
     private void blackout(){
-        var cfg=ToolkitConfig.get();int half=(layout.bodyWidth()-10)/2;
-        button(()->"Turn blackout on",0,0,half,()->{persist();BlackoutManager.setActive(true);onClose();});
-        button(()->"Wake: "+ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),0,half+10,half,()->bindingTarget=2);
-        sliderAt("Opacity",36,cfg.blackoutOpacity,1,0,half,v->cfg.blackoutOpacity=v);
-        advancedButton(76);
-        if(advanced){
-            toggleCell("Wake hint",112,0,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
-            button(()->"Menu key: "+ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),112,half+10,half,()->bindingTarget=1);
-            button("Reset HUD positions",148,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;});
-        }
+        var cfg=ToolkitConfig.get();
+        section("Blackout controls",0);
+        button("Turn blackout on",16,()->{persist();BlackoutManager.setActive(true);onClose();});
+        slider("Opacity",40,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
+        toggle("Wake hint",62,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
+        setting("Wake key",86,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        label("Dim the game while keeping audio active.",112);
+    }
+    private void general(){
+        var cfg=ToolkitConfig.get();
+        section("Keyboard shortcuts",0);
+        setting("Menu key",16,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);
+        sellAllBinding(40);
+        setting("Wake key",62,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        section("HUD & layout",100);
+        button("HUD elements",116,()->{hudReturnPage=10;go(8);});
+        button("Edit positions",138,()->go(5));
+        button("Reset HUD positions",162,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;});
     }
     private void advancedSounds(){
         var cfg=ToolkitConfig.get();var fishing=ToolkitMod.FISHING;
         button("Back to "+PAGES[soundReturnPage],0,()->go(soundReturnPage));
         if(soundReturnPage==2){
-            slider("Ready to reel gain",38,cfg.readySoundGain,3,v->cfg.readySoundGain=v);
-            button("Preview ready",66,fishing::previewDepth);
-            slider("Depleted area gain",104,cfg.areaSoundGain,3,v->cfg.areaSoundGain=v);
-            button("Preview area",132,fishing::previewWarning);
-            slider("Snapped line gain",170,cfg.snapSoundGain,3,v->cfg.snapSoundGain=v);
-            button("Preview snapped line",198,fishing::previewSnap);
+            slider("Ready to reel gain",30,cfg.readySoundGain,3,v->cfg.readySoundGain=v);
+            button("Preview ready",52,fishing::previewDepth);
+            slider("Depleted area gain",82,cfg.areaSoundGain,3,v->cfg.areaSoundGain=v);
+            button("Preview area",102,fishing::previewWarning);
+            slider("Snapped line gain",132,cfg.snapSoundGain,3,v->cfg.snapSoundGain=v);
+            button("Preview snapped line",154,fishing::previewSnap);
         }else{
-            button(()->"Sound: "+cfg.ahSoundName(),38,0,Math.min(180,layout.bodyWidth()),()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
-            slider("Auction gain",76,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
-            button("Preview auction sale",108,AhSaleNotifier::playPreviewSound);
+            button(()->"Sound: "+cfg.ahSoundName(),30,0,Math.min(180,layout.bodyWidth()),()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
+            slider("Auction gain",60,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
+            button("Preview auction sale",84,AhSaleNotifier::playPreviewSound);
         }
     }
     private void initLayout(){} // Only the HUD elements and their eye controls live on this canvas.
@@ -324,29 +370,34 @@ public final class ToolkitScreen extends Screen {
             g.blit(LOGO,layout.bodyX(),y+12,layout.bodyX()+18,y+30,0f,1f,0f,1f);
             g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.palette().text(),false);
         }else if(!layout.compact()){
-            ToolkitTheme.rounded(g,x,y,104,h,6,ToolkitTheme.palette().sidebar());g.fill(x+96,y,x+104,y+h,ToolkitTheme.palette().sidebar());
+            ToolkitTheme.rounded(g,x,y,112,h,6,ToolkitTheme.palette().sidebar());g.fill(x+104,y,x+112,y+h,ToolkitTheme.palette().sidebar());
             g.blit(LOGO,x+8,y+10,x+44,y+46,0f,1f,0f,1f);
             g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.palette().accent(),false);
             g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.palette().muted(),false);
-            g.text(font,PAGES[page],layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
-            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings"};
-            g.text(font,descriptions[page],layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
+            g.text(font,query.isBlank()?PAGES[page]:"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
+            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays"};
+            g.text(font,query.isBlank()?descriptions[page]:"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
             g.text(font,"Skyblock Toolkit",x+30,y+15,ToolkitTheme.palette().text(),false);
         }
-        if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+47,layout.bodyX()+28,y+49,ToolkitTheme.palette().accent());
+        if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
+        if(page!=8){
+            int sy=layout.y()+(layout.compact()?68:50);
+            ToolkitTheme.rounded(g,layout.bodyX(),sy,layout.bodyWidth()-34,20,3,ToolkitTheme.palette().surface());
+            if(searchBox.isFocused())g.fill(layout.bodyX()+8,sy+19,layout.bodyX()+layout.bodyWidth()-42,sy+20,ToolkitTheme.palette().accent());
+            if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY(),ToolkitTheme.palette().muted(),false);
+        }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
-        for(var label:labels){String text=label.text().get();if(text.isEmpty())continue;
+        for(var label:labels){String text=label.text().get();if(text.isEmpty()||!layout.fits(label.top(),(int)Math.ceil(10*label.scale()),scroll))continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());
             String clipped=font.substrByWidth(Component.literal(text),(int)((layout.bodyWidth()-label.offset())/label.scale())).getString();
             g.text(font,clipped,0,0,label.color(),false);g.pose().popMatrix();
         }
-        for(var field:settingFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+12,26,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
+        for(var field:settingFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-4,field.getWidth()+12,20,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
         if(page==2&&fishEarnings){
-            net.minecraft.world.item.Item[] fish={net.minecraft.world.item.Items.COD,net.minecraft.world.item.Items.SALMON,net.minecraft.world.item.Items.PUFFERFISH,net.minecraft.world.item.Items.TROPICAL_FISH};
-            for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+6,24,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
-            if(Minecraft.getInstance().level!=null)for(int i=0;i<fish.length;i++)g.item(new net.minecraft.world.item.ItemStack(fish[i]),layout.bodyX(),layout.bodyY()+55+i*28-scroll);
+            for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-4,field.getWidth()+12,20,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
+
         }
         g.disableScissor();
         if(layout.maxScroll(contentHeight)>0){int track=layout.viewport(),thumb=Math.max(12,track*track/contentHeight),ty=layout.bodyY()+scroll*(track-thumb)/layout.maxScroll(contentHeight);g.fill(x+w-5,ty,x+w-3,ty+thumb,com.skyblocktoolkit.ToolkitTheme.palette().muted());}
@@ -402,8 +453,13 @@ public final class ToolkitScreen extends Screen {
             bindingTarget=0;
             return true;
         }
+        if(page!=5&&page!=8&&event.key()==GLFW.GLFW_KEY_F&&(event.modifiers()&(GLFW.GLFW_MOD_CONTROL|GLFW.GLFW_MOD_SUPER))!=0){setFocused(searchBox);return true;}
+        if(page!=5&&page!=8&&event.key()==GLFW.GLFW_KEY_ESCAPE&&!query.isEmpty()){searchBox.setValue("");return true;}
         if(page==8&&event.key()==GLFW.GLFW_KEY_ESCAPE){go(hudReturnPage);return true;}
-        if(page==5&&event.key()==GLFW.GLFW_KEY_ESCAPE){go(1);return true;}
+        if(page==5&&event.key()==GLFW.GLFW_KEY_ESCAPE){go(layoutReturnPage);return true;}
+        if(page!=5&&!(getFocused() instanceof EditBox)){
+            if(event.key()==GLFW.GLFW_KEY_PAGE_DOWN||event.key()==GLFW.GLFW_KEY_PAGE_UP){scroll+=(event.key()==GLFW.GLFW_KEY_PAGE_DOWN?1:-1)*Math.max(24,layout.viewport()-24);updateControls();return true;}
+        }
         return super.keyPressed(event);
     }
     @Override public boolean mouseClicked(MouseButtonEvent event,boolean handled){

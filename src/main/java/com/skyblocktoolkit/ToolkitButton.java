@@ -12,6 +12,7 @@ public final class ToolkitButton extends Button {
     private final BooleanSupplier state;
     private final String label,description;
     private final ItemStack icon;
+    private Supplier<String> value;
     private ToolkitButton(int x,int y,int w,int h,String label,OnPress press,int kind,boolean selected,BooleanSupplier state,ItemStack icon,String description){
         super(x,y,w,h,Component.literal(label),press,DEFAULT_NARRATION);this.kind=kind;this.selected=selected;this.state=state;this.icon=icon;this.description=description;this.label=label;
     }
@@ -20,9 +21,23 @@ public final class ToolkitButton extends Button {
     public static ToolkitButton toggle(String label,OnPress press,int x,int y,int w,int h,BooleanSupplier state){return new ToolkitButton(x,y,w,h,label,press,2,false,state,null,null);}
     public static ToolkitButton tile(String label,String description,ItemStack icon,OnPress press,int x,int y,int w,int h){return new ToolkitButton(x,y,w,h,label,press,3,false,null,icon,description);}
     public static ToolkitButton themeSwitch(OnPress press,int x,int y,boolean lightMode){return new ToolkitButton(x,y,60,22,lightMode?"Light mode":"Dark mode",press,4,lightMode,null,null,null);}
+    public static ToolkitButton setting(String label,Supplier<String> value,OnPress press,int x,int y,int w){
+        var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
+        button.value=value;return button;
+    }
     @Override protected void extractContents(GuiGraphicsExtractor g,int mx,int my,float tick){
         var font=Minecraft.getInstance().font;boolean hover=isHoveredOrFocused()&&active;
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
+        if(kind==5){
+            var palette=ToolkitTheme.palette();String current=value.get();
+            setMessage(Component.literal(description+": "+current));
+            int valueWidth=Math.min(w/2,Math.max(62,font.width(current)+16));
+            g.text(font,description,x+6,y+6,palette.text(),false);
+            ToolkitTheme.rounded(g,x+w-valueWidth,y+1,valueWidth,18,3,hover?palette.hover():palette.surface());
+            String clipped=font.substrByWidth(Component.literal(current),valueWidth-12).getString();
+            g.text(font,clipped,x+w-(valueWidth+font.width(clipped))/2,y+6,palette.accent(),false);
+            return;
+        }
         if(kind==4){
             var palette=ToolkitTheme.palette();
             ToolkitTheme.rounded(g,x,y,w,h,h/2,hover?palette.accent():palette.border());
@@ -35,23 +50,21 @@ public final class ToolkitButton extends Button {
         }
         if(kind==1){
             if(selected){
-                ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().accent());
-                ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,ToolkitTheme.palette().accentSurface());
+                ToolkitTheme.rounded(g,x,y,w,h,3,ToolkitTheme.palette().accentSurface());
             }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().surface());
             int pad=w<70?4:8;
             String clipped=font.substrByWidth(getMessage(),w-pad*2).getString();
             g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted(),false);return;
         }
         if(kind!=2||hover){
-            ToolkitTheme.rounded(g,x,y,w,h,4,hover?ToolkitTheme.palette().accent():ToolkitTheme.palette().border());
-            ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,hover?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
+            ToolkitTheme.rounded(g,x,y,w,h,3,hover?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
+            if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,ToolkitTheme.palette().accent());
         }
         if(kind==2){
-            g.fill(x+8,y+h-1,x+w-8,y+h,com.skyblocktoolkit.ToolkitTheme.palette().divider());
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
             g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.palette().text(),false);
-            ToolkitTheme.rounded(g,x+w-29,y+(h-12)/2,24,12,6,enabled?ToolkitTheme.palette().accentTrack():com.skyblocktoolkit.ToolkitTheme.palette().track());
-            ToolkitTheme.rounded(g,x+w-(enabled?15:25),y+(h-8)/2,8,8,4,ToolkitTheme.palette().onAccent());return;
+            ToolkitTheme.rounded(g,x+w-26,y+(h-10)/2,20,10,5,enabled?ToolkitTheme.palette().accentTrack():com.skyblocktoolkit.ToolkitTheme.palette().track());
+            ToolkitTheme.rounded(g,x+w-(enabled?14:24),y+(h-6)/2,6,6,3,ToolkitTheme.palette().onAccent());return;
         }
         if(kind==3){
             boolean hasIcon=!icon.isEmpty();

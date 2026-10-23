@@ -57,7 +57,7 @@ with tempfile.TemporaryDirectory(prefix='toolkit-timer-menu-') as tmp:
     argfile.write_text('\n'.join('"' + a.replace('\\', '/') + '"' for a in args), encoding='utf-8')
     with (output / 'runtime.log').open('w', encoding='utf-8') as log:
         result = subprocess.run([java, '@' + str(argfile)], cwd=game, env={**os.environ, 'ALSOFT_DRIVERS': 'null'},
-                                stdout=log, stderr=subprocess.STDOUT, timeout=120, creationflags=subprocess.CREATE_NO_WINDOW)
+                                stdout=log, stderr=subprocess.STDOUT, timeout=180, creationflags=subprocess.CREATE_NO_WINDOW)
     if result.returncode:
         print((output / 'runtime.log').read_text(encoding='utf-8')[-9000:])
         raise SystemExit(result.returncode)

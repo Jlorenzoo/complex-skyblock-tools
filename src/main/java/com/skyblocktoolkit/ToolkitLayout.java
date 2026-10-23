@@ -1,6 +1,13 @@
 package com.skyblocktoolkit;
 /** Shared geometry, also exercised at small GUI sizes without Minecraft. */
 public record ToolkitLayout(int x,int y,int width,int height,int bodyX,int bodyY,int bodyWidth,int footerY,boolean compact){
+    /** The hub reserves separate rows for its heading, search and compact navigation. */
+    public static ToolkitLayout hub(int sw,int sh){
+        int w=Math.min(480,Math.max(100,sw-16)),h=Math.min(330,Math.max(100,sh-16));
+        int x=(sw-w)/2,y=(sh-h)/2;boolean compact=w<400||h<300;
+        int bx=compact?x+12:x+124;
+        return new ToolkitLayout(x,y,w,h,bx,y+(compact?96:80),x+w-12-bx,y+h-28,compact);
+    }
     public static ToolkitLayout of(int sw,int sh){return of(sw,sh,250);}
     public static ToolkitLayout of(int sw,int sh,int preferredHeight){
         int w=Math.min(460,Math.max(100,sw-16)),h=Math.min(preferredHeight,Math.max(100,sh-16));

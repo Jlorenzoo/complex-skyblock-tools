@@ -2,7 +2,7 @@ import com.skyblocktoolkit.ToolkitLayout;
 public final class ToolkitLayoutTest {
  public static void main(String[] args){
   for(int w:new int[]{240,320,426,640,960})for(int h:new int[]{180,240,360,540}){
-   check(ToolkitLayout.of(w,h),w,h);check(ToolkitLayout.popup(w,h),w,h);
+   check(ToolkitLayout.of(w,h),w,h);check(ToolkitLayout.hub(w,h),w,h);check(ToolkitLayout.popup(w,h),w,h);
   }
   System.out.println("PASS: responsive panel and popup bounds, narrow navigation, fixed footer and scroll limits");
  }
