@@ -16,6 +16,7 @@ public final class ToolkitMod implements ClientModInitializer {
     public static KeyMapping.Category CATEGORY;
     public static KeyMapping menuKey;
     public static KeyMapping blackoutKey;
+    public static KeyMapping sellAllKey;
     public static String fishingLabel(){
         var cfg=FISHING.settings();long now=System.currentTimeMillis();String window=cfg.earningsWindow==300?"5m":"60s";
         if(cfg.averageFishPrice()<=0)return "Fishing: set fish prices";
@@ -32,6 +33,7 @@ public final class ToolkitMod implements ClientModInitializer {
         CATEGORY=KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","main"));
         menuKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.menu",GLFW.GLFW_KEY_RIGHT_SHIFT,CATEGORY));
         blackoutKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.blackout",GLFW.GLFW_KEY_F6,CATEGORY));
+        sellAllKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.skyblocktoolkit.sellall",GLFW.GLFW_KEY_UNKNOWN,CATEGORY));
         net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=net.minecraft.client.Minecraft.getInstance();if(!overlay&&mc.level!=null&&mc.player!=null){
                 if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
@@ -56,6 +58,9 @@ public final class ToolkitMod implements ClientModInitializer {
             }
             boolean clicked=false;while(menuKey.consumeClick())clicked=true;
             boolean blackoutClicked=false;while(blackoutKey.consumeClick())blackoutClicked=true;
+            boolean sellClicked=false;while(sellAllKey.consumeClick())sellClicked=true;
+            if(sellClicked&&mc.player!=null&&mc.getConnection()!=null&&mc.gui.screen()==null)
+                mc.getConnection().sendCommand("sellall");
             if(blackoutClicked)BlackoutManager.toggle();
             if(requested||clicked){
                 if(clicked&&!requested)requestedPage=0;

@@ -4,12 +4,12 @@ public class BoosterClockTest {
  static void check(boolean value,String msg){if(!value)throw new AssertionError(msg);}
  public static void main(String[] args){
   var clock=new BoosterClock(); clock.start(36,0);
-  clock.observe(true,-1,35900); check(clock.active(36100),"Local expiry defeated sidebar");
-  clock.observe(true,-1,70000); check(clock.active(70000),"Below-minute booster ended early");
+  clock.observe(true,-1,35900); check(!clock.active(36100),"Stale sidebar outlived chat duration");
+  clock.observe(true,-1,70000); check(!clock.active(70000),"Untimed sidebar resurrected expired coconut");
   check(!clock.hasTimer(70000),"Invented exact seconds");
-  clock.observe(false,-1,70250); check(clock.active(72500),"Temporary removal caused flicker");
+  clock.observe(false,-1,70250); check(!clock.active(72500),"Removal resurrected expired timer");
   clock.observe(false,-1,73500); check(!clock.active(73500),"Effect survived confirmed removal");
-  clock.reset(); clock.start(180,0); clock.observe(true,60000,1000);
+  clock.reset(); clock.observe(true,60000,1000);
   check(clock.remaining(1000)==60000,"Sidebar time not used");
   clock.observe(true,120000,2000); check(clock.remaining(2000)==120000 && clock.progress(2000)<=1,"Extension not reconciled");
   clock.observe(false,-1,2500);clock.observe(false,-1,5500);check(!clock.active(5500),"Chat timer overrode server removal");
@@ -38,6 +38,17 @@ public class BoosterClockTest {
   check(clock.remaining(2000)==34000,"Rounded-up minute sidebar replaced coconut chat duration");
   clock.reset();clock.observe(true,10000,true,0);clock.observe(true,10000,true,750);
   check(clock.remaining(1000)==9000,"Stale exact sample froze countdown on joining");
-  System.out.println("PASS: server-active after local expiry, hidden seconds, removal grace, server extensions, chat fallback and sidebar formats");
+  clock.reset();clock.start(60,0);
+  for(long now=0;now<=120000;now+=250) {
+   clock.observe(true,now%2000==0?180000:-1,true,now);
+   check(clock.active(now)==(now<60000),"Repeated sidebar changed advertised expiry at "+now);
+   check(clock.remaining(now)==Math.max(0,60000-now),"Sidebar moved chat deadline");
+  }
+  clock.start(30,121000);check(clock.active(121000)&&!clock.active(151000),"New chat activation replaces expired effect");
+  clock.reset();clock.observe(true,10000,true,0);clock.observe(true,-1,false,10000);
+  check(!clock.active(10000),"Sidebar-only timed effect stayed active after expiry");
+  clock.reset();clock.observe(true,-1,false,0);clock.observe(false,-1,false,250);
+  check(clock.active(2000)&&!clock.active(3500),"Unknown join duration uses removal grace");
+  System.out.println("PASS: authoritative expiry, stale sidebar rejection, unknown join state, removal grace and timer formats");
  }
 }

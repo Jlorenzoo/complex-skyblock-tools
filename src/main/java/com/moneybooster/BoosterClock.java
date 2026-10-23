@@ -1,13 +1,13 @@
 package com.moneybooster;
 
-/** The sidebar confirms server state; chat time is a fallback estimate. */
+/** Activation durations are authoritative; the sidebar fills in state when joining mid-effect. */
 public final class BoosterClock {
     private long started = -1, end, total, lastPresent = -1, lastSample = -1, sidebarRemaining = -1;
     private boolean present;
     private long lastDuration=-1;
-    private boolean precise;
+    private boolean precise, chatTimed;
     public void start(long seconds, long now) {
-        started = now; total = seconds * 1000; end = now + total; precise = true;
+        started = now; total = seconds * 1000; end = now + total; precise = true; chatTimed = true;
         lastPresent = lastSample = -1; sidebarRemaining = -1; lastDuration=-1; present = false;
     }
     public void observe(boolean found,long remainingMs,long now){observe(found,remainingMs,true,now);}
@@ -17,10 +17,10 @@ public final class BoosterClock {
         lastPresent = now;
         if (started < 0) started = now;
         sidebarRemaining = remainingMs;
-        if (remainingMs >= 0) {
+        if (remainingMs >= 0 && !chatTimed) {
             if(exactSeconds){
                 // Repeated scoreboard frames are the same sample, not fresh server time.
-                // Keep a chat deadline within the server's one-second display precision.
+                // Only reconcile sidebar-only clocks within the display's one-second precision.
                 if(remainingMs!=lastDuration && (!precise || Math.abs(end-(now+remainingMs))>1000))
                     end=now+remainingMs;
                 precise=true;
@@ -28,7 +28,7 @@ public final class BoosterClock {
             else if(!precise && remainingMs!=lastDuration){
                 long current=Math.max(0,end-now);
                 // A minute-only sidebar is a bucket, not an exact countdown.
-                // Preserve the chat deadline when it fits; otherwise seed a local estimate once.
+                // Keep the local estimate when it fits; otherwise seed from the new bucket.
                 if(current<remainingMs || current>=remainingMs+60000)end=now+remainingMs+59000;
             }
             lastDuration=remainingMs;
@@ -37,6 +37,8 @@ public final class BoosterClock {
     }
     private boolean recent(long now) { return lastPresent >= 0 && now - lastPresent <= 3000; }
     public boolean active(long now) {
+        // A persistent/lagging sidebar label must never outlive a known deadline.
+        if ((chatTimed || total > 0) && now >= end) return false;
         if (recent(now)) return true;
         // Once the sidebar has shown the effect, a confirmed removal ends it even if chat predicted longer.
         if (lastPresent >= 0 && lastSample > lastPresent && !present) return false;
@@ -45,6 +47,7 @@ public final class BoosterClock {
     public boolean hasTimer(long now) {
         return started >= 0 && now < end;
     }
+    public boolean chatTimed() { return chatTimed; }
     public long remaining(long now) {
         return Math.max(0, end - now);
     }
@@ -53,5 +56,5 @@ public final class BoosterClock {
         if (!hasTimer(now) || total <= 0) return 1;
         return Math.max(0, Math.min(1, (float) remaining(now) / total));
     }
-    public void reset() { started = lastPresent = lastSample = -1; end = total = 0; sidebarRemaining = -1; lastDuration=-1; present = false; precise=false; }
+    public void reset() { started = lastPresent = lastSample = -1; end = total = 0; sidebarRemaining = -1; lastDuration=-1; present = false; precise=chatTimed=false; }
 }

@@ -20,9 +20,10 @@ public final class ToolkitScreen extends Screen {
     private final Screen parent;
     private int page,scroll,contentHeight,dragging,soundReturnPage=2,hudReturnPage=1;
     private double grabX,grabY;
-    private int bindingTarget; // 0=none, 1=menu, 2=blackout
+    private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
     private boolean fishEarnings,advanced;
     private final List<EditBox> priceFields=new ArrayList<>();
+    private final List<EditBox> settingFields=new ArrayList<>();
     private ToolkitLayout layout;
     private final List<Control> controls=new ArrayList<>();
     private final List<Label> labels=new ArrayList<>();
@@ -33,7 +34,7 @@ public final class ToolkitScreen extends Screen {
     private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming"};
     public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,9);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==1||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.of(width,height,advanced||fishEarnings||page==1||page==6||page==9?286:250);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
@@ -151,10 +152,36 @@ public final class ToolkitScreen extends Screen {
         label(()->"Session money bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),124,ToolkitTheme.palette().text(),1);
         label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest money bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},142,ToolkitTheme.palette().muted(),1);
         actionRow(168,new String[]{"History","Rate tests",advanced?"Less settings":"Advanced..."},new Runnable[]{()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->{advanced=!advanced;rebuildWidgets();}});
+        int half=(layout.bodyWidth()-10)/2;
+        toggleCell("Coconut sound",202,0,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
+        button(()->"Preview sound",202,half+10,half,CoconutNotifier::preview);
+        thresholdField(238);
+        label("Alert for money boosts at or above this %.",266);
+        sellAllBinding(286);
         if(advanced){
-            button("HUD elements...",202,()->{hudReturnPage=page;go(8);});
-            pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),238);
+            button("HUD elements...",322,()->{hudReturnPage=page;go(8);});
+            pair(()->cfg.includesBoostersInAverage()?"With boosters":"Base earnings",cfg::toggleAverageBoosters,()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this)),358);
         }
+    }
+    private void thresholdField(int top){
+        var cfg=ToolkitConfig.get();
+        labels.add(new Label(()->"Minimum boost (%)",top+7,ToolkitTheme.palette().text(),1));
+        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+124,layout.bodyY()+top+7-scroll,Math.max(34,layout.bodyWidth()-132),14,Component.literal("Minimum coconut money booster percentage")));
+        field.setBordered(false);field.setTextColorUneditable(ToolkitTheme.palette().muted());
+        field.setMaxLength(6);field.setValue(Integer.toString(cfg.coconutSoundThreshold));
+        field.setTextColor(ToolkitTheme.palette().text());
+        field.setResponder(text->{
+            try{
+                int value=Integer.parseInt(text);
+                if(value<0||value>100000)throw new NumberFormatException();
+                cfg.coconutSoundThreshold=value;field.setTextColor(ToolkitTheme.palette().text());
+            }catch(NumberFormatException e){field.setTextColor(ToolkitTheme.palette().error());}
+        });
+        field.setTooltip(Tooltip.create(Component.literal("0 alerts for every coconut money boost. Enter 0 to 100000; invalid input keeps the last valid value.")));
+        settingFields.add(field);controls.add(new Control(field,top+7,14));contentHeight=Math.max(contentHeight,top+22);
+    }
+    private void sellAllBinding(int top){
+        button(()->"Sell all key: "+ToolkitMod.sellAllKey.getTranslatedKeyMessage().getString(),top,0,layout.bodyWidth(),()->bindingTarget=3);
     }
     private String timerStatus(BoosterTimers.Type type){
         long now=System.currentTimeMillis();var timers=BoosterManager.timers;var clock=timers.clock(type);
@@ -175,6 +202,7 @@ public final class ToolkitScreen extends Screen {
         label(()->XpTracker.averageLabel(),184,ToolkitTheme.palette().xpText(),1.2f);
         toggle("XP per hour HUD",206,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
         toggle("Include XP boosters",240,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
+        sellAllBinding(274);
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
@@ -314,6 +342,7 @@ public final class ToolkitScreen extends Screen {
             String clipped=font.substrByWidth(Component.literal(text),(int)((layout.bodyWidth()-label.offset())/label.scale())).getString();
             g.text(font,clipped,0,0,label.color(),false);g.pose().popMatrix();
         }
+        for(var field:settingFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+12,26,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
         if(page==2&&fishEarnings){
             net.minecraft.world.item.Item[] fish={net.minecraft.world.item.Items.COD,net.minecraft.world.item.Items.SALMON,net.minecraft.world.item.Items.PUFFERFISH,net.minecraft.world.item.Items.TROPICAL_FISH};
             for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-6,field.getWidth()+6,24,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
@@ -325,7 +354,7 @@ public final class ToolkitScreen extends Screen {
 
         if(bindingTarget>0){
             ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
-            g.centeredText(font,Component.literal(bindingTarget==1?"Press your menu key":"Press your black screen key"),x+w/2,y+h/2-12,com.skyblocktoolkit.ToolkitTheme.palette().text());
+            g.centeredText(font,Component.literal(bindingTarget==1?"Press your menu key":bindingTarget==2?"Press your black screen key":"Press your sell all key"),x+w/2,y+h/2-12,com.skyblocktoolkit.ToolkitTheme.palette().text());
             g.centeredText(font,Component.literal("Escape cancels · Delete clears"),x+w/2,y+h/2+8,ToolkitTheme.palette().muted());
         }
     }
@@ -365,7 +394,7 @@ public final class ToolkitScreen extends Screen {
         if(bindingTarget>0){
             if(event.key()!=GLFW.GLFW_KEY_ESCAPE){
                 int key=event.key()==GLFW.GLFW_KEY_DELETE||event.key()==GLFW.GLFW_KEY_BACKSPACE?GLFW.GLFW_KEY_UNKNOWN:event.key();
-                KeyMapping target=(bindingTarget==1)?ToolkitMod.menuKey:ToolkitMod.blackoutKey;
+                KeyMapping target=bindingTarget==1?ToolkitMod.menuKey:bindingTarget==2?ToolkitMod.blackoutKey:ToolkitMod.sellAllKey;
                 target.setKey(InputConstants.Type.KEYSYM.getOrCreate(key));
                 KeyMapping.resetMapping();
                 Minecraft.getInstance().options.save();

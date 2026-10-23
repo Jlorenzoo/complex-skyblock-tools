@@ -7,6 +7,8 @@ public final class ToolkitConfig {
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
     public boolean xpBoosterHud=true,boosterReminder=false;
     public boolean lightMode=false;
+    public boolean coconutSoundEnabled=true;
+    public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
     public int xpHudX=12,xpHudY=74;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
@@ -30,6 +32,8 @@ public final class ToolkitConfig {
             xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
             if(j.has("boosterReminder"))boosterReminder=j.get("boosterReminder").getAsBoolean();
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
+            if(j.has("coconutSoundEnabled"))coconutSoundEnabled=j.get("coconutSoundEnabled").getAsBoolean();
+            if(j.has("coconutSoundThreshold"))coconutSoundThreshold=Math.clamp(j.get("coconutSoundThreshold").getAsInt(),0,100000);
             if(j.has("xpEarningsHud"))xpEarningsHud=j.get("xpEarningsHud").getAsBoolean();
             if(j.has("xpIncludesBoosters"))xpIncludesBoosters=j.get("xpIncludesBoosters").getAsBoolean();
             if(j.has("rateTestXp"))rateTestXp=j.get("rateTestXp").getAsBoolean();
@@ -67,6 +71,7 @@ public final class ToolkitConfig {
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
             j.addProperty("lightMode",lightMode);
+            j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
             j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);

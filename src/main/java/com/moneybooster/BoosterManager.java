@@ -48,6 +48,9 @@ public class BoosterManager {
             boolean money = activation.type() == BoosterTimers.Type.MONEY;
             var source = activation.server()
                 ? new BoosterSources.Source("Server booster", "Server booster", null, false) : BoosterSources.recent();
+            var config = com.skyblocktoolkit.ToolkitConfig.get();
+            if (CoconutAlert.qualifies(activation, source.type(), config.coconutSoundEnabled, config.coconutSoundThreshold))
+                com.skyblocktoolkit.CoconutNotifier.preview();
             // XP can be recorded as a non-money effect without replacing the active money ledger.
             BoosterStatsManager.recordEffect(money ? activation.percentage() : 0, activation.seconds(),
                 money ? "Money booster" : activation.percentage() + "% Experience booster", source);

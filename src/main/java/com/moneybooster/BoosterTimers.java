@@ -36,7 +36,7 @@ public final class BoosterTimers {
     }
     public void observe(Type type, BoosterSidebar.State state, long now) {
         clock(type).observe(state.active(), state.remainingMs(), state.exactSeconds(), now);
-        if (state.percentage() > 0) percentages.put(type, state.percentage());
+        if (state.percentage() > 0 && !clock(type).chatTimed()) percentages.put(type, state.percentage());
     }
     public Activation onChat(String raw, long now) {
         if (raw == null) return null;

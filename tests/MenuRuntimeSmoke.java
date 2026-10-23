@@ -224,7 +224,47 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==34){
                     check(Files.exists(output.resolve("screenshots/xp-hud-settings-dark.png")),"XP HUD settings screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: rendered light/dark themes, full/compact menus; XP/money rate selection, XP booster toggle and saved preferences; independent XP HUD visibility/drag/position; money/XP timers, ledger isolation, crop visibility, HUD editing, blackout and F6 wake\n");
+                    BoosterManager.onChatMessage("You have gained the effect of a 61% Money Booster for 60 seconds!");
+                    long expiredAt=System.currentTimeMillis()-61000;
+                    BoosterManager.timers.start(BoosterTimers.Type.MONEY,61,60,expiredAt);
+                    BoosterManager.timers.observe(BoosterTimers.Type.MONEY,new BoosterSidebar.State(true,61,-1,false),System.currentTimeMillis());
+                    BoosterStatsManager.tick();
+                    check(!BoosterManager.isActive()&&BoosterStatsManager.history().activeId()<0,"Expired coconut stops money accounting and history despite lingering sidebar");
+                    mc.setScreenAndShow(new ToolkitScreen(null,1));scrollBottom(mc);
+                    check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound");
+                    press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
+                    check(ToolkitMod.sellAllKey.saveString().equals("key.keyboard.g"),"Sell all key assigned from toolkit");
+                    check(Files.readString(net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("options.txt")).contains("key_key.skyblocktoolkit.sellall:key.keyboard.g"),"Sell all key persisted to Minecraft options");
+                    press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                    check(ToolkitMod.sellAllKey.saveString().equals("key.keyboard.g"),"Escape cancels binding");
+                    press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_DELETE,0,0));
+                    check(ToolkitMod.sellAllKey.isUnbound(),"Delete clears sell all binding");
+                    press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
+                    net.minecraft.client.KeyMapping.click(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_G));
+                    boolean oldSound=ToolkitConfig.get().coconutSoundEnabled;press(mc,"Coconut sound");
+                    check(ToolkitConfig.get().coconutSoundEnabled!=oldSound,"Coconut alert toggle");
+                    var threshold=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.EditBox).map(c->(net.minecraft.client.gui.components.EditBox)c).findFirst().orElseThrow();
+                    threshold.setValue("61");check(ToolkitConfig.get().coconutSoundThreshold==61,"Threshold accepts exact percentage");
+                    for(String invalid:new String[]{"", "-1", "100001", "abc"}){
+                        threshold.setValue(invalid);check(ToolkitConfig.get().coconutSoundThreshold==61,"Invalid threshold preserves last valid value");
+                    }
+                    threshold.setValue("61");press(mc,"Preview sound");
+                    var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);var saved=ctor.newInstance();
+                    check(saved.coconutSoundThreshold==61&&saved.coconutSoundEnabled==ToolkitConfig.get().coconutSoundEnabled,"Coconut preferences persist");
+                    stage++;return;
+                }
+                if(stage==35){
+                    check(!ToolkitMod.sellAllKey.consumeClick(),"Sell all click is drained safely outside gameplay");
+                    capture(mc,"coconut-settings-dark");switchTheme(mc);stage++;return;
+                }
+                if(stage==36){capture(mc,"coconut-settings-light");mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,1));scrollBottom(mc);stage++;return;}
+                if(stage==37){capture(mc,"coconut-settings-light-compact");switchTheme(mc);stage++;return;}
+                if(stage==38){capture(mc,"coconut-settings-dark-compact");mc.setScreenAndShow(new ToolkitScreen(null,9));scrollBottom(mc);stage++;return;}
+                if(stage==39){capture(mc,"sellall-farming-dark-compact");switchTheme(mc);stage++;return;}
+                if(stage==40){capture(mc,"sellall-farming-light-compact");stage++;return;}
+                if(stage==41){
+                    check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
@@ -233,6 +273,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     }
     void capture(net.minecraft.client.Minecraft mc,String name){
         Screenshot.grab(output.toFile(),name+".png",mc.gameRenderer.mainRenderTarget(),1,msg->{});
+    }
+    void scrollBottom(net.minecraft.client.Minecraft mc){
+        var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,-20);
     }
     void switchTheme(net.minecraft.client.Minecraft mc){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&(b.getMessage().getString().equals("Dark mode")||b.getMessage().getString().equals("Light mode"))){b.onPress(null);return;}

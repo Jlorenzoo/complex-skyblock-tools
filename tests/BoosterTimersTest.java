@@ -57,6 +57,12 @@ public final class BoosterTimersTest {
         check(timers.visible(500000, true, true).equals(List.of(XP)), "joining with XP only shows one row");
         check(!timers.reminding(XP, 500000, true), "no invented warning for unknown duration");
         timers.reset();
+        timers.onChat("You have gained the effect of a 61% Money Booster for 60 seconds!", 0);
+        timers.observe(MONEY, BoosterSidebar.parse(List.of("+20% Money Booster: 5m")), 1000);
+        check(timers.percentage(MONEY)==61 && timers.clock(MONEY).remaining(1000)==59000, "stale sidebar cannot replace coconut strength or duration");
+        timers.observe(MONEY, BoosterSidebar.parse(List.of("+20% Money Booster:")), 60000);
+        check(!timers.clock(MONEY).active(60000), "stale label cannot extend coconut accounting");
+        timers.reset();
         check(timers.visible(500000, true, true).isEmpty() && timers.percentage(XP) == 0, "disconnect clears both clocks");
         check(BoosterTimers.formatTime(42000, true).equals("42s") && BoosterTimers.formatTime(4000, true).equals("4.0s"), "countdown formatting");
         check(BoosterTimers.formatTime(0, false).equals("Active"), "server active with unknown timer");

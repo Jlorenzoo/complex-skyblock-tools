@@ -53,6 +53,12 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             var legacySettings=constructor.newInstance();
             check(!legacySettings.boosterHud&&!legacySettings.xpBoosterHud&&!legacySettings.boosterReminder&&!legacySettings.lightMode,"legacy visibility and dark theme stay unchanged on migration");
             check(!legacySettings.xpEarningsHud&&legacySettings.xpIncludesBoosters&&!legacySettings.rateTestXp,"legacy XP rate defaults");
+            check(legacySettings.coconutSoundEnabled&&legacySettings.coconutSoundThreshold==0,"legacy coconut defaults alert for every money coconut");
+            Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"coconutSoundEnabled\":false,\"coconutSoundThreshold\":-10}");
+            var coconutSettings=constructor.newInstance();
+            check(!coconutSettings.coconutSoundEnabled&&coconutSettings.coconutSoundThreshold==0,"disabled coconut preference and lower threshold clamp");
+            Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"coconutSoundThreshold\":100001}");
+            check(constructor.newInstance().coconutSoundThreshold==100000,"upper threshold clamp");
             var unsafeClass=Class.forName("sun.misc.Unsafe");
             var unsafeField=unsafeClass.getDeclaredField("theUnsafe");unsafeField.setAccessible(true);
             Object unsafe=unsafeField.get(null);
