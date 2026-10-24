@@ -40,10 +40,12 @@ Works seamlessly with your existing Fabric profile alongside **Litematica**, **S
 
 ### Minecraft 26.2 (teammate pack)
 
-The same current features also build for **Fabric 26.2 / Java 25**. Open the
-**[Fabric 26.2 builds](https://github.com/Jlorenzoo/complex-skyblock-tools/actions/workflows/fabric-26.2.yml)**,
-choose the latest successful `main` run, and download **skyblock-toolkit-fabric-26.2**
-under **Artifacts** (GitHub sign-in required). Extract that outer download ZIP.
+The same current features also build for **Fabric 26.2 / Java 25**. Download the
+26.2 files from the **[v1.1.0 release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0)**
+(no GitHub sign-in required). New development builds are also available under
+**Artifacts → skyblock-toolkit-fabric-26.2** in the latest successful
+**[Fabric 26.2 workflow](https://github.com/Jlorenzoo/complex-skyblock-tools/actions/workflows/fabric-26.2.yml)**
+run; those require GitHub sign-in and come in an outer ZIP that you extract first.
 
 - **Prism:** Add Instance → Import → select `Complex-Skyblock-Prism-1.1.0+mc26.2.zip`.
 - **Modrinth App / Prism:** import `Complex-Skyblock-1.1.0+mc26.2.mrpack`.
