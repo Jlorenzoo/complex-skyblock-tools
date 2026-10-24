@@ -13,26 +13,22 @@ from voicechat import control_options
 
 ROOT = Path(__file__).resolve().parents[1]
 JAR_NAME = 'skyblock-toolkit-1.1.0+mc26.2.jar'
-README = '''Skyblock Toolkit 1.1.0 — Minecraft 26.2 / Fabric
+README = '''Skyblock Toolkit - Minecraft 26.2
 
-Requires Java 25. Use a separate Minecraft 26.2 instance.
+Prism Launcher: Add Instance > Import > choose Full-Pack-Prism-26.2.zip.
+Modrinth App: create an instance by importing Full-Pack-Modrinth-26.2.mrpack.
+Then launch the new instance using your own Minecraft account.
 
-Prism Launcher: Add Instance > Import > select Complex-Skyblock-Prism-1.1.0+mc26.2.zip.
-Modrinth App or Prism: import Complex-Skyblock-1.1.0+mc26.2.mrpack.
-Existing Fabric profile: install Fabric Loader 0.19.5 and the six dependencies
-listed in fabric-26.2.json, then put skyblock-toolkit-1.1.0+mc26.2.jar in mods.
-Do not install this jar or these dependencies into Minecraft 1.21.11.
+Already use Fabric? Put just the toolkit jar in your mods folder with Minecraft
+closed. You need Fabric Loader 0.19.5 or newer, Fabric API for 26.2 and Java 25.
+In the Modrinth App, update Fabric Loader in the instance settings if needed.
 
-Includes Fabric API, Simple Voice Chat, Litematica, MaLiLib, ChatShot and YACL.
-Clear Harvest crop visibility textures are built into the toolkit and enabled.
-Right Shift opens Toolkit; M opens Litematica. V opens voice chat setup.
-Voice: Caps Lock push-to-talk, Right Alt whisper, F8 mute, N disable, H hide icons.
-Select your own microphone/speakers and complete voice onboarding yourself.
-Add skyblock.mc-complex.com in Multiplayer to join Complex Skyblock.
+Right Shift opens Toolkit. M opens Litematica. V sets up voice chat.
+Hold Caps Lock to talk; F8 mutes your microphone.
+Add skyblock.mc-complex.com in Multiplayer to play on Complex Skyblock.
 
-Clean defaults only; no accounts, server lists, worlds, chat, personal settings,
-earnings history, microphone choices or credentials are included.
-See THIRD-PARTY.md for dependency credits. Toolkit source is in toolkit-source.
+The full pack includes the required mods. No personal player data is included.
+Credits are in THIRD-PARTY.md; source code is in toolkit-source.
 '''
 
 
@@ -41,7 +37,7 @@ def verify_toolkit(path):
         meta = json.loads(archive.read('fabric.mod.json'))
         if (archive.testzip() is not None or meta['id'] != 'skyblocktoolkit'
                 or meta['version'] != '1.1.0' or meta['depends']['minecraft'] != '~26.2'
-                or meta['depends']['java'] != '>=25'):
+                or meta['depends']['java'] != '>=25' or meta['depends']['fabricloader'] != '>=0.19.5'):
             raise ValueError('Expected the Minecraft 26.2 / Java 25 toolkit jar')
 
 
@@ -66,7 +62,7 @@ def package(output, toolkit, sources=None):
     options = control_options('resourcePacks:["vanilla","skyblocktoolkit:clear_harvest"]\n', minecraft='26.2').encode()
     files = {'mods/' + JAR_NAME: toolkit.read_bytes(), 'options.txt': options}
 
-    prism = output / 'Complex-Skyblock-Prism-1.1.0+mc26.2.zip'
+    prism = output / 'Full-Pack-Prism-26.2.zip'
     prism_files = {**common, **{'.minecraft/' + name: data for name, data in files.items()},
                    **{'.minecraft/mods/' + name: path.read_bytes() for name, path in dependencies.items()},
                    'instance.cfg': b'[General]\nConfigVersion=1.3\nInstanceType=OneSix\nname=Complex Skyblock Toolkit (26.2)\nOverrideJavaLocation=false\n',
@@ -83,7 +79,7 @@ def package(output, toolkit, sources=None):
         index['files'].append({'path': 'mods/' + mod['filename'],
             'hashes': {'sha1': hashlib.sha1(data).hexdigest(), 'sha512': mod['sha512']},
             'env': {'client': 'required', 'server': 'unsupported'}, 'downloads': [mod['url']], 'fileSize': len(data)})
-    mrpack = output / 'Complex-Skyblock-1.1.0+mc26.2.mrpack'
+    mrpack = output / 'Full-Pack-Modrinth-26.2.mrpack'
     write_archive(mrpack, {'modrinth.index.json': json.dumps(index, indent=2).encode(),
         **{'overrides/' + name: data for name, data in {**common, **files}.items()}})
     checksum_files = [public_jar, prism, mrpack, output / 'INSTALL-26.2.txt', output / 'fabric-26.2.json']

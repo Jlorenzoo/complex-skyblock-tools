@@ -54,8 +54,10 @@ def allowed(library):
     return result
 
 
-def prepare(local):
+def prepare(local, loader_version=None):
     spec = manifest()
+    if loader_version:
+        spec['loader'] = loader_version  # Isolated compatibility checks only.
     descriptor = fetch(spec['vanilla']['url'], CACHE / 'versions/26.2/26.2.json', spec['vanilla']['sha1'])
     version = json.loads(descriptor.read_text())
     client = version['downloads']['client']

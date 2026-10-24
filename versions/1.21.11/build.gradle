@@ -81,7 +81,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 tasks.named('processResources') {
     filesMatching('fabric.mod.json') {
-        filter { it.replace('~26.2', '~1.21.11').replace('>=25', '>=21').replace('>=0.19.0', '>=0.18.4') }
+        filter { it.replace('~26.2', '~1.21.11').replace('>=25', '>=21').replace('>=0.19.5', '>=0.18.4') }
     }
     filesMatching('skyblocktoolkit.mixins.json') { filter { it.replace('JAVA_25', 'JAVA_21') } }
     filesMatching('resourcepacks/clear_harvest/pack.mcmeta') { filter { it.replace('88', '75') } }

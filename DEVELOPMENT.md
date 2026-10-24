@@ -51,6 +51,13 @@ light/dark menus and voice controls. `python tests/run_smoke_windows.py` verifie
 26.2 Fabric mixins and native audio without opening a game window (also used on
 Linux CI). The active 1.21.11 profile is unchanged by these 26.2 checks.
 
+The 26.2 jar requires Fabric Loader >=0.19.5. Older loaders bundle MixinExtras
+that cannot read the array-form `@Redirect.at` annotations emitted by the newer
+Mixin compiler dependency, causing an `ArrayList` / `AnnotationNode` cast failure
+in `SoundEngine`. Check the real pre-mixin dependency rejection with
+`python tests/run_smoke_windows.py --loader 0.19.3 --expect-loader-rejection`.
+The 1.21.11 adaptation retains its own >=0.18.4 loader requirement.
+
 Workstation paths belong in ignored `local-settings.json`: `mods_dir` selects the
 live profile, and `minecraft_version` defaults to `1.21.11`. Legacy build paths
 (`minecraft_jar`, `fabric_api_jar`, `loader_jar`, `javac`, `libraries_dir`, optional

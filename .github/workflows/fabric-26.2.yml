@@ -30,6 +30,8 @@ jobs:
         run: python build.py --minecraft 26.2
       - name: Verify Fabric mixins in an isolated client
         run: python tests/run_smoke_windows.py
+      - name: Verify outdated loaders get a clear compatibility message
+        run: python tests/run_smoke_windows.py --loader 0.19.3 --expect-loader-rejection
       - name: Package teammate downloads
         run: python scripts/package_26_2.py
       - uses: actions/upload-artifact@v4

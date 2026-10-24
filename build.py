@@ -25,7 +25,7 @@ LOADER_JAR = configured("loader_jar", "LOADER_JAR", "libraries/net/fabricmc/fabr
 JAVAC = configured("javac", "JAVAC", "java/java-runtime-epsilon/bin/" + ("javac.exe" if os.name == "nt" else "javac"))
 LIBRARIES_DIR = configured("libraries_dir", "LIBRARIES_DIR", "libraries")
 
-def configure_26_2():
+def configure_26_2(loader_version=None):
     """Resolve pinned public dependencies without needing a private launcher profile."""
     global MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC, LIBRARIES_DIR, LOCAL
     from scripts.fabric_26_2 import prepare
@@ -34,7 +34,7 @@ def configure_26_2():
                           ("loader_jar", "LOADER_JAR"), ("javac", "JAVAC"), ("libraries_dir", "LIBRARIES_DIR")):
         if os.environ.get(variable):
             overrides[key] = os.environ[variable]
-    LOCAL = {**LOCAL, **prepare(overrides)}
+    LOCAL = {**LOCAL, **prepare(overrides, loader_version=loader_version)}
     MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC, LIBRARIES_DIR = (LOCAL[k] for k in
         ("minecraft_jar", "fabric_api_jar", "loader_jar", "javac", "libraries_dir"))
 

@@ -21,10 +21,15 @@ class PackTest(unittest.TestCase):
         self.jar = self.root / 'toolkit.jar'
         self.write_jar('~26.2')
 
-    def write_jar(self, version):
+    def write_jar(self, version, loader='>=0.19.5'):
         with zipfile.ZipFile(self.jar, 'w') as archive:
             archive.writestr('fabric.mod.json', json.dumps({'id': 'skyblocktoolkit', 'version': '1.1.0',
-                'depends': {'minecraft': version, 'java': '>=25'}}))
+                'depends': {'minecraft': version, 'java': '>=25', 'fabricloader': loader}}))
+
+    def test_pack_cannot_publish_a_jar_that_allows_the_crashing_loader(self):
+        self.write_jar('~26.2', loader='>=0.19.0')
+        with self.assertRaises(ValueError):
+            package_26_2.package(self.root / 'out', self.jar, {})
 
     def test_wrong_minecraft_build_is_rejected(self):
         self.write_jar('~1.21.11')
