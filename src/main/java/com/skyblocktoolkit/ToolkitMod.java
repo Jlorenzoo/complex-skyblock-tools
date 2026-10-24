@@ -26,6 +26,7 @@ public final class ToolkitMod implements ClientModInitializer {
     private static int requestedPage;
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
+        StartupConnection.init();
         ClearHarvest.init();
         UpdateManager.cleanOldBackups();
         UpdateManager.checkForUpdatesAsync();

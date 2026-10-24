@@ -37,6 +37,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
+                    if(Boolean.getBoolean("toolkit.testStartupConnect")){
+                        check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
+                        check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
+                        Files.writeString(output.resolve("startup-connection.txt"),"PASS: one configured startup connection reached the real vanilla entry point; network intercepted by smoke mod\n");
+                    }
                     String migration=System.getProperty("toolkit.migrationOptions");
                     if(migration!=null){
                         var expected=new java.util.HashMap<String,String>();
@@ -71,6 +76,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     timerConfig.save();
                     var timerCtor=ToolkitConfig.class.getDeclaredConstructor();timerCtor.setAccessible(true);var reloaded=timerCtor.newInstance();
                     check(reloaded.boosterHud==timerConfig.boosterHud&&reloaded.xpBoosterHud==timerConfig.xpBoosterHud&&reloaded.boosterReminder==timerConfig.boosterReminder,"Timer settings persist from real widgets");
+                    check(reloaded.startupServer.equals(timerConfig.startupServer),"Startup server survives other settings saves");
                     timerConfig.boosterHud=oldMoney;timerConfig.xpBoosterHud=oldXp;timerConfig.boosterReminder=oldReminder;
                     BoosterManager.onChatMessage("⚡ You will now receive +20% Shop Money.");
                     BoosterManager.onChatMessage("⚡ Your Booster will end in: 5 minutes.");
@@ -363,6 +369,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage==80){
+                    if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
                     check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
                     Files.writeString(output.resolve("PASS.txt"),"PASS: global search, every section destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);

@@ -56,6 +56,16 @@ into a disposable offline client. It verifies loaded keybindings before exercisi
 the full/compact light/dark menus and writes the loaded options for comparison.
 It never joins a server or modifies the source profile.
 
+An optional `startupServer` address in `config/skyblocktoolkit.json` makes a
+profile join that server once after the title screen finishes loading. It defaults
+to an empty string. Existing connections, vanilla quick-play and disconnect screens
+cancel the startup attempt; returning to the menu never reconnects automatically.
+This does not depend on CurseForge forwarding custom game arguments. The configured
+Complex workstation profile uses `skyblock.mc-complex.com`. Settings saves retain
+the address. The offline runtime's `--startup` check intercepts the real vanilla
+connection entry point and verifies host/port and one attempt, without network
+access to a game server. Copied profiles with startup enabled are intercepted too.
+
 Run `python tests/test_profile_migration.py`, `python tests/test_installer.py`,
 `python tests/test_voicechat.py` and `python tests/test_updater.py`. The Gradle build
 runs the Java suites; `python tests/run_java.py` remains a legacy 26.2 check. The Java runner excludes the private transaction replay dataset. It covers timer isolation, reminder boundaries, sidebar formats, ledger/history behavior and readable palette contrast.

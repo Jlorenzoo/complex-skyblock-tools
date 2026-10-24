@@ -7,6 +7,7 @@ public final class ToolkitConfig {
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
     public boolean xpBoosterHud=true,boosterReminder=false;
     public boolean lightMode=false;
+    public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
     public boolean coconutSoundEnabled=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
@@ -56,6 +57,7 @@ public final class ToolkitConfig {
             if(j.has("blackoutHint"))blackoutHint=j.get("blackoutHint").getAsBoolean();
             if(j.has("highlight"))highlight=Math.clamp(j.get("highlight").getAsInt(),0,2);
             if(j.has("highlightOpacity")){double v=j.get("highlightOpacity").getAsDouble();if(Double.isFinite(v))highlightOpacity=Math.clamp(v,.1,.8);}
+            if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be read: "+e.getMessage());}
     }
     public int highlightColor(){int[] colors={0x0078D7,0x89BBA0,0xC0C8D0};return ((int)(highlightOpacity*255)<<24)|colors[highlight];}
@@ -71,6 +73,7 @@ public final class ToolkitConfig {
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
             j.addProperty("lightMode",lightMode);
+            j.addProperty("startupServer",startupServer);
             j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
             j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);

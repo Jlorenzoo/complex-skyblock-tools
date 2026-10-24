@@ -97,7 +97,7 @@ def regressionClasses = [
     'com.moneybooster.RollingEarningsTest', 'com.moneybooster.XpEarningsTest',
     'com.moneybooster.EarningsActivityTest', 'ToolkitLayoutTest',
     'ToolkitPaletteTest', 'com.skyblocktoolkit.AhSaleNotifierTest',
-    'com.skyblocktoolkit.UpdateChannelTest'
+    'com.skyblocktoolkit.UpdateChannelTest', 'com.skyblocktoolkit.StartupJoinTest'
 ]
 regressionClasses.each { className ->
     def suite = tasks.register('run' + className.tokenize('.').last(), JavaExec) {
@@ -114,7 +114,7 @@ regressionClasses.each { className ->
 tasks.register('menuSmokeJar', Jar) {
     dependsOn testClasses
     archiveClassifier = 'menu-smoke-dev'
-    from(sourceSets.test.output) { include 'com/skyblocktoolkit/MenuRuntimeSmoke*.class' }
+    from(sourceSets.test.output) { include 'com/skyblocktoolkit/MenuRuntimeSmoke*.class', 'com/skyblocktoolkit/smoke/StartupConnectProbe.class' }
     from('src/smoke')
 }
 tasks.register('remapMenuSmoke', net.fabricmc.loom.task.RemapJarTask) {
