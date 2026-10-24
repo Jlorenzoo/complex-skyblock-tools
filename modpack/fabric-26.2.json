@@ -1,0 +1,59 @@
+{
+  "minecraft": "26.2",
+  "java": 25,
+  "loader": "0.19.5",
+  "vanilla": {
+    "url": "https://piston-meta.mojang.com/v1/packages/bdfd9856166b7171857c491f15479762f3abda99/26.2.json",
+    "sha1": "bdfd9856166b7171857c491f15479762f3abda99"
+  },
+  "mods": [
+    {
+      "project": "fabric-api",
+      "version_id": "ewUK83HI",
+      "version": "0.161.0+26.2",
+      "filename": "fabric-api-0.161.0+26.2.jar",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/ewUK83HI/fabric-api-0.161.0%2B26.2.jar",
+      "sha512": "2502fa5ade78e9a120b3747bc1a9a2167d6671743bea45bf115d3174c94121aeda87c549446d1a604a9c11fb828de17a551e3514ce42f3e93069dd14bdaee55b"
+    },
+    {
+      "project": "simple-voice-chat",
+      "version_id": "DKSq5wO6",
+      "version": "fabric-2.6.22+26.2",
+      "filename": "voicechat-fabric-2.6.22+26.2.jar",
+      "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/DKSq5wO6/voicechat-fabric-2.6.22%2B26.2.jar",
+      "sha512": "eb45e75e8b031f3bb27e178ed44fd7b78ba681f077f5972e170726b4837146efd49c7b67d63a95ec4ce87e5672cf76bed85ac8fa7790a9e7ff7309a6c3f424ee"
+    },
+    {
+      "project": "litematica",
+      "version_id": "CuniXtbo",
+      "version": "0.28.8",
+      "filename": "litematica-fabric-26.2-0.28.8.jar",
+      "url": "https://cdn.modrinth.com/data/bEpr0Arc/versions/CuniXtbo/litematica-fabric-26.2-0.28.8.jar",
+      "sha512": "d1c80538f3311b585c9311e59f14fd7fd3eb82288fe5afb399b2139cb35b42d24db7203379f2f61b50a610736335a86dbd395ca1795b001622e6b24dc6fe2a67"
+    },
+    {
+      "project": "malilib",
+      "version_id": "KvjmGjAV",
+      "version": "0.29.6",
+      "filename": "malilib-fabric-26.2-0.29.6.jar",
+      "url": "https://cdn.modrinth.com/data/GcWjdA9I/versions/KvjmGjAV/malilib-fabric-26.2-0.29.6.jar",
+      "sha512": "0fab398f835d9c4736dac65510f707c77a60be6e6051bfd008225c20a5ff13e146296da258bee551d39fa28102b8854d77fa25b2ecb6b0f89fb3c874bac563db"
+    },
+    {
+      "project": "chatshot",
+      "version_id": "cY5mf87P",
+      "version": "1.0.10",
+      "filename": "ChatShot (26.2-fabric)-1.0.10.jar",
+      "url": "https://cdn.modrinth.com/data/X2Zy7Oi6/versions/cY5mf87P/ChatShot%20%2826.2-fabric%29-1.0.10.jar",
+      "sha512": "5bf4c855464a822c41ee104d1fb033bff6b923bfd2d1a7e3ae689df9a215a8e1fc66e53a0ff69b1592611efd37765f08589863eaad546d75b8f1869aa296753c"
+    },
+    {
+      "project": "yacl",
+      "version_id": "DoR7RYgi",
+      "version": "3.9.7+26.2-fabric",
+      "filename": "yet_another_config_lib_v3-3.9.7+26.2-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/DoR7RYgi/yet_another_config_lib_v3-3.9.7%2B26.2-fabric.jar",
+      "sha512": "f36d91a9506ad9addbaaeecaea01d2b0cb5b060f52486b17688746cb597f0f3b23a80f8441f7a73a9cb8cde85af8809fe54825984b56345325359d505a80e7f2"
+    }
+  ]
+}

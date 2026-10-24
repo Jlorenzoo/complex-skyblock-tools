@@ -5,6 +5,7 @@ import zipfile
 import subprocess
 import tempfile
 import argparse
+import sys
 from scripts.local_paths import settings
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +25,21 @@ LOADER_JAR = configured("loader_jar", "LOADER_JAR", "libraries/net/fabricmc/fabr
 JAVAC = configured("javac", "JAVAC", "java/java-runtime-epsilon/bin/" + ("javac.exe" if os.name == "nt" else "javac"))
 LIBRARIES_DIR = configured("libraries_dir", "LIBRARIES_DIR", "libraries")
 
+def configure_26_2():
+    """Resolve pinned public dependencies without needing a private launcher profile."""
+    global MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC, LIBRARIES_DIR, LOCAL
+    from scripts.fabric_26_2 import prepare
+    overrides = dict(LOCAL)
+    for key, variable in (("minecraft_jar", "MC_JAR"), ("fabric_api_jar", "FAPI_JAR"),
+                          ("loader_jar", "LOADER_JAR"), ("javac", "JAVAC"), ("libraries_dir", "LIBRARIES_DIR")):
+        if os.environ.get(variable):
+            overrides[key] = os.environ[variable]
+    LOCAL = {**LOCAL, **prepare(overrides)}
+    MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC, LIBRARIES_DIR = (LOCAL[k] for k in
+        ("minecraft_jar", "fabric_api_jar", "loader_jar", "javac", "libraries_dir"))
+
 def main():
+    configure_26_2()
     print("Building Skyblock Toolkit mod...")
     for path in (MC_JAR, FAPI_JAR, LOADER_JAR, JAVAC):
         if not os.path.isfile(path):
@@ -89,6 +104,7 @@ def main():
         # 6. Create jar archive
         print("Packaging jar...")
         with zipfile.ZipFile(OUTPUT_JAR, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            z.write(os.path.join(PROJECT_DIR, "LICENSE"), "LICENSE")
             for root, _, files in os.walk(CLASSES_DIR):
                 for file in files:
                     src_file = os.path.join(root, file)
@@ -108,6 +124,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.minecraft == "26.2":
         main()
+        subprocess.run([sys.executable, os.path.join(PROJECT_DIR, "tests", "run_java.py")], check=True)
     else:
         project = os.path.join(PROJECT_DIR, "versions", "1.21.11")
         wrapper = [os.path.join(project, "gradlew.bat")] if os.name == "nt" else ["bash", "gradlew"]

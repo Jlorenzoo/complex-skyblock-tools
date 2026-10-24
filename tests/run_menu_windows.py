@@ -4,8 +4,10 @@ import argparse, json, os, shutil, subprocess, sys, tempfile, zipfile
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 import build
+build.configure_26_2()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--voicechat', action='store_true', help='Also load and render the pinned voice chat mod')
+parser.add_argument('--pack', action='store_true', help='Load every pinned 26.2 pack dependency')
 options = parser.parse_args()
 sys.path.insert(0, str(root / 'scripts'))
 toolkit = root / 'build/skyblock-toolkit-1.1.0.jar'
@@ -13,6 +15,9 @@ install = Path(build.MC_JAR).parents[2]
 output = root / 'artifacts/menu-preview'
 if options.voicechat:
     output = root / 'artifacts/voicechat-preview'
+if options.pack:
+    options.voicechat = True
+    output = root / 'artifacts/fabric-26.2-pack'
 output.mkdir(parents=True, exist_ok=True)
 (output / 'PASS.txt').unlink(missing_ok=True)
 for screenshot in (output / 'screenshots').glob('*.png'):
@@ -26,8 +31,13 @@ with tempfile.TemporaryDirectory(prefix='toolkit-timer-menu-') as tmp:
     shutil.copy2(build.FAPI_JAR, mods / Path(build.FAPI_JAR).name)
     if options.voicechat:
         from voicechat import fetch
-        voicechat_jar = fetch()
+        voicechat_jar = fetch(minecraft='26.2')
         shutil.copy2(voicechat_jar, mods / voicechat_jar.name)
+    if options.pack:
+        from fabric_26_2 import manifest, fetch_mod
+        for spec in manifest()['mods']:
+            dependency = fetch_mod(spec)
+            shutil.copy2(dependency, mods / dependency.name)
     with zipfile.ZipFile(build.FAPI_JAR) as z:
         for name in z.namelist():
             if name.startswith('META-INF/jars/') and name.endswith('.jar'): z.extract(name, game)
@@ -43,7 +53,7 @@ with tempfile.TemporaryDirectory(prefix='toolkit-timer-menu-') as tmp:
     initial_options = 'onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n'
     if options.voicechat:
         from voicechat import control_options
-        initial_options = control_options(initial_options)
+        initial_options = control_options(initial_options, minecraft='26.2')
     (game / 'options.txt').write_text(initial_options)
     version = json.loads((install / 'versions/26.2/26.2.json').read_text())
     args = ['-Xmx1G', '--enable-native-access=ALL-UNNAMED', '-Dtoolkit.preview=' + str(output),

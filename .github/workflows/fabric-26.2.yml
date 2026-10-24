@@ -1,0 +1,39 @@
+name: Fabric 26.2
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'tests/**', 'scripts/**', 'modpack/**', 'build.py', '.github/workflows/fabric-26.2.yml']
+  pull_request:
+    paths: ['src/**', 'tests/**', 'scripts/**', 'modpack/**', 'build.py', '.github/workflows/fabric-26.2.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify pack isolation, checksums and installers
+        run: |
+          python tests/test_pack_26_2.py
+          python tests/test_installer.py
+          python tests/test_voicechat.py
+          python tests/test_updater.py
+      - name: Build 26.2 client jar and run Java regressions
+        run: python build.py --minecraft 26.2
+      - name: Verify Fabric mixins in an isolated client
+        run: python tests/run_smoke_windows.py
+      - name: Package teammate downloads
+        run: python scripts/package_26_2.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skyblock-toolkit-fabric-26.2
+          path: dist/fabric-26.2/*
+          if-no-files-found: error

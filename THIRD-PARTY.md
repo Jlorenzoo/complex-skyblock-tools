@@ -18,3 +18,18 @@ as a separate jar. It is not part of the toolkit's source or license.
 - Pinned Fabric release and download checksum: `modpack/voicechat.json`.
 
 The mod is All Rights Reserved; its bundled third-party notices remain in its jar.
+
+## Full Fabric 26.2 teammate pack
+
+`modpack/fabric-26.2.json` pins the upstream downloads and SHA-512 hashes. Each
+dependency remains a separate, unmodified jar with its own license and notices:
+
+- Fabric API — FabricMC contributors, Apache-2.0: https://modrinth.com/mod/fabric-api
+- Simple Voice Chat — Max Henkel, credited above.
+- Litematica — masa and sakura-ryoko, LGPL-3.0: https://modrinth.com/mod/litematica
+- MaLiLib — masa and sakura-ryoko, LGPL-3.0: https://modrinth.com/mod/malilib
+- ChatShot — DeDiamondPro, LGPL: https://modrinth.com/mod/chatshot
+- YetAnotherConfigLib (YACL) — isXander and contributors, LGPL-3.0-or-later: https://modrinth.com/mod/yacl
+
+The Modrinth pack downloads dependencies directly from their upstream CDN.
+Minecraft and Fabric Loader are downloaded by the launcher and are not bundled.

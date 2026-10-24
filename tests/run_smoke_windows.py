@@ -4,11 +4,11 @@ import json, os, shutil, subprocess, sys, tempfile, zipfile
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 import build
+build.configure_26_2()
 toolkit = root / 'build/skyblock-toolkit-1.1.0.jar'
-libraries = [p for p in build.LOCAL['library_jars']
-             if 'natives-' not in p or p.endswith('-natives-windows.jar')]
+libraries = build.LOCAL['library_jars']  # Already filtered for this OS by prepare().
 classpath = os.pathsep.join([build.MC_JAR, *libraries])
-java = str(Path(build.JAVAC).with_name('java.exe'))
+java = str(Path(build.JAVAC).with_name('java.exe' if os.name == 'nt' else 'java'))
 with tempfile.TemporaryDirectory(prefix='toolkit-update-smoke-') as tmp:
     game = Path(tmp)
     mods = game / 'mods'; mods.mkdir()

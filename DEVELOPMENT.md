@@ -30,11 +30,26 @@ running Minecraft version and checks jar metadata before replacement. The
 `Fabric 1.21.11` workflow builds the jar, runs regressions and installer/migration
 checks, and publishes a checksummed build artifact on relevant pushes.
 
-The historical Java 25 / 26.2 build is explicit: `python build.py --minecraft 26.2`.
-It requires the original 26.2 compiler/dependency paths. Its output remains
-`build/skyblock-toolkit-1.1.0.jar`; never put it into a 1.21.11 profile.
-Linux Prism defaults and `PRISM_DATA`, `MC_JAR`, `FAPI_JAR`, `LOADER_JAR`, `JAVAC`,
-and `LIBRARIES_DIR` overrides remain for this legacy builder.
+The additional Java 25 / 26.2 build is explicit: `python build.py --minecraft 26.2`.
+It downloads public dependencies into ignored `.local/fabric-26.2`, verifies their
+upstream checksums, compiles the shared sources and runs the Java regressions.
+Set `JAVA_HOME` or `JAVAC` to JDK 25; configured launcher files are reused only
+when their bytes match the pinned upstream dependencies. No installed pack is
+needed. Its output remains `build/skyblock-toolkit-1.1.0.jar`; never put it into
+a 1.21.11 profile. `python scripts/package_26_2.py` creates the clearly named
+`skyblock-toolkit-1.1.0+mc26.2.jar`, a complete Prism ZIP, a Modrinth `.mrpack`,
+installation instructions and SHA-256 checksums under `dist/fabric-26.2`.
+The `Fabric 26.2` GitHub workflow runs these steps on every relevant main push
+and uploads downloadable artifacts. It does not create a tag or release.
+
+The full 26.2 dependency set is pinned in `modpack/fabric-26.2.json`. Pack exports
+use fresh defaults and the built-in crop pack, without reading any live player
+profile. Run `python tests/test_pack_26_2.py` for pack isolation/integrity checks.
+On the configured Windows workstation, `python tests/run_menu_windows.py --pack`
+loads all seven mods in an isolated offline client and exercises the full/compact
+light/dark menus and voice controls. `python tests/run_smoke_windows.py` verifies
+26.2 Fabric mixins and native audio without opening a game window (also used on
+Linux CI). The active 1.21.11 profile is unchanged by these 26.2 checks.
 
 Workstation paths belong in ignored `local-settings.json`: `mods_dir` selects the
 live profile, and `minecraft_version` defaults to `1.21.11`. Legacy build paths

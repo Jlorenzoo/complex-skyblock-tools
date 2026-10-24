@@ -38,13 +38,28 @@ Works seamlessly with your existing Fabric profile alongside **Litematica**, **S
 3. Place the `.jar` directly into your `.minecraft/mods/` folder.
 4. Launch Minecraft and press **`Right Shift`** (or type `/toolkit`) to open the settings hub!
 
-### Historical 26.2 Prism pack
-The existing published Prism ZIP targets Minecraft 26.2 / Java 25. Use the 1.21.11
-jar/profile above for the maintained target. To use that historical pack:
+### Minecraft 26.2 (teammate pack)
 
-1. Download **[Complex-Skyblock-Prism (Latest Release)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
-2. In Prism Launcher: **Add Instance** → **Import** → select the zip file.
-3. Click Launch (Prism handles the Fabric Loader and Java setup automatically).
+The same current features also build for **Fabric 26.2 / Java 25**. Open the
+**[Fabric 26.2 builds](https://github.com/Jlorenzoo/complex-skyblock-tools/actions/workflows/fabric-26.2.yml)**,
+choose the latest successful `main` run, and download **skyblock-toolkit-fabric-26.2**
+under **Artifacts** (GitHub sign-in required). Extract that outer download ZIP.
+
+- **Prism:** Add Instance → Import → select `Complex-Skyblock-Prism-1.1.0+mc26.2.zip`.
+- **Modrinth App / Prism:** import `Complex-Skyblock-1.1.0+mc26.2.mrpack`.
+- **Existing 26.2 profile:** install `skyblock-toolkit-1.1.0+mc26.2.jar` with
+  Fabric Loader 0.19.5 and Fabric API for 26.2. The full packs also include
+  Simple Voice Chat, Litematica, MaLiLib, ChatShot and YACL.
+
+Both importable packs use clean defaults, built-in Clear Harvest textures and
+voice keybindings, without anyone's personal data. Use a separate 26.2 instance;
+the 1.21.11 jar and dependencies are incompatible. Downloads include installation
+instructions and SHA-256 checksums. Routine builds retain mod version 1.1.0;
+1.21.11 remains the default local build/install target.
+
+Build it yourself with JDK 25: `python build.py --minecraft 26.2`, then
+`python scripts/package_26_2.py`. Public dependencies download automatically and
+are checksum-verified against `modpack/fabric-26.2.json` and upstream metadata.
 
 ### ⚡ Automatic Updates
 Once installed, you never need to visit GitHub or drag files again:
@@ -71,7 +86,7 @@ Use the **Dark mode / Light mode** button in the toolkit menu header to switch b
 
 Complex uses **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** by
 Max Henkel. Lunar is not required. The maintained pack pins the Fabric version for
-Minecraft 1.21.11 as a separate mod; the old Prism ZIP contains the 26.2 build. For an existing configured profile, run
+Minecraft 1.21.11 as a separate mod; the teammate packs contain the 26.2 build. For an existing configured profile, run
 `python scripts/voicechat.py --install --wait`; restart Minecraft after installation.
 
 Press **V** to select your microphone and speakers and choose **push-to-talk**.

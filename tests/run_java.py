@@ -8,6 +8,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import build
+build.configure_26_2()
 
 with tempfile.TemporaryDirectory() as tmp:
     classes = Path(tmp) / "classes"
