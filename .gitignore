@@ -11,6 +11,7 @@ __pycache__/
 *.download
 toolkit-installation-status.txt
 voicechat-installation-status.txt
+migration-1.21.11-status.txt
 .DS_Store
 .idea/
 .vscode/

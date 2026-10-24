@@ -5,9 +5,10 @@ This repository is `Jlorenzoo/complex-skyblock-tools`, the Fabric client mod. It
 A unified Minecraft Fabric client mod bringing together booster tracking, fishing signals, chat copying, and a Lunar Client–inspired configuration hub.
 
 ## Tech Stack & Environment
-- **Minecraft Version:** 26.2 (Fabric Loader >= 0.19.0)
-- **Java Version:** Java 25
-- **Dependencies:** Fabric API (`fabric-api-0.160.0+26.2.jar`), Fabric Screen API, Mixin
+- **Primary Minecraft Version:** 1.21.11 (Fabric Loader >= 0.18.4)
+- **Java Version:** Java 21 or newer to build; Java 21 to play
+- **Dependencies:** Fabric API (`fabric-api-0.141.6+1.21.11.jar`), Fabric Screen API, Mixin
+- **Shared sources:** `src/main` retains 26.2 API names; `versions/1.21.11` adapts/remaps them. Keep 1.21.11 the default for future pack updates. The old 26.2 profile is a fallback, not the live install target.
 
 ## Modules
 1. `com.moneybooster` - Coconut & booster earnings tracker, rolling hourly averages, session history.
@@ -27,7 +28,7 @@ A unified Minecraft Fabric client mod bringing together booster tracking, fishin
   ```bash
   python3 build.py
   ```
-  Produces `build/skyblock-toolkit-1.1.0.jar`.
+  Produces `versions/1.21.11/build/libs/skyblock-toolkit-1.1.0+mc1.21.11.jar` and runs the Java regression suites. The explicit `--minecraft 26.2` build remains available with legacy dependency paths.
 - **Run Tests:**
   ```bash
   python3 tests/test_installer.py

@@ -13,10 +13,10 @@ import voicechat
 import package_prism
 
 
-def jar(path, mod_id, version='2.6.22+26.2'):
+def jar(path, mod_id, version='1.21.11-2.6.22'):
     with zipfile.ZipFile(path, 'w') as archive:
         archive.writestr('fabric.mod.json', json.dumps({
-            'id': mod_id, 'version': version, 'depends': {'minecraft': '26.2.x'}}))
+            'id': mod_id, 'version': version, 'depends': {'minecraft': '1.21.11'}}))
 
 
 class VoicechatTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class VoicechatTest(unittest.TestCase):
         self.root = Path(temp.name)
         self.mods = self.root / 'profile/mods'
         self.mods.mkdir(parents=True)
-        self.source = self.root / 'voicechat-fabric-2.6.22+26.2.jar'
+        self.source = self.root / 'voicechat-fabric-1.21.11-2.6.22.jar'
         jar(self.source, 'voicechat')
         self.spec = {**voicechat.manifest(), 'sha512': hashlib.sha512(self.source.read_bytes()).hexdigest()}
         jar(self.mods / 'old-voice.jar', 'voicechat', '2.6.20+26.2')
@@ -174,7 +174,7 @@ class VoicechatTest(unittest.TestCase):
         (self.root / 'build').mkdir()
         jar(self.root / 'build/skyblock-toolkit-1.1.0.jar', 'skyblocktoolkit', '1.1.0')
         for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'CHANGELOG.md', 'build.py',
-                     'modpack/voicechat.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
+                     'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('fixture')

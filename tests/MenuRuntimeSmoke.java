@@ -37,6 +37,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
+                    String migration=System.getProperty("toolkit.migrationOptions");
+                    if(migration!=null){
+                        var expected=new java.util.HashMap<String,String>();
+                        for(String line:Files.readAllLines(Path.of(migration))){int colon=line.indexOf(':');if(colon>0)expected.put(line.substring(0,colon),line.substring(colon+1));}
+                        int checked=0;
+                        for(var key:mc.options.keyMappings){
+                            String saved=expected.get("key_"+key.getName());
+                            if(saved!=null){check(saved.equals(key.saveString()),"Migrated control loads: "+key.getName());checked++;}
+                        }
+                        check(checked>40,"Migrated vanilla and mod controls were checked");
+                        mc.options.save();
+                        Files.copy(mc.gameDirectory.toPath().resolve("options.txt"),output.resolve("loaded-options.txt"),StandardCopyOption.REPLACE_EXISTING);
+                        Files.writeString(output.resolve("migration-controls.txt"),"PASS: "+checked+" migrated controls loaded unchanged\n");
+                    }
                     check(((com.skyblocktoolkit.mixin.BossHealthOverlayAccessor)mc.gui.hud.getBossOverlay()).toolkit$getEvents().isEmpty(),"Production boss-bar accessor is remapped");
                     check(((com.skyblocktoolkit.mixin.ChatComponentAccessor)mc.gui.hud.getChat()).toolkit$getTrimmedMessages().isEmpty(),"Production chat accessor is remapped");
                     check(java.util.Arrays.stream(net.minecraft.client.gui.screens.ChatScreen.class.getDeclaredMethods()).anyMatch(m->m.getName().contains("toolkit$onMouseClicked")),"Production chat selection mixin applies");
@@ -234,7 +248,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     BoosterStatsManager.tick();
                     check(!BoosterManager.isActive()&&BoosterStatsManager.history().activeId()<0,"Expired coconut stops money accounting and history despite lingering sidebar");
                     mc.setScreenAndShow(new ToolkitScreen(null,1));scrollBottom(mc);
-                    check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound");
+                    if(System.getProperty("toolkit.migrationOptions")==null)
+                        check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound on a fresh profile");
                     press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
                     check(ToolkitMod.sellAllKey.saveString().equals("key.keyboard.g"),"Sell all key assigned from toolkit");
                     check(Files.readString(net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("options.txt")).contains("key_key.skyblocktoolkit.sellall:key.keyboard.g"),"Sell all key persisted to Minecraft options");

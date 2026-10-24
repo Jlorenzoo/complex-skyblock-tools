@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -36,10 +37,13 @@ def fetch(url, path, sha1=None):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--profile', type=Path, help='Copy real settings and every pack mod into the disposable runtime')
+    cli = parser.parse_args()
     local = settings()
     install = Path(os.environ.get("MINECRAFT_INSTALL", str(Path(local["minecraft_jar"]).parents[2])))
     version = json.loads((install / f"versions/{VERSION}/{VERSION}.json").read_text())
-    output = ROOT / "artifacts/fabric-1.21.11"
+    output = ROOT / ("artifacts/fabric-1.21.11-pack" if cli.profile else "artifacts/fabric-1.21.11")
     output.mkdir(parents=True, exist_ok=True)
     (output / "PASS.txt").unlink(missing_ok=True)
     for screenshot in (output / "screenshots").glob("*.png"):
@@ -78,10 +82,20 @@ def main():
         game = Path(temp)
         mods = game / "mods"
         mods.mkdir()
+        migration_args = []
+        if cli.profile:
+            for folder in ('config', 'resourcepacks'):
+                if (cli.profile / folder).exists():
+                    shutil.copytree(cli.profile / folder, game / folder)
+            for mod in (cli.profile / 'mods').glob('*.jar'):
+                shutil.copy2(mod, mods / mod.name)
+            shutil.copy2(cli.profile / 'options.txt', game / 'options.txt')
+            migration_args = ['-Dtoolkit.migrationOptions=' + str(cli.profile / 'options.txt')]
         for mod in (toolkit, smoke, api):
             shutil.copy2(mod, mods / mod.name)
-        (game / "options.txt").write_text("onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n")
-        args = ["-Xmx1G", "-Dtoolkit.preview=" + str(output), "-Dfabric.log.disableAnsi=true",
+        if not cli.profile:
+            (game / "options.txt").write_text("onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n")
+        args = ["-Xmx1G", *migration_args, "-Dtoolkit.preview=" + str(output), "-Dfabric.log.disableAnsi=true",
                 "-cp", os.pathsep.join(map(str, [*libraries, client])), profile["mainClass"],
                 "--gameDir", str(game), "--assetsDir", str(install / "assets"),
                 "--assetIndex", version["assetIndex"]["id"], "--version", VERSION,
@@ -98,6 +112,25 @@ def main():
             print((output / "runtime.log").read_text(encoding="utf-8")[-12000:])
             raise SystemExit(result.returncode)
         print((output / "PASS.txt").read_text())
+        if cli.profile:
+            def options(path):
+                return dict(line.split(':', 1) for line in path.read_text(encoding='utf-8').splitlines() if ':' in line)
+            original = options(cli.profile / 'options.txt')
+            loaded = options(output / 'loaded-options.txt')
+            changed = []
+            for key in original.keys() & loaded.keys():
+                try:
+                    equal = json.loads(original[key]) == json.loads(loaded[key])
+                except (ValueError, TypeError):
+                    equal = original[key] == loaded[key]
+                if not equal:
+                    changed.append(key)
+            if changed:
+                raise RuntimeError('Migrated options changed: ' + ', '.join(changed))
+            message = f'PASS: {len(original.keys() & loaded.keys())} supported options retained unchanged'
+            (output / 'migration-options.txt').write_text(message + '\n')
+            print((output / 'migration-controls.txt').read_text().strip())
+            print(message)
         print("Production jar SHA-256:", hashlib.sha256(toolkit.read_bytes()).hexdigest())
 
 

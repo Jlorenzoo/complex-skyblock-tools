@@ -3,12 +3,12 @@
 from pathlib import Path
 import argparse,datetime,hashlib,json,os,shutil,subprocess,time,zipfile
 from contextlib import contextmanager
-from local_paths import settings
+from local_paths import settings, toolkit_jar
 
 PROJECT_DIR = Path(__file__).resolve().parents[1] if Path(__file__).resolve().parent.name == "scripts" else Path(__file__).resolve().parent
-SOURCE = PROJECT_DIR / "build" / "skyblock-toolkit-1.1.0.jar"
-if not SOURCE.exists() and (PROJECT_DIR / "skyblock-toolkit-1.1.0.jar").exists():
-    SOURCE = PROJECT_DIR / "skyblock-toolkit-1.1.0.jar"
+SOURCE = toolkit_jar()
+if not SOURCE.exists() and (PROJECT_DIR / SOURCE.name).exists():
+    SOURCE = PROJECT_DIR / SOURCE.name
 MODS = Path(os.environ.get("MODS_DIR", settings().get("mods_dir", str(Path.home() / "Documents/curseforge/minecraft/Instances/Complex Skyblock/mods"))))
 STATUS = PROJECT_DIR / "toolkit-installation-status.txt"
 LOCK_FILE = PROJECT_DIR / ".toolkit-install.lock"
@@ -81,6 +81,21 @@ def mod_id(path):
             return None
         return json.loads(z.read("fabric.mod.json")).get("id")
 
+def validate_target(metadata, mods):
+    """Never put a different Minecraft build into a known launcher profile."""
+    instance = mods.parent / "minecraftinstance.json"
+    prism = mods.parent.parent / "mmc-pack.json"
+    version = None
+    if instance.exists():
+        version = json.loads(instance.read_text(encoding="utf-8-sig")).get("gameVersion")
+    elif prism.exists():
+        components = json.loads(prism.read_text(encoding="utf-8"))["components"]
+        version = next((c["version"] for c in components if c["uid"] == "net.minecraft"), None)
+    if version:
+        requirement = metadata.get("depends", {}).get("minecraft")
+        if requirement not in (version, "~" + version, version + ".x"):
+            raise SystemExit(f"Toolkit requires Minecraft {requirement}; profile uses {version}. No mods replaced.")
+
 def main():
     global MODS, SOURCE
     parser = argparse.ArgumentParser()
@@ -100,6 +115,7 @@ def main():
         with zipfile.ZipFile(SOURCE) as z:
             meta = json.loads(z.read("fabric.mod.json"))
             assert meta["id"] == "skyblocktoolkit" and meta["version"] == "1.1.0" and z.testzip() is None
+            validate_target(meta, MODS)
 
         deadline = time.monotonic() + 86400
         while active_clients():

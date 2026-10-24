@@ -1,5 +1,9 @@
 # Skyblock Toolkit for Fabric 1.21.11
 
+This is the maintained pack target. From the repository root, `python build.py`
+builds this jar and runs the shared regressions; `python scripts/install.py --wait`
+uses this build by default. The previous 26.2 profile can remain as a fallback.
+
 [Download the 1.21.11 build](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0-mc1.21.11).
 
 ## Install

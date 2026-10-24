@@ -95,5 +95,21 @@ class InstallerTest(unittest.TestCase):
             with self.assertRaises(SystemExit), installer.installer_lock():
                 pass
 
+    def test_wrong_minecraft_target_is_rejected_before_mods_change(self):
+        (self.mods.parent / "minecraftinstance.json").write_text('{"gameVersion":"26.2"}')
+        with zipfile.ZipFile(self.source, "w") as archive:
+            archive.writestr("fabric.mod.json", json.dumps({"id":"skyblocktoolkit", "version":"1.1.0", "depends":{"minecraft":"~1.21.11"}}))
+        with patch.object(installer, "active_clients", return_value=[]), self.assertRaises(SystemExit):
+            installer.main()
+        self.assertEqual({p.name:p.read_bytes() for p in self.mods.iterdir()}, self.before)
+
+    def test_correct_minecraft_target_is_accepted(self):
+        (self.mods.parent / "minecraftinstance.json").write_text('{"gameVersion":"1.21.11"}')
+        with zipfile.ZipFile(self.source, "w") as archive:
+            archive.writestr("fabric.mod.json", json.dumps({"id":"skyblocktoolkit", "version":"1.1.0", "depends":{"minecraft":"~1.21.11"}}))
+        with patch.object(installer, "active_clients", return_value=[]):
+            installer.main()
+        self.assertEqual((self.mods / self.source.name).read_bytes(), self.source.read_bytes())
+
 if __name__ == "__main__":
     unittest.main()

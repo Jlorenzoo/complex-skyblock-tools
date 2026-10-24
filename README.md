@@ -8,9 +8,9 @@
 
 **The Essential Quality-of-Life HUD & Stats Suite for Complex Gaming Skyblock**
 
-[![Minecraft 26.2](https://img.shields.io/badge/Minecraft-26.2-ED1C24?style=for-the-badge&logo=minecraft&logoColor=white)](#)
-[![Fabric Loader](https://img.shields.io/badge/Fabric-0.19.5+-white?style=for-the-badge&logo=fabric&logoColor=black)](#)
-[![Java 25](https://img.shields.io/badge/Java-25-ED1C24?style=for-the-badge&logo=openjdk&logoColor=white)](#)
+[![Minecraft 1.21.11](https://img.shields.io/badge/Minecraft-1.21.11-ED1C24?style=for-the-badge&logo=minecraft&logoColor=white)](#)
+[![Fabric Loader](https://img.shields.io/badge/Fabric-0.18.4+-white?style=for-the-badge&logo=fabric&logoColor=black)](#)
+[![Java 21](https://img.shields.io/badge/Java-21-ED1C24?style=for-the-badge&logo=openjdk&logoColor=white)](#)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-white?style=for-the-badge)](#)
 [![Server: Complex Gaming](https://img.shields.io/badge/Server-Complex_Gaming-ED1C24?style=for-the-badge)](#)
 
@@ -20,24 +20,27 @@
 
 ## Quick Installation
 
-### Minecraft 1.21.11 teammates
+### Minecraft 1.21.11 (maintained pack target)
 
 Use the separate **[Fabric 1.21.11 download](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0-mc1.21.11)**:
 `skyblock-toolkit-1.1.0+mc1.21.11.jar`. It requires Java 21, Fabric Loader >=0.18.4
 and Fabric API for 1.21.11. Place it in your 1.21.11 profile's `mods` folder and
 press **Right Shift**. See [installation and build instructions](versions/1.21.11/README.md).
-The instructions and Prism pack below target Minecraft 26.2.
+Future pack updates target 1.21.11. `python build.py` builds the current sources,
+runs regressions and produces the matching jar; `python scripts/install.py --wait`
+safely installs it into the configured profile. Keep your previous profile as a fallback.
 
 ### Method 1: Fabric Mod (Recommended)
 Works seamlessly with your existing Fabric profile alongside **Litematica**, **Sodium**, **Iris**, and other client mods.
 
-1. Ensure you have **Fabric Loader (>= 0.19.0)** and **Fabric API** installed for **Minecraft 26.2**.
-2. Download **[Skyblock Toolkit (Latest Release)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
+1. Ensure you have **Fabric Loader (>= 0.18.4)** and **Fabric API** installed for **Minecraft 1.21.11**.
+2. Download **[Skyblock Toolkit for Fabric 1.21.11](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0-mc1.21.11)**.
 3. Place the `.jar` directly into your `.minecraft/mods/` folder.
 4. Launch Minecraft and press **`Right Shift`** (or type `/toolkit`) to open the settings hub!
 
-### Method 2: Prism Launcher (Pre-configured Pack)
-For players who prefer an all-in-one standalone instance with texture packs and configs ready out of the box:
+### Historical 26.2 Prism pack
+The existing published Prism ZIP targets Minecraft 26.2 / Java 25. Use the 1.21.11
+jar/profile above for the maintained target. To use that historical pack:
 
 1. Download **[Complex-Skyblock-Prism (Latest Release)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest)**.
 2. In Prism Launcher: **Add Instance** → **Import** → select the zip file.
@@ -67,8 +70,8 @@ Use the **Dark mode / Light mode** button in the toolkit menu header to switch b
 ### Proximity voice chat on Complex
 
 Complex uses **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** by
-Max Henkel. Lunar is not required. The Prism pack includes the Fabric version for
-Minecraft 26.2 as a separate mod. For an existing configured profile, run
+Max Henkel. Lunar is not required. The maintained pack pins the Fabric version for
+Minecraft 1.21.11 as a separate mod; the old Prism ZIP contains the 26.2 build. For an existing configured profile, run
 `python scripts/voicechat.py --install --wait`; restart Minecraft after installation.
 
 Press **V** to select your microphone and speakers and choose **push-to-talk**.

@@ -1,0 +1,55 @@
+{
+  "minecraft": "1.21.11",
+  "java": 21,
+  "loader": "0.18.4",
+  "mods": [
+    {
+      "project": "fabric-api",
+      "version_id": "6qAuTtLR",
+      "version": "0.141.6+1.21.11",
+      "filename": "fabric-api-0.141.6+1.21.11.jar",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/6qAuTtLR/fabric-api-0.141.6%2B1.21.11.jar",
+      "sha512": "852d3682c4f353fd0ca86546af8578513e8bcf628377fa9d49c556bc59c5024c69ab56c92fc6dfba11fed19e4316a3f5636e7e07fd3d96f7043b531aef59b637"
+    },
+    {
+      "project": "simple-voice-chat",
+      "version_id": "CN53keBo",
+      "version": "fabric-1.21.11-2.6.22",
+      "filename": "voicechat-fabric-1.21.11-2.6.22.jar",
+      "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/CN53keBo/voicechat-fabric-1.21.11-2.6.22.jar",
+      "sha512": "dab29df8577b220e1c2ad97b784c5acb837501c8ba42d83205c085f44b4a6df75bce2477b8c2c7905285d248fd2d195b3dc77f169cb11a226dc2965e23f5859a"
+    },
+    {
+      "project": "litematica",
+      "version_id": "mengBR9D",
+      "version": "0.26.16",
+      "filename": "litematica-fabric-1.21.11-0.26.16.jar",
+      "url": "https://cdn.modrinth.com/data/bEpr0Arc/versions/mengBR9D/litematica-fabric-1.21.11-0.26.16.jar",
+      "sha512": "c7d8e4ee3a1a4eacb825b19d389a06e17f6c4b78c3074fd929eb1bb1f5eabdbd77bd09545229b042e50f47aa78deac4005809a4c4bf554537e816e40e2885005"
+    },
+    {
+      "project": "malilib",
+      "version_id": "loabWpyU",
+      "version": "0.27.20",
+      "filename": "malilib-fabric-1.21.11-0.27.20.jar",
+      "url": "https://cdn.modrinth.com/data/GcWjdA9I/versions/loabWpyU/malilib-fabric-1.21.11-0.27.20.jar",
+      "sha512": "c6a0cbc407962b43316e52b15d928aa2137efa86963cdcea29699f43efa6442519206bdbfac23e4c6c36237931006ecd12b9c6450a4efd1a9a20689e50b5622a"
+    },
+    {
+      "project": "chatshot",
+      "version_id": "DAKdYIP1",
+      "version": "1.0.9",
+      "filename": "ChatShot (1.21.11-fabric)-1.0.9.jar",
+      "url": "https://cdn.modrinth.com/data/X2Zy7Oi6/versions/DAKdYIP1/ChatShot%20%281.21.11-fabric%29-1.0.9.jar",
+      "sha512": "7f4cdec97e9164e1b77f4a53f7f49a3b87665305a2d1e9dce9b831e3f6c4759c8556c356e37853260d20903b454b5d5ba505596b3e155d76ac595405063af4f7"
+    },
+    {
+      "project": "yacl",
+      "version_id": "pHWDw3Vc",
+      "version": "3.8.2+1.21.11-fabric",
+      "filename": "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/pHWDw3Vc/yet_another_config_lib_v3-3.8.2%2B1.21.11-fabric.jar",
+      "sha512": "392db7d471030cca27483ecf58c626a14cd73d71a18afe6d4173c6b030948b8a925b36e708d4cc2c897dfa3f20a7f23b999fc18aa6d36c156da29037601153ac"
+    }
+  ]
+}

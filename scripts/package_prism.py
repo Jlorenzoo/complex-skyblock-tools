@@ -16,6 +16,8 @@ def main():
     parser.add_argument('--instance', type=Path, default=DEFAULT_INSTANCE)
     parser.add_argument('--output', type=Path, default=PROJECT / 'dist/Complex-Skyblock-Prism-1.1.0.zip')
     args = parser.parse_args()
+    # This explicitly retained export is the historical 26.2 pack. The maintained
+    # 1.21.11 profile uses the Gradle build and its own dependency manifest.
     game = args.instance / '.minecraft'
     jar = PROJECT / 'build/skyblock-toolkit-1.1.0.jar'
     api = game / 'mods/fabric-api-0.160.0+26.2.jar'
@@ -30,7 +32,7 @@ def main():
     with zipfile.ZipFile(jar) as archive:
         metadata = json.loads(archive.read('fabric.mod.json'))
         assert metadata['id'] == 'skyblocktoolkit' and metadata['version'] == '1.1.0'
-    voicechat = fetch_voicechat()
+    voicechat = fetch_voicechat(minecraft='26.2')
 
     files = {
         '.minecraft/mods/' + jar.name: jar,
@@ -47,7 +49,7 @@ def main():
         if path.is_file():
             files['toolkit-source/' + path.relative_to(PROJECT).as_posix()] = path
     for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'CHANGELOG.md', 'build.py',
-                 'modpack/voicechat.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
+                 'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
         files['toolkit-source/' + name] = PROJECT / name
 
     readme = '''COMPLEX SKYBLOCK - PRISM PACK
@@ -79,7 +81,7 @@ Toolkit GPL source and licenses are in toolkit-source.
     with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('instance.cfg', '[General]\nConfigVersion=1.3\nInstanceType=OneSix\nname=Complex Skyblock Toolkit\niconKey=default\nOverrideJavaLocation=false\nOverrideCommands=false\nOverrideMemory=false\n')
         archive.writestr('mmc-pack.json', json.dumps(components, indent=2) + '\n')
-        archive.writestr('.minecraft/options.txt', control_options('resourcePacks:["vanilla","skyblocktoolkit:clear_harvest","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n'))
+        archive.writestr('.minecraft/options.txt', control_options('resourcePacks:["vanilla","skyblocktoolkit:clear_harvest","file/' + pack.name + '"]\nincompatibleResourcePacks:[]\n', minecraft='26.2'))
         archive.writestr('READ-ME.txt', readme)
         for name, path in sorted(files.items()):
             archive.write(path, name)

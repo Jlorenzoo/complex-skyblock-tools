@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import subprocess
 import tempfile
+import argparse
 from scripts.local_paths import settings
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -101,4 +102,16 @@ def main():
         shutil.rmtree(temp_dir)
 
 if __name__ == "__main__":
-    main()
+    from scripts.local_paths import minecraft_version
+    parser = argparse.ArgumentParser(description="Build the maintained Fabric pack target.")
+    parser.add_argument("--minecraft", choices=("1.21.11", "26.2"), default=minecraft_version())
+    args = parser.parse_args()
+    if args.minecraft == "26.2":
+        main()
+    else:
+        project = os.path.join(PROJECT_DIR, "versions", "1.21.11")
+        wrapper = [os.path.join(project, "gradlew.bat")] if os.name == "nt" else ["bash", "gradlew"]
+        env = dict(os.environ)
+        if not env.get("JAVA_HOME") and os.path.isfile(JAVAC):
+            env["JAVA_HOME"] = os.path.dirname(os.path.dirname(JAVAC))
+        subprocess.run([*wrapper, "build", "--no-daemon", "--console=plain"], cwd=project, env=env, check=True)

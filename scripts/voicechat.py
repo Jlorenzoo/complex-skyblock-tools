@@ -11,9 +11,10 @@ import urllib.request
 import zipfile
 
 import install as toolkit_install
+from local_paths import minecraft_version
 
 PROJECT = Path(__file__).resolve().parents[1]
-MANIFEST = PROJECT / 'modpack/voicechat.json'
+MANIFEST = PROJECT / ('modpack/voicechat-26.2.json' if minecraft_version() == '26.2' else 'modpack/voicechat.json')
 STATUS = PROJECT / 'voicechat-installation-status.txt'
 CONTROL_DEFAULTS = {
     'key_key.voice_chat': 'key.keyboard.v',
@@ -29,12 +30,13 @@ CONTROL_DEFAULTS = {
 }
 
 
-def control_options(existing=''):
+def control_options(existing='', minecraft=None):
     """Seed only missing voice keys; retain all player settings, including unbound keys."""
     present = {line.split(':', 1)[0] for line in existing.splitlines()}
     # Without the options data version, Minecraft treats modern key names as
     # pre-LWJGL3 numeric bindings and discards them during migration.
-    defaults = {'version': '4903', **CONTROL_DEFAULTS}  # Minecraft 26.2 data version
+    minecraft = minecraft or manifest()['minecraft']
+    defaults = {'version': '4671' if minecraft == '1.21.11' else '4903', **CONTROL_DEFAULTS}
     additions = ''.join(key + ':' + value + '\n' for key, value in defaults.items()
                         if key not in present)
     if not additions:
@@ -76,8 +78,9 @@ def install_controls(game, backup_dir):
         temporary.unlink(missing_ok=True)
 
 
-def manifest():
-    return json.loads(MANIFEST.read_text(encoding='utf-8'))
+def manifest(minecraft=None):
+    path = PROJECT / 'modpack/voicechat-26.2.json' if minecraft == '26.2' else MANIFEST
+    return json.loads(path.read_text(encoding='utf-8'))
 
 
 def verify(path, spec):
@@ -87,12 +90,12 @@ def verify(path, spec):
         meta = json.loads(archive.read('fabric.mod.json'))
         if (archive.testzip() is not None or meta['id'] != 'voicechat'
                 or meta['version'] != spec['version']
-                or meta['depends']['minecraft'] != spec['minecraft'] + '.x'):
+                or meta['depends']['minecraft'] not in (spec['minecraft'], spec['minecraft'] + '.x')):
             raise ValueError('Unexpected Simple Voice Chat Fabric metadata')
 
 
-def fetch():
-    spec = manifest()
+def fetch(minecraft=None):
+    spec = manifest(minecraft) if minecraft else manifest()
     dest = PROJECT / 'build/dependencies' / spec['filename']
     if dest.exists():
         verify(dest, spec)
@@ -123,6 +126,7 @@ def status(message):
 def install(source, mods, wait=False):
     spec = manifest()
     verify(source, spec)
+    toolkit_install.validate_target({'depends': {'minecraft': spec['minecraft']}}, mods)
     if not mods.is_dir():
         raise SystemExit('Mods directory does not exist: ' + str(mods))
     # Share the toolkit installer's profile detection and exclusive lock.
