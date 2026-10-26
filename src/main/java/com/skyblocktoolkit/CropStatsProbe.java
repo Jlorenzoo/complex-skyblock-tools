@@ -23,6 +23,9 @@ public final class CropStatsProbe {
     private static long requested, lastRequest;
     private static boolean hasRequested;
     private static String hoe = "";
+    private static long started;
+    private static CropStatSample.Result lastResult;
+    private static String feedback = "Validate counts before comparing hoes.";
 
     private CropStatsProbe() {}
 
@@ -42,7 +45,7 @@ public final class CropStatsProbe {
 
     public static void register(com.mojang.brigadier.builder.LiteralArgumentBuilder<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> root) {
         var command = ClientCommands.literal("crops").executes(ctx -> {
-            say("Test server crop statistics: /toolkit crops start, then harvest, then /toolkit crops stop. Status/cancel are also available. Counts need validation on this server.");
+            say("Open Right Shift > Farming > Crop harvest test for Start, Stop, Cancel and results. The optional /toolkit crops start/stop commands use the same test. Counts need validation on this server.");
             return 1;
         });
         command.then(ClientCommands.literal("start").executes(ctx -> request("start")));
@@ -54,14 +57,43 @@ public final class CropStatsProbe {
                 : "No crop-stat sample running. Use /toolkit crops start.");
             return 1;
         }));
-        command.then(ClientCommands.literal("cancel").executes(ctx -> { reset(); say("Crop-stat test cancelled."); return 1; }));
+        command.then(ClientCommands.literal("cancel").executes(ctx -> { cancel(); return 1; }));
         root.then(command);
+    }
+
+    public static boolean blockedOnCurrentServer() {
+        var server = Minecraft.getInstance().getCurrentServer();
+        return server != null && CropStatsPolicy.requiresApproval(server.ip);
+    }
+    public static boolean canStart() { return connected() && !blockedOnCurrentServer() && pending == null && !SAMPLE.active() && cooledDown(); }
+    public static boolean canStop() { return connected() && !blockedOnCurrentServer() && pending == null && SAMPLE.active() && cooledDown(); }
+    public static boolean canCancel() { return pending != null || SAMPLE.active(); }
+    private static boolean connected() { var mc=Minecraft.getInstance(); return mc.player != null && mc.getConnection() != null; }
+    private static boolean cooledDown() { return !hasRequested || System.nanoTime() - lastRequest >= COOLDOWN; }
+    public static void start() { request("start"); }
+    public static void stop() { request("stop"); }
+    public static void cancel() { reset(); say("Crop-stat test cancelled."); }
+    public static String menuStatus() {
+        if (blockedOnCurrentServer()) return "Complex: staff approval required";
+        if (pending != null) return "Waiting for server statistics...";
+        if (SAMPLE.active()) return String.format(Locale.ROOT,"Test running: %.0fs",(System.nanoTime()-started)/1_000_000_000.0);
+        return lastResult != null ? "Test finished · unvalidated count" : connected() ? "Ready to test server crop counts" : "Join a server to start a test";
+    }
+    public static String menuTotal() { return lastResult == null ? "Crop blocks: --" : String.format(Locale.ROOT,"Crop blocks: %,d",lastResult.total()); }
+    public static String menuRate() {
+        return lastResult == null ? "Rate: -- blocks/h" : String.format(Locale.ROOT,"Rate: %,.0f blocks/h · %.1fs",lastResult.hourly(),lastResult.elapsedNanos()/1_000_000_000.0);
+    }
+    public static String menuFeedback() {
+        if (blockedOnCurrentServer()) return "Blocked until Complex staff approves it.";
+        if (pending == null && SAMPLE.active() && !cooledDown()) return "Stop becomes available after 5 seconds.";
+        return feedback;
     }
 
     private static int request(String operation) {
         var mc = Minecraft.getInstance();
         checkContext();
         if (mc.player == null || mc.getConnection() == null) { say("Join a server first."); return 0; }
+        if (blockedOnCurrentServer()) { say("Complex has not approved this custom counter. Ask staff before use; no statistics request sent."); return 0; }
         if (pending != null) { say("Still waiting for the previous statistics request."); return 0; }
         if (operation.equals("start") && SAMPLE.active()) { say("A sample is already running. Stop or cancel it first."); return 0; }
         if (operation.equals("stop") && !SAMPLE.active()) { say("Start a sample first: /toolkit crops start."); return 0; }
@@ -71,7 +103,7 @@ public final class CropStatsProbe {
         pending = operation;
         requested = lastRequest = now;
         hasRequested = true;
-        if (operation.equals("start")) hoe = mc.player.getMainHandItem().getHoverName().getString();
+        if (operation.equals("start")) { hoe = mc.player.getMainHandItem().getHoverName().getString(); lastResult = null; }
         mc.getConnection().send(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS));
         say("Requesting the server's crop block statistics...");
         return 1;
@@ -80,11 +112,12 @@ public final class CropStatsProbe {
     private static void checkContext() {
         var mc = Minecraft.getInstance();
         if (connection != null && (mc.player == null || mc.getConnection() != connection)) {
-            reset(); hasRequested = false; return;
+            reset(); lastResult = null; feedback = "Connection changed; sample discarded."; hasRequested = false; return;
         }
         if (pending != null && System.nanoTime() - requested >= TIMEOUT) {
             reset();
             say("No statistics reply within 10 seconds. Sample discarded; this server may not expose vanilla statistics.");
+            feedback = "No server reply; test discarded.";
         }
     }
 
@@ -100,26 +133,32 @@ public final class CropStatsProbe {
         long now = System.nanoTime();
         if (operation.equals("start")) {
             SAMPLE.start(counts, now);
-            say("Server replied. Sample started with " + hoe + ". Harvest a known number of crops, then /toolkit crops stop.");
+            started = now;
+            say("Server replied. Sample started with " + hoe + ". Harvest a known number of crops, then reopen Farming and press Stop crop test.");
             say("Diagnostic only: vanilla stats may omit hoe effects or include immature crops. Rune/ability messages are ignored.");
+            feedback = "Harvest, then reopen Farming and press Stop.";
             return;
         }
         var result = SAMPLE.finish(counts, now);
-        if (!result.valid()) { say("Statistics reset or became incomplete. Sample discarded; no rate calculated."); return; }
+        if (!result.valid()) { say("Statistics reset or became incomplete. Sample discarded; no rate calculated."); feedback = "Counters changed; restart the test."; return; }
+        lastResult = result;
         say(String.format(Locale.ROOT, "%s: server reports %,d crop blocks in %.1fs (%,.0f/h). Unvalidated server statistic.",
             hoe, result.total(), result.elapsedNanos() / 1_000_000_000.0, result.hourly()));
         if (result.total() == 0) {
             say("No increase reported. If you harvested crops, this counter is unsuitable on this server.");
+            feedback = "No gain reported; server may not track crops.";
         } else {
             result.changes().entrySet().stream().filter(e -> e.getValue() > 0).sorted(Map.Entry.comparingByKey())
                 .forEach(e -> say(e.getKey() + ": " + e.getValue()));
             say("Compare against a known harvest before trusting this count, especially crops broken by hoe effects.");
+            feedback = "Check against a known number of harvested crops.";
         }
     }
 
     private static void reset() { SAMPLE.reset(); pending = null; connection = null; hoe = ""; }
 
     private static void say(String message) {
+        feedback = message;
         var player = Minecraft.getInstance().player;
         if (player != null) player.sendSystemMessage(Component.literal("[Crop stats] " + message));
     }

@@ -98,6 +98,17 @@ On a configured Windows workstation, `python tests/run_smoke_windows.py` checks 
 
 ### Crop statistics diagnostic
 
+The same test is available in **Right Shift → Farming → Crop harvest test**,
+with Start, Stop and Cancel buttons, status, totals and the resulting hourly
+rate. It sends no requests just by opening the menu. Results stay in memory.
+
+Rules checked 2026-10-26: Complex's official [Allowed Game Modifications](https://www.mc-complex.com/forums/vanilla/threads/%E2%AD%90-allowed-game-modifications.9/)
+does not explicitly approve this custom counter and requires staff approval for
+unlisted modifications. The diagnostic therefore blocks both commands and menu
+Start/Stop for `mc-complex.com` and its subdomains, including explicit ports.
+No staff approval has been obtained. This restriction is not certification of
+the modpack's other features or of use on other servers.
+
 `/toolkit crops start` requests vanilla block-mining statistics from the server
 and starts a sample only after its reply. Harvest a known number of crops, then
 use `/toolkit crops stop` to request the end counters and print per-crop changes,

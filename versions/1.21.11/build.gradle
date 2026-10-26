@@ -98,7 +98,7 @@ def regressionClasses = [
     'com.moneybooster.EarningsActivityTest', 'ToolkitLayoutTest',
     'ToolkitPaletteTest', 'com.skyblocktoolkit.AhSaleNotifierTest',
     'com.skyblocktoolkit.UpdateChannelTest', 'com.skyblocktoolkit.StartupJoinTest',
-    'com.skyblocktoolkit.CropStatSampleTest'
+    'com.skyblocktoolkit.CropStatSampleTest', 'com.skyblocktoolkit.CropStatsPolicyTest'
 ]
 regressionClasses.each { className ->
     def suite = tasks.register('run' + className.tokenize('.').last(), JavaExec) {
