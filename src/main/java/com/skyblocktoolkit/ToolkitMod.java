@@ -26,7 +26,6 @@ public final class ToolkitMod implements ClientModInitializer {
     private static int requestedPage;
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
-        CropStatsProbe.init();
         StartupConnection.init();
         ClearHarvest.init();
         UpdateManager.cleanOldBackups();
@@ -74,7 +73,6 @@ public final class ToolkitMod implements ClientModInitializer {
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher,access)->{
             var command=ClientCommands.literal("toolkit").executes(ctx->{requestedPage=0;requested=true;return 1;});
-            CropStatsProbe.register(command);
             command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
             command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
             String[] modules={"boosters","fishing","chat","auction","hud","blackout","farming","farm"};

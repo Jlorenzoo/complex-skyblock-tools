@@ -30,7 +30,6 @@ public final class ToolkitScreen extends Screen {
     private ToolkitLayout layout;
     private final List<Control> controls=new ArrayList<>();
     private final List<Label> labels=new ArrayList<>();
-    private final Map<AbstractWidget,BooleanSupplier> availability=new HashMap<>();
     private record Control(AbstractWidget widget,int top,int rowHeight){}
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
@@ -38,7 +37,7 @@ public final class ToolkitScreen extends Screen {
     private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General"};
     public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,10);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();availability.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
@@ -91,7 +90,6 @@ public final class ToolkitScreen extends Screen {
         clear.setTooltip(Tooltip.create(Component.literal("Clear search (Escape)")));
     }
     private void clearBody(){
-        availability.clear();
         for(var control:controls)removeWidget(control.widget());
         controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
     }
@@ -232,35 +230,20 @@ public final class ToolkitScreen extends Screen {
     }
     private void farming(){
         var cfg=ToolkitConfig.get();var money=ModConfig.getInstance();
-        section("Crop harvest test",0);
-        label("Server crop counts · no rune messages.",14);
-        label(CropStatsProbe::menuStatus,28,ToolkitTheme.palette().text(),1);
-        int half=Math.min(144,(layout.bodyWidth()-8)/2);
-        cropAction("Start crop test",44,0,half,CropStatsProbe::start,CropStatsProbe::canStart);
-        cropAction("Stop crop test",44,half+8,half,CropStatsProbe::stop,CropStatsProbe::canStop);
-        cropAction("Cancel crop test",68,0,half,CropStatsProbe::cancel,CropStatsProbe::canCancel);
-        label(CropStatsProbe::menuTotal,94,ToolkitTheme.palette().text(),1);
-        label(CropStatsProbe::menuRate,108,ToolkitTheme.palette().text(),1);
-        label(CropStatsProbe::menuFeedback,124,ToolkitTheme.palette().muted(),1);
-        section("Crop visibility",152);
-        toggle("Clear Harvest textures",168,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-        label("Dim immature crops to spot harvest-ready plants.",194);
-        section("Crop earnings",220);
-        toggle("Crop earnings HUD",234,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        toggle("Include boosters in crop average",258,money::includesBoostersInAverage,money::toggleAverageBoosters);
-        label(()->BoosterStatsManager.averageLabel(),284,ToolkitTheme.palette().text(),1);
-        section("Minecraft XP",310);
-        toggle("XP per hour HUD",326,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        toggle("Include XP boosters",348,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
-        label(()->XpTracker.averageLabel(),376,ToolkitTheme.palette().xpText(),1);
-        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},392);
-        section("Quick selling",430);
-        sellAllBinding(446);
-    }
-    private void cropAction(String title,int top,int offset,int width,Runnable action,BooleanSupplier enabled){
-        var button=addRenderableWidget(ToolkitButton.action(title,b->{action.run();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,width,20));
-        button.setTooltip(Tooltip.create(Component.literal("Validate a known harvest before comparing hoes. Start and Stop each request vanilla statistics once. Opening the menu sends no requests.")));
-        availability.put(button,enabled);controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
+        section("Crop visibility",0);
+        toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
+        label("Dim immature crops to spot harvest-ready plants.",42);
+        section("Crop earnings",68);
+        toggle("Crop earnings HUD",82,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        toggle("Include boosters in crop average",106,money::includesBoostersInAverage,money::toggleAverageBoosters);
+        label(()->BoosterStatsManager.averageLabel(),132,ToolkitTheme.palette().text(),1);
+        section("Minecraft XP",158);
+        toggle("XP per hour HUD",174,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
+        toggle("Include XP boosters",196,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
+        label(()->XpTracker.averageLabel(),224,ToolkitTheme.palette().xpText(),1);
+        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},240);
+        section("Quick selling",278);
+        sellAllBinding(294);
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
@@ -371,7 +354,6 @@ public final class ToolkitScreen extends Screen {
         if(!visible)for(int i=0;i<8;i++)g.fill(x+1+i,y+8-i,x+2+i,y+9-i,color);
     }
     private void updateControls(){
-        availability.forEach((widget,enabled)->widget.active=enabled.getAsBoolean());
         scroll=Math.clamp(scroll,0,layout.maxScroll(contentHeight));
         for(var row:controls){row.widget().setY(layout.bodyY()+row.top()-scroll);row.widget().visible=layout.fits(row.top(),row.rowHeight(),scroll);
             if(!row.widget().visible&&getFocused()==row.widget())setFocused(null);

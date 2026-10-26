@@ -19,7 +19,6 @@ public final class ToolkitSearch {
         new Entry(1,"Boosters","Coconut alerts","sound preview minimum boost percentage threshold money"),
         new Entry(1,"Boosters","Quick selling","sell all sellall key binding shortcut"),
         new Entry(9,"Farming","Crop visibility","clear harvest textures immature dim desaturate"),
-        new Entry(9,"Farming","Crop harvest test","crops harvested blocks counter per hour hoe start stop cancel statistics diagnostic"),
         new Entry(9,"Farming","Crop earnings","money hud average rate tests include boosters base"),
         new Entry(9,"Farming","Minecraft XP","experience xp per hour hud include boosters rate tests"),
         new Entry(9,"Farming","Quick selling","sell all sellall key binding shortcut"),

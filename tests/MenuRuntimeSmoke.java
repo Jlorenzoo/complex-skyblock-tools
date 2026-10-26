@@ -37,14 +37,6 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
-                    var cropCommands = net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("toolkit");
-                    CropStatsProbe.register(cropCommands);
-                    var cropDispatcher = new com.mojang.brigadier.CommandDispatcher<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource>();
-                    cropDispatcher.register(cropCommands);
-                    check(cropDispatcher.execute("toolkit crops start", null)==0,"Crop stats refuses requests without a player/connection");
-                    check(cropDispatcher.execute("toolkit crops stop", null)==0,"Crop stats refuses stop without a connection");
-                    check(cropDispatcher.execute("toolkit crops status", null)==1,"Crop stats status works offline");
-                    check(cropDispatcher.execute("toolkit crops cancel", null)==1,"Crop stats cancellation works offline");
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
@@ -169,10 +161,6 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==12){
                     capture(mc,"farming");
                     var screen=mc.gui.screen();
-                    var cropButtons=screen.children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith("crop test")).map(c->(Button)c).toList();
-                    check(cropButtons.size()==3,"Farming has Start, Stop and Cancel crop controls");
-                    check(cropButtons.stream().allMatch(b->b.visible&&!b.active),"Crop controls visible and disabled without a connection in compact layout");
-                    check(CropStatsProbe.menuTotal().equals("Crop blocks: --"),"Crop results not fabricated before sampling");
                     var cfg=ToolkitConfig.get();
                     boolean oldHarvest=ClearHarvest.isEnabled();
                     for(var child:screen.children())if(child instanceof Button b&&b.getMessage().getString().startsWith("Clear Harvest textures")){b.onPress(null);break;}
@@ -381,22 +369,6 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage==80){
-                    var result=CropStatsProbe.class.getDeclaredField("lastResult");result.setAccessible(true);
-                    result.set(null,new CropStatSample.Result(true,5_000_000_000L,java.util.Map.of("wheat",20L)));
-                    check(CropStatsProbe.menuTotal().equals("Crop blocks: 20"),"Crop result exposed in menu");
-                    check(CropStatsProbe.menuRate().contains("14,400"),"Crop rate exposed in menu");
-                    mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
-                    ToolkitConfig.get().lightMode=false;mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;
-                }
-                if(stage==81){capture(mc,"crop-test-results-dark");switchTheme(mc);stage++;return;}
-                if(stage==82){capture(mc,"crop-test-results-light");mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;}
-                if(stage==83){capture(mc,"crop-test-results-light-compact");switchTheme(mc);stage++;return;}
-                if(stage==84){capture(mc,"crop-test-results-dark-compact");stage++;return;}
-                if(stage==85){
-                    // Screenshot encoding finishes asynchronously after rendering.
-                    if(!Files.exists(output.resolve("screenshots/crop-test-results-dark-compact.png")))return;
-                    var result=CropStatsProbe.class.getDeclaredField("lastResult");result.setAccessible(true);result.set(null,null);
-                    check(Files.exists(output.resolve("screenshots/crop-test-results-dark-compact.png")),"Crop test rendered in both themes and sizes");
                     if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
                     check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
                     Files.writeString(output.resolve("PASS.txt"),"PASS: global search, every section destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");

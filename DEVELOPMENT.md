@@ -96,35 +96,6 @@ On a configured Windows workstation, `python tests/run_smoke_windows.py` checks 
 
 ## Install
 
-### Crop statistics diagnostic
-
-The same test is available in **Right Shift → Farming → Crop harvest test**,
-with Start, Stop and Cancel buttons, status, totals and the resulting hourly
-rate. It sends no requests just by opening the menu. Results stay in memory.
-
-Rules checked 2026-10-26: Complex's official [Allowed Game Modifications](https://www.mc-complex.com/forums/vanilla/threads/%E2%AD%90-allowed-game-modifications.9/)
-does not explicitly approve this custom counter and requires staff approval for
-unlisted modifications. No staff approval has been obtained. At the player's
-explicit request, there is no server-specific block; this does not mean the
-counter is approved. Each manual Start/Stop sends the same `REQUEST_STATS`
-packet used by the vanilla Statistics screen. There is no automatic polling or
-gameplay automation in this diagnostic. Detection and enforcement on Complex
-have not been established.
-
-`/toolkit crops start` requests vanilla block-mining statistics from the server
-and starts a sample only after its reply. Harvest a known number of crops, then
-use `/toolkit crops stop` to request the end counters and print per-crop changes,
-elapsed time and the reported hourly rate in local chat. `status` and `cancel`
-are also available. Requests are manual, at least five seconds apart; a missing
-reply after ten seconds or a disconnect discards the sample.
-
-This is a diagnostic, not a verified total-harvest tracker. Some servers do not
-maintain vanilla crop statistics, or omit crops broken by plugin/hoe effects;
-vanilla counts can include immature plants. Validate a known manual harvest and
-then a known hoe-effect harvest before using this counter for comparisons. A
-zero result after harvesting means this data source is unsuitable. It does not
-read rune/ability messages, earnings, inventory yields or nearby block changes.
-
 Run `python scripts/install.py --wait` to wait for clients using the configured profile to close. `--mods PATH` and `--source PATH` override the target and built jar. Check `toolkit-installation-status.txt` before relaunching.
 
 The installer verifies backups and the installed checksum, preserves unrelated mods and settings/history, and rolls back failed replacement. Keep a rollback copy outside `mods` as the in-game updater cleans old `.bak` files. Do not force-close a player's running client to install an update. Never commit launcher tokens, workstation paths, logs, compiled jars, or private game history.
