@@ -18,26 +18,23 @@
 
 ---
 
-## Download and install
+## Download & Install
 
-Choose your **Minecraft version**:
+Every release automatically provides 1-click modpack bundles and standalone mod JARs:
 
-- **[v1 - 1.21.11](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0-mc1.21.11)**
-- **[v1 - 26.2](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/tag/v1.1.0)**
+| Your Setup / Launcher | Minecraft 1.21.11 (Recommended) | Minecraft 26.2 |
+| :--- | :--- | :--- |
+| **Modrinth App** (1-Click) | **`Full-Pack-Modrinth-1.21.11.mrpack`** | **`Full-Pack-Modrinth-26.2.mrpack`** |
+| **Prism Launcher** (1-Click) | **`Full-Pack-Prism-1.21.11.zip`** | **`Full-Pack-Prism-26.2.zip`** |
+| **Standalone JAR** (Existing Mods Folder) | **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** | **`skyblock-toolkit-1.1.0+mc26.2.jar`** |
 
-**Already use Fabric?** Download the **Skyblock Toolkit `.jar`** on that page.
-Close Minecraft, remove any older Skyblock Toolkit jar from your **mods** folder,
-and put the downloaded jar there. You also need **Fabric API** for your Minecraft
-version. Launch the game and press **Right Shift** to open the menu.
+> **Tip for Teammates:**  
+> - **Want the full modpack with Litematica & Voice Chat?** Download the `.mrpack` (Modrinth App) or `.zip` (Prism Launcher). Just click **Import** in your launcher—it automatically sets up the right Minecraft version, Java, and all required mods in 1 click. You do not need to configure anything manually.
+> - **Already have a custom Fabric profile?** Download just the `+mc<version>.jar` and drop it into your `.minecraft/mods` folder.
+> - **Unsure what version you are playing?** Check the bottom-left corner of your Minecraft main menu screen.
 
-**Want the complete 26.2 modpack?** Choose **Full Pack - Prism** for Prism Launcher,
-or **Full Pack - Modrinth** for the Modrinth App. Import that file in your launcher.
-The full pack includes voice chat, Litematica and the other required mods.
+Minecraft **1.21.11 uses Java 21**; Minecraft **26.2 uses Java 25** and **Fabric Loader 0.19.5 or newer**. Both versions connect directly to Complex Skyblock (`skyblock.mc-complex.com`).
 
-Minecraft **1.21.11 uses Java 21**; Minecraft **26.2 uses Java 25** and
-**Fabric Loader 0.19.5 or newer**. In the Modrinth App, update Fabric Loader under
-your instance's **Settings → Installation** if you have an older one.
-Only download the files for the version you play.
 
 ### ⚡ Automatic Updates
 Once installed, you never need to visit GitHub or drag files again:

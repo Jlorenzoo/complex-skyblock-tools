@@ -1,0 +1,47 @@
+{
+  "minecraft": "1.20.1",
+  "java": 17,
+  "loader": "0.15.11",
+  "mods": [
+    {
+      "project": "fabric-api",
+      "version_id": "rvI2dfzR",
+      "version": "0.92.12+1.20.1",
+      "filename": "fabric-api-0.92.12+1.20.1.jar",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/rvI2dfzR/fabric-api-0.92.12%2B1.20.1.jar",
+      "sha512": "de9da2344043b3e9ef9fb7dbfff5f2577b06000c4f73f2a37959a80123141169084cece19133bd299b45feaaa4648bdaca2ea085684888cc8c55cc9134a477ca"
+    },
+    {
+      "project": "simple-voice-chat",
+      "version_id": "moiHjUsv",
+      "version": "fabric-1.20.1-2.6.26",
+      "filename": "voicechat-fabric-1.20.1-2.6.26.jar",
+      "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/moiHjUsv/voicechat-fabric-1.20.1-2.6.26.jar",
+      "sha512": "e373065046714c723223590235ba5c995ec9caba500c36348bb7d8fc6a67688a21319a44dfd0c6cc2f437e4ecc65b171b5b30bf83874fdb5bc314b3e76c56760"
+    },
+    {
+      "project": "litematica",
+      "version_id": "1ZTpW1lr",
+      "version": "0.15.4",
+      "filename": "litematica-fabric-1.20.1-0.15.4.jar",
+      "url": "https://cdn.modrinth.com/data/bEpr0Arc/versions/1ZTpW1lr/litematica-fabric-1.20.1-0.15.4.jar",
+      "sha512": "3cf1f2a16997e5a1dcda37b2626595f37873a39e33c254af1a7eda986aa13be74449d56fe706db7f158ed1a047271a48fa705091e5c71e3b0aa28d0d53c7cb01"
+    },
+    {
+      "project": "malilib",
+      "version_id": "V7yLDtJV",
+      "version": "0.16.3",
+      "filename": "malilib-fabric-1.20.1-0.16.3.jar",
+      "url": "https://cdn.modrinth.com/data/GcWjdA9I/versions/V7yLDtJV/malilib-fabric-1.20.1-0.16.3.jar",
+      "sha512": "2c16a64cf9af03569618c6bd0359797bbaecec854ac8e8197e9180b1739eb74b6157a9c389a4f8dd8b4aabe52227aafb8d2a6b6b72732ed3c450ff9a0849234c"
+    },
+    {
+      "project": "yacl",
+      "version_id": "dvS5DjUA",
+      "version": "3.6.6+1.20.1-fabric",
+      "filename": "yet_another_config_lib_v3-3.6.6+1.20.1-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/dvS5DjUA/yet_another_config_lib_v3-3.6.6%2B1.20.1-fabric.jar",
+      "sha512": "20f282b3cdaec7c83a96840edb756336677c5816ed943145022f1ce1eafac0c9aa7c621939e15abe6f4309626738bc56d3d1b8434f5175d22e7409108630b02b"
+    }
+  ]
+}

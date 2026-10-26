@@ -1,0 +1,121 @@
+name: Release Modpacks
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v1.1.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-1-21-11:
+    name: Build & Package Fabric 1.21.11
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run verification checks
+        run: |
+          python tests/test_installer.py
+          python tests/test_updater.py
+          python tests/test_voicechat.py
+          python tests/test_profile_migration.py
+          python tests/test_package_pack.py
+
+      - name: Build 1.21.11 jar and run Java regressions
+        working-directory: versions/1.21.11
+        run: bash gradlew build --no-daemon --console=plain
+
+      - name: Package Prism, Modrinth and Jar bundles
+        run: python scripts/package_pack.py --minecraft 1.21.11
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-1.21.11
+          path: dist/fabric-1.21.11/*
+          if-no-files-found: error
+
+  build-26-2:
+    name: Build & Package Fabric 26.2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run verification checks
+        run: |
+          python tests/test_pack_26_2.py
+          python tests/test_installer.py
+          python tests/test_updater.py
+          python tests/test_voicechat.py
+
+      - name: Build 26.2 client jar and run Java regressions
+        run: python build.py --minecraft 26.2
+
+      - name: Package Prism, Modrinth and Jar bundles
+        run: python scripts/package_pack.py --minecraft 26.2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-26.2
+          path: dist/fabric-26.2/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish Release Assets
+    needs: [build-1-21-11, build-26-2]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download 1.21.11 assets
+        uses: actions/download-artifact@v4
+        with:
+          name: packages-1.21.11
+          path: release-assets/
+
+      - name: Download 26.2 assets
+        uses: actions/download-artifact@v4
+        with:
+          name: packages-26.2
+          path: release-assets/
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
+        with:
+          files: |
+            release-assets/*
+          generate_release_notes: true

@@ -2,24 +2,18 @@
 
 Keep GitHub release pages short and easy to use without programming knowledge.
 
-- Use the display title `v1 - 26.2` or `v1 - 1.21.11` for the current v1 family.
-  Keep existing Git tags and mod metadata unchanged for presentation-only edits.
-- Put a direct **Download the mod** link first, followed by three short install
-  steps and the required Fabric API / Java version.
-- Publish one toolkit jar per Minecraft version. For 26.2, also offer one Prism
-  ZIP and one Modrinth pack, labeled **Full Pack - Prism** and **Full Pack - Modrinth**.
-- Give the jar the GitHub display label `Skyblock-Toolkit-26.2.jar` (or
-  `Skyblock-Toolkit-1.21.11.jar`). Preserve its underlying versioned asset name:
-  existing installed updaters use that filename to select the right game version.
-  Player instructions should use direct download links, not ask readers to decode filenames.
-- Do not attach duplicate aliases, manifests, install-text files, checksum-text
-  files or separate source archives. Keep technical verification in Actions and
-  the repository. Link matching source in a short footer when needed.
-- GitHub automatically adds its own two source-code links; those are not manual
-  release attachments and cannot be removed through release asset management.
-- Back up removed assets and metadata outside the repository before cleanup.
-  Verify the remaining public downloads and their checksums afterward.
+## Automated Releases via GitHub Actions
+Releases are automated via [`.github/workflows/release.yml`](../.github/workflows/release.yml):
+- Pushing a version tag (e.g. `git tag v1.2.0 && git push origin v1.2.0`) or clicking **Publish release** on GitHub triggers the build and packaging workflow.
+- GitHub Actions builds both **1.21.11** and **26.2**, runs all test suites, and generates:
+  - `Full-Pack-Modrinth-<version>.mrpack` (Modrinth App 1-click import)
+  - `Full-Pack-Prism-<version>.zip` (Prism Launcher 1-click import)
+  - `skyblock-toolkit-1.1.0+mc<version>.jar` (standalone JAR for existing mods folders)
+  - `SHA256SUMS.txt`
+- The workflow automatically attaches all 6 package assets directly to the GitHub Release.
 
-Build and regression guidance stays in `DEVELOPMENT.md`. Release descriptions
-should explain what to download and how to play, without build logs, commit IDs,
-developer commands or long lists of test results.
+## Player Presentation
+- The release description presents a clear download table by launcher and game version.
+- Preserves the underlying `+mc<version>.jar` filename so the in-game auto-updater in `UpdateManager.java` automatically detects and downloads updates for players' installed game version.
+- Build and regression guidance stays in `DEVELOPMENT.md`. Release descriptions explain what to download and how to play.
+
