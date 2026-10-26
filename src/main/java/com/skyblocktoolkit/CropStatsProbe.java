@@ -61,12 +61,8 @@ public final class CropStatsProbe {
         root.then(command);
     }
 
-    public static boolean blockedOnCurrentServer() {
-        var server = Minecraft.getInstance().getCurrentServer();
-        return server != null && CropStatsPolicy.requiresApproval(server.ip);
-    }
-    public static boolean canStart() { return connected() && !blockedOnCurrentServer() && pending == null && !SAMPLE.active() && cooledDown(); }
-    public static boolean canStop() { return connected() && !blockedOnCurrentServer() && pending == null && SAMPLE.active() && cooledDown(); }
+    public static boolean canStart() { return connected() && pending == null && !SAMPLE.active() && cooledDown(); }
+    public static boolean canStop() { return connected() && pending == null && SAMPLE.active() && cooledDown(); }
     public static boolean canCancel() { return pending != null || SAMPLE.active(); }
     private static boolean connected() { var mc=Minecraft.getInstance(); return mc.player != null && mc.getConnection() != null; }
     private static boolean cooledDown() { return !hasRequested || System.nanoTime() - lastRequest >= COOLDOWN; }
@@ -74,7 +70,6 @@ public final class CropStatsProbe {
     public static void stop() { request("stop"); }
     public static void cancel() { reset(); say("Crop-stat test cancelled."); }
     public static String menuStatus() {
-        if (blockedOnCurrentServer()) return "Complex: staff approval required";
         if (pending != null) return "Waiting for server statistics...";
         if (SAMPLE.active()) return String.format(Locale.ROOT,"Test running: %.0fs",(System.nanoTime()-started)/1_000_000_000.0);
         return lastResult != null ? "Test finished · unvalidated count" : connected() ? "Ready to test server crop counts" : "Join a server to start a test";
@@ -84,7 +79,6 @@ public final class CropStatsProbe {
         return lastResult == null ? "Rate: -- blocks/h" : String.format(Locale.ROOT,"Rate: %,.0f blocks/h · %.1fs",lastResult.hourly(),lastResult.elapsedNanos()/1_000_000_000.0);
     }
     public static String menuFeedback() {
-        if (blockedOnCurrentServer()) return "Blocked until Complex staff approves it.";
         if (pending == null && SAMPLE.active() && !cooledDown()) return "Stop becomes available after 5 seconds.";
         return feedback;
     }
@@ -93,7 +87,6 @@ public final class CropStatsProbe {
         var mc = Minecraft.getInstance();
         checkContext();
         if (mc.player == null || mc.getConnection() == null) { say("Join a server first."); return 0; }
-        if (blockedOnCurrentServer()) { say("Complex has not approved this custom counter. Ask staff before use; no statistics request sent."); return 0; }
         if (pending != null) { say("Still waiting for the previous statistics request."); return 0; }
         if (operation.equals("start") && SAMPLE.active()) { say("A sample is already running. Stop or cancel it first."); return 0; }
         if (operation.equals("stop") && !SAMPLE.active()) { say("Start a sample first: /toolkit crops start."); return 0; }

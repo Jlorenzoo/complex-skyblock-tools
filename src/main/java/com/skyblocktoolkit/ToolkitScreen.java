@@ -259,7 +259,7 @@ public final class ToolkitScreen extends Screen {
     }
     private void cropAction(String title,int top,int offset,int width,Runnable action,BooleanSupplier enabled){
         var button=addRenderableWidget(ToolkitButton.action(title,b->{action.run();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,width,20));
-        button.setTooltip(Tooltip.create(Component.literal("Complex requires staff approval for this custom counter. On other servers, validate a known harvest first. Requests happen only when Start or Stop is pressed.")));
+        button.setTooltip(Tooltip.create(Component.literal("Validate a known harvest before comparing hoes. Start and Stop each request vanilla statistics once. Opening the menu sends no requests.")));
         availability.put(button,enabled);controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
     private void fishing(){

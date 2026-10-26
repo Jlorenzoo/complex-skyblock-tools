@@ -104,10 +104,12 @@ rate. It sends no requests just by opening the menu. Results stay in memory.
 
 Rules checked 2026-10-26: Complex's official [Allowed Game Modifications](https://www.mc-complex.com/forums/vanilla/threads/%E2%AD%90-allowed-game-modifications.9/)
 does not explicitly approve this custom counter and requires staff approval for
-unlisted modifications. The diagnostic therefore blocks both commands and menu
-Start/Stop for `mc-complex.com` and its subdomains, including explicit ports.
-No staff approval has been obtained. This restriction is not certification of
-the modpack's other features or of use on other servers.
+unlisted modifications. No staff approval has been obtained. At the player's
+explicit request, there is no server-specific block; this does not mean the
+counter is approved. Each manual Start/Stop sends the same `REQUEST_STATS`
+packet used by the vanilla Statistics screen. There is no automatic polling or
+gameplay automation in this diagnostic. Detection and enforcement on Complex
+have not been established.
 
 `/toolkit crops start` requests vanilla block-mining statistics from the server
 and starts a sample only after its reply. Harvest a known number of crops, then
