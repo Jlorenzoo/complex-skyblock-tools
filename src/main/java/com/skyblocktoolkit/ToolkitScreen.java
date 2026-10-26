@@ -22,6 +22,8 @@ public final class ToolkitScreen extends Screen {
     private double grabX,grabY;
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
     private boolean fishEarnings;
+    private final Set<Integer> expandedPages=new HashSet<>();
+    private int advancedDivider=-1;
     private String query="",jumpSection="";
     private EditBox searchBox;
     private int savedScroll,layoutReturnPage=1;
@@ -34,16 +36,16 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,10);}
+    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General","Mining"};
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,11);}
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
         if(page==8){hudElements();updateControls();return;}
-        int[] targets={1,9,2,3,4,7,10};String[] names={"Boosters","Farming","Fishing","Chat Copy","Auction","Blackout","General"};
-        String[] compactNames={"Boost","Farm","Fish","Chat","Sales","Dim","Keys"};
+        int[] targets={1,9,11,2,3,4,7,10};String[] names={"Boosters","Farming","Mining","Fishing","Chat Copy","Auction","Blackout","General"};
+        String[] compactNames={"Boost","Farm","Mine","Fish","Chat","Sales","Dim","Keys"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
             int by=layout.compact()?y+36:y+54+i*25,bw=layout.compact()?(w-12)/targets.length-2:104;
@@ -60,7 +62,7 @@ public final class ToolkitScreen extends Screen {
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
                     UpdateManager.triggerUpdateFromCommand();
                     if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },x+4,y+54+7*25+2,104,20));
+                },x+4,y+54+8*25+2,104,20));
             }else{
                 int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
@@ -91,7 +93,7 @@ public final class ToolkitScreen extends Screen {
     }
     private void clearBody(){
         for(var control:controls)removeWidget(control.widget());
-        controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
     }
     private void buildBody(){
         if(!query.isBlank()){
@@ -101,11 +103,11 @@ public final class ToolkitScreen extends Screen {
             for(var result:results){
                 button(()->result.title(),top,0,layout.bodyWidth(),()->{
                     persist();page=result.page();fishEarnings=false;query="";scroll=0;
-                    jumpSection=result.section();rebuildWidgets();
+                    jumpSection=result.section();expandedPages.add(page);rebuildWidgets();
                 });
                 top+=24;
             }
-        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();}
+        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();case 11->mining();}
         jumpSection="";updateControls();
     }
     private void section(String title,int top){
@@ -228,22 +230,41 @@ public final class ToolkitScreen extends Screen {
         long now=System.currentTimeMillis();var timers=BoosterManager.timers;var clock=timers.clock(type);
         return type.label+": "+(clock.active(now)?"+"+timers.percentage(type)+"% · "+BoosterTimers.formatTime(clock.remaining(now),clock.hasTimer(now)):"Inactive");
     }
+    /** Expand in place, then bring the advanced divider and first controls into view. */
+    private boolean advanced(int top){
+        boolean open=expandedPages.contains(page);
+        button(open?"Hide advanced":"Advanced...",top,()->{
+            if(open)expandedPages.remove(page);else expandedPages.add(page);
+            clearBody();buildBody();
+            scroll=open?0:top+24;updateControls();
+        });
+        if(open){advancedDivider=top+28;section("Advanced settings",top+36);}
+        return open;
+    }
     private void farming(){
         var cfg=ToolkitConfig.get();var money=ModConfig.getInstance();
         section("Crop visibility",0);
         toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-        label("Dim immature crops to spot harvest-ready plants.",42);
+        label("Dim immature crops to spot ready plants.",42);
         section("Crop earnings",68);
-        toggle("Crop earnings HUD",82,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        toggle("Include boosters in crop average",106,money::includesBoostersInAverage,money::toggleAverageBoosters);
-        label(()->BoosterStatsManager.averageLabel(),132,ToolkitTheme.palette().text(),1);
-        section("Minecraft XP",158);
-        toggle("XP per hour HUD",174,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        toggle("Include XP boosters",196,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
-        label(()->XpTracker.averageLabel(),224,ToolkitTheme.palette().xpText(),1);
-        pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},240);
-        section("Quick selling",278);
-        sellAllBinding(294);
+        toggle("Crop earnings HUD",84,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        sellAllBinding(108);
+        if(advanced(140)){
+            toggle("Include boosters in crop average",194,money::includesBoostersInAverage,money::toggleAverageBoosters);
+            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},220);
+        }
+    }
+    private void mining(){
+        var cfg=ToolkitConfig.get();
+        section("Minecraft XP",0);
+        toggle("XP per hour HUD",16,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
+        label("Appears while you collect XP.",42);
+        label(()->XpTracker.averageLabel(),60,ToolkitTheme.palette().xpText(),1);
+        button("Rate tests",82,()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)));
+        if(advanced(114)){
+            toggle("Include XP boosters",168,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
+            button("HUD elements",194,()->{hudReturnPage=11;go(8);});
+        }
     }
     private void fishing(){
         if(fishEarnings){fishPrices();return;}
@@ -251,15 +272,18 @@ public final class ToolkitScreen extends Screen {
         section("Catch alerts",0);
         toggle("Ready to reel",16,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
         toggle("Depleted area",40,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
-        toggle("Snapped line",62,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
+        toggle("Snapped line (Void Rod)",62,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
         slider("Volume",86,cfg.volume,3,v->cfg.volume=(float)v);
-        pair(()->"Preview",mod::previewDepth,()->"Alert sounds",()->{soundReturnPage=2;go(6);},110);
-        label(()->"Reel depth: "+(int)cfg.target+" blocks",138,ToolkitTheme.palette().text(),1);
-        pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),154);
-        section("Earnings & prices",192);
-        toggle("Fishing earnings HUD",208,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
-        button("Fish prices",230,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
+        section("Earnings & prices",116);
+        toggle("Fishing earnings HUD",132,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
+        button("Fish prices",156,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
+        if(advanced(188)){
+            label(()->"Reel depth: "+(int)cfg.target+" blocks",242,ToolkitTheme.palette().text(),1);
+            pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),258);
+            pair(()->"Preview",mod::previewDepth,()->"Alert sounds",()->{soundReturnPage=2;go(6);},284);
+        }
     }
+
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
         labels.add(new Label(()->name,top+5,ToolkitTheme.palette().text(),1,6));
         EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name+" price per fish")));
@@ -375,7 +399,7 @@ public final class ToolkitScreen extends Screen {
             g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.palette().accent(),false);
             g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.palette().muted(),false);
             g.text(font,query.isBlank()?PAGES[page]:"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
-            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays"};
+            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays","XP tracking & earnings"};
             g.text(font,query.isBlank()?descriptions[page]:"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
@@ -389,6 +413,8 @@ public final class ToolkitScreen extends Screen {
             if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY(),ToolkitTheme.palette().muted(),false);
         }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
+        if(advancedDivider>=0){int lineY=layout.bodyY()+advancedDivider-scroll;
+            g.fill(layout.bodyX(),lineY,layout.bodyX()+layout.bodyWidth(),lineY+1,ToolkitTheme.palette().border());}
         for(var label:labels){String text=label.text().get();if(text.isEmpty()||!layout.fits(label.top(),(int)Math.ceil(10*label.scale()),scroll))continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());
             String clipped=font.substrByWidth(Component.literal(text),(int)((layout.bodyWidth()-label.offset())/label.scale())).getString();

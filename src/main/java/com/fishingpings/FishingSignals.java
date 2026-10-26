@@ -19,6 +19,9 @@ public final class FishingSignals {
         if(text==null)return false;String clean=text.replaceAll("§.","").strip().replaceAll("\\s+"," ");
         return LOW.equalsIgnoreCase(clean)||EMPTY.equalsIgnoreCase(clean);
     }
+    public static boolean voidRod(String name){
+        return name!=null && name.replaceAll("§.","").strip().equalsIgnoreCase("Void Rod");
+    }
     public static boolean snappedText(String text){
         if(text==null)return false;String clean=text.replaceAll("§.","").strip();
         return clean.equalsIgnoreCase("The fishing line snapped.")||SNAP.matcher(clean).matches();

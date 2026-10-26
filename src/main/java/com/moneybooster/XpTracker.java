@@ -50,6 +50,10 @@ public final class XpTracker {
         }
     }
 
+    public static boolean shouldShowHud() {
+        return earnings.recentlyCollected(System.currentTimeMillis());
+    }
+
     public static String averageLabel() {
         long now = System.currentTimeMillis();
         if (now - averageUpdated >= 1000) {

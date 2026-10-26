@@ -3,7 +3,7 @@ package com.moneybooster;
 /** XP points represented by the vanilla level/bar, independent of money accounting. */
 public final class XpEarnings {
     public record Gain(double total, double base, long from, long to) {}
-    private long previous = -1, observedAt;
+    private long previous = -1, observedAt, lastGain=-1;
 
     public static long points(int level, float progress) {
         if (level < 0 || !Float.isFinite(progress) || progress < 0 || progress > 1) return -1;
@@ -22,9 +22,14 @@ public final class XpEarnings {
         previous = value; observedAt = now;
         // First observation, spending XP, death and resets only establish a baseline.
         if (old < 0 || value <= old || now <= from) return null;
+        lastGain=now;
         double total = value - old;
         return new Gain(total, total / (1 + Math.max(0, percentage) / 100.0), from, now);
     }
 
-    public void reset() { previous = -1; observedAt = 0; }
+    public boolean recentlyCollected(long now) {
+        return lastGain>=0 && now>=lastGain && now-lastGain<5_000;
+    }
+
+    public void reset() { previous = -1; observedAt = 0; lastGain=-1; }
 }

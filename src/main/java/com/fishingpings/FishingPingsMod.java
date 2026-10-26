@@ -31,7 +31,7 @@ public final class FishingPingsMod implements ClientModInitializer {
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
             // Actionbar and system messages are supported; signed player-chat is not parsed.
-            if(config.snapEnabled&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
+            if(config.snapEnabled&&holdingVoidRod(mc)&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
             if(config.warningEnabled&&signals.warning(text,now))warningSound(mc,now);
             if(config.depthEnabled||config.snapEnabled)checkDepth(mc,text,now);
         });
@@ -54,7 +54,7 @@ public final class FishingPingsMod implements ClientModInitializer {
                 var events=((BossHealthOverlayAccessor)overlay).toolkit$getEvents();
                 for(var bar:events.values())checkDepth(mc,bar.getName().getString(),now);
                 if(config.snapEnabled&&mc.player.fishing!=null
-                    &&(mc.player.getMainHandItem().is(Items.FISHING_ROD)||mc.player.getOffhandItem().is(Items.FISHING_ROD))
+                    &&holdingVoidRod(mc)
                     &&signals.snapped(null,now))snapSound(mc);
             }catch(Exception e){if(!warnedAboutBossAccess){warnedAboutBossAccess=true;System.err.println("[FishingPings] Cannot read boss bars: "+e.getMessage());}}
         });
@@ -66,6 +66,12 @@ public final class FishingPingsMod implements ClientModInitializer {
         if(!mc.player.getMainHandItem().is(Items.FISHING_ROD)&&!mc.player.getOffhandItem().is(Items.FISHING_ROD))return;
         double depth=FishingSignals.depth(text);
         if(signals.ready(mc.player.fishing.getUUID(),depth,config.target,now)&&config.depthEnabled)readySound(mc);
+    }
+    private static boolean holdingVoidRod(Minecraft mc){
+        if(mc.player==null)return false;
+        var main=mc.player.getMainHandItem();var off=mc.player.getOffhandItem();
+        return (main.is(Items.FISHING_ROD)&&FishingSignals.voidRod(main.getHoverName().getString()))
+            ||(off.is(Items.FISHING_ROD)&&FishingSignals.voidRod(off.getHoverName().getString()));
     }
     private void snapSound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain));}
     private void readySound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain));}

@@ -2,6 +2,16 @@ package com.moneybooster;
 
 public final class XpEarningsTest {
     public static void main(String[] args) {
+        var visibility=new XpEarnings();
+        check(!visibility.recentlyCollected(1000),"No XP HUD before observation");
+        visibility.observe(10,0,0,1000);
+        check(!visibility.recentlyCollected(1001),"Joining XP is only a baseline");
+        visibility.observe(10,.5f,0,2000);
+        check(visibility.recentlyCollected(2000)&&visibility.recentlyCollected(6999),"XP gain shows HUD during activity");
+        check(!visibility.recentlyCollected(7000),"Idle XP HUD expires");
+        visibility.observe(9,0,0,8000);
+        check(!visibility.recentlyCollected(8000),"XP loss does not activate HUD");
+        visibility.reset();check(!visibility.recentlyCollected(8001),"Reconnect clears XP HUD activity");
         check(XpEarnings.points(0,0)==0,"zero XP");
         check(XpEarnings.points(16,0)==352,"first curve boundary");
         check(XpEarnings.points(17,0)==394,"second curve");

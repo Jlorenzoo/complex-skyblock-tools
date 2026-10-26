@@ -20,7 +20,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             try{
                 if(mc.gui.overlay()!=null||++ticks<100)return;
-                if(ticks%20!=0)return;
+                if(ticks%Integer.getInteger("toolkit.menuTickInterval",20)!=0)return;
                 if(stage==-2){
                     var voice=Class.forName("de.maxhenkel.voicechat.VoicechatClient");
                     check(voice.getField("CLIENT_CONFIG").get(null)!=null,"Voice chat client initialized alongside toolkit");
@@ -236,10 +236,10 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==29){
                     capture(mc,"money-rates-dark-compact");
-                    mc.setScreenAndShow(new ToolkitScreen(null,9));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;
+                    mc.setScreenAndShow(new ToolkitScreen(null,11));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;
                 }
                 if(stage==30){capture(mc,"xp-hud-settings-dark-compact");switchTheme(mc);stage++;return;}
-                if(stage==31){capture(mc,"xp-hud-settings-light-compact");mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,9));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;}
+                if(stage==31){capture(mc,"xp-hud-settings-light-compact");mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,11));mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);stage++;return;}
                 if(stage==32){capture(mc,"xp-hud-settings-light");switchTheme(mc);stage++;return;}
                 if(stage==33){
                     capture(mc,"xp-hud-settings-dark");
@@ -333,7 +333,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==48){
                     capture(mc,"general-dark");
                     mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();
-                    for(int page:new int[]{1,2,3,4,7,9,10}){
+                    for(int page:new int[]{1,2,3,4,7,9,10,11}){
                         mc.setScreenAndShow(new ToolkitScreen(null,page));assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }
                     mc.setScreenAndShow(new ToolkitScreen(null,10));stage++;return;
@@ -368,7 +368,34 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==80){
+                if(stage>=80&&stage<96){
+                    int index=stage-80;
+                    int target=index%4<2?9:11;
+                    ToolkitConfig.get().lightMode=(index/4)%2==1;
+                    if(index==0||index==8){mc.getWindow().setWindowed(index<8?1280:1000,800);mc.options.guiScale().set(index<8?2:3);mc.resizeGui();}
+                    mc.setScreenAndShow(new ToolkitScreen(null,target));
+                    if(index%2==1){
+                        scrollBottom(mc);press(mc,"Advanced...");
+                        var scrollField=ToolkitScreen.class.getDeclaredField("scroll");scrollField.setAccessible(true);
+                        check(scrollField.getInt(mc.gui.screen())>0,"Advanced scrolls to revealed settings");
+                        var divider=ToolkitScreen.class.getDeclaredField("advancedDivider");divider.setAccessible(true);
+                        check(divider.getInt(mc.gui.screen())>=0,"Advanced has a divider");
+                    }
+                    if(target==9)check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&b.getMessage().getString().startsWith("XP per hour")),"Farming contains no XP control");
+                    assertControls(mc);stage++;return;
+                }
+                if(stage>=96&&stage<128){
+                    int index=(stage-96)/2;
+                    int target=index%4<2?9:11;
+                    if(stage%2==0){
+                        ToolkitConfig.get().lightMode=(index/4)%2==1;
+                        if(index==0||index==8){mc.getWindow().setWindowed(index<8?1280:1000,800);mc.options.guiScale().set(index<8?2:3);mc.resizeGui();}
+                        mc.setScreenAndShow(new ToolkitScreen(null,target));
+                        if(index%2==1){scrollBottom(mc);press(mc,"Advanced...");}
+                    }else capture(mc,"simplified-"+target+"-"+((index/4)%2==1?"light":"dark")+(index>=8?"-compact":"")+(index%2==1?"-advanced":""));
+                    stage++;return;
+                }
+                if(stage==128){
                     if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
                     check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
                     Files.writeString(output.resolve("PASS.txt"),"PASS: global search, every section destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");

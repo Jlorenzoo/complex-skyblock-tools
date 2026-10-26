@@ -21,6 +21,10 @@ with tempfile.TemporaryDirectory(prefix='toolkit-menu-smoke-') as tmp:
     toolkit=BASE/'build/skyblock-toolkit-1.1.0.jar'
     shutil.copy2(toolkit,mods/toolkit.name)
     shutil.copy2(PRISM/'instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar',mods)
+    # Match the configured pack while leaving its files and settings untouched.
+    for dependency in (PRISM/'instances/Complex-Skyblock-2/.minecraft/mods').glob('*.jar'):
+        if dependency.name.startswith(('litematica-', 'malilib-', 'voicechat-')):
+            shutil.copy2(dependency,mods/dependency.name)
     with zipfile.ZipFile(mods/'fabric-api-0.160.0+26.2.jar') as z:
         for name in z.namelist():
             if name.startswith('META-INF/jars/') and name.endswith('.jar'): z.extract(name,root)
@@ -29,8 +33,8 @@ with tempfile.TemporaryDirectory(prefix='toolkit-menu-smoke-') as tmp:
     with zipfile.ZipFile(mods/'menu-smoke.jar','w') as z:
         z.writestr('fabric.mod.json',json.dumps({'schemaVersion':1,'id':'toolkitmenusmoke','version':'1.0.0','environment':'client','entrypoints':{'client':['com.skyblocktoolkit.MenuRuntimeSmoke']},'depends':{'skyblocktoolkit':'*'}}))
         for p in classes.rglob('*.class'):z.write(p,p.relative_to(classes))
-    (root/'options.txt').write_text('onboardAccessibility:false\nshowMusicToast:false\n')
+    (root/'options.txt').write_text('onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n')
     with (output/'runtime.log').open('w') as log:
-        result=subprocess.run([str(JAVA/'java'),'-Xmx1G','-Dtoolkit.preview='+str(output),'-Dfabric.gameVersion=26.2','-cp',classpath,'net.fabricmc.loader.impl.launch.knot.KnotClient','--gameDir',str(root),'--assetsDir',str(PRISM/'assets'),'--assetIndex','32','--version','26.2','--accessToken','0','--username','ToolkitPreview','--width','1280','--height','800'],cwd=root,env={**os.environ,'ALSOFT_DRIVERS':'null'},stdout=log,stderr=subprocess.STDOUT,timeout=180)
+        result=subprocess.run([str(JAVA/'java'),'-Xmx1G','-Dtoolkit.menuTickInterval=5','-Dtoolkit.preview='+str(output),'-Dfabric.gameVersion=26.2','-cp',classpath,'net.fabricmc.loader.impl.launch.knot.KnotClient','--gameDir',str(root),'--assetsDir',str(PRISM/'assets'),'--assetIndex','32','--version','26.2','--accessToken','0','--username','ToolkitPreview','--width','1280','--height','800'],cwd=root,env={**os.environ,'ALSOFT_DRIVERS':'null'},stdout=log,stderr=subprocess.STDOUT,timeout=300)
     if result.returncode: print((output/'runtime.log').read_text()[-7000:]);raise SystemExit(result.returncode)
     print((output/'PASS.txt').read_text())

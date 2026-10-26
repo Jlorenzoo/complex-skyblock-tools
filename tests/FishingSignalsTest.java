@@ -8,6 +8,9 @@ public final class FishingSignalsTest {
         check(FishingSignals.depth("Depth: 30/30")==30,"Fraction fallback");
         check(Double.isNaN(FishingSignals.depth("Money booster 30/30")),"Unrelated numbers");
         check(Double.isNaN(FishingSignals.depth("Depth NaN blocks")),"Invalid numeric value");
+        check(FishingSignals.voidRod("§5Void Rod"),"Formatted Void Rod accepted");
+        for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]"})
+            check(!FishingSignals.voidRod(name),"Other item names rejected");
         var s=new FishingSignals();UUID first=UUID.randomUUID(),second=UUID.randomUUID();
         check(!s.ready(first,30,30,0),"Stale initial bossbar");
         check(!s.ready(first,30,30,1000),"Stale value with no rising depth");

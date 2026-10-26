@@ -92,7 +92,7 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
 
 ## 4. Menu & Lunar-Style Navigation Hub
 
-The toolkit hub (`ToolkitScreen`) uses a sidebar with compact settings rows. Categories follow the activity order: Boosters, Farming, Fishing, Chat Copy, Auction, Blackout, then General. General collects keyboard shortcuts and HUD management. Each category groups controls under named sections; settings are no longer hidden behind an Advanced toggle.
+The toolkit hub (`ToolkitScreen`) uses a sidebar with compact settings rows. Categories follow the activity order: Boosters, Farming, Mining, Fishing, Chat Copy, Auction, Blackout, then General. General collects keyboard shortcuts and HUD management. Each category groups controls under named sections; secondary controls in Farming, Mining and Fishing sit behind Advanced. Expanding brings a labeled divider and its settings into view.
 
 Use 20px control rows, small gaps between related settings and extra space before section headings. Most settings have a left-aligned label and a right-aligned switch, short value field or slider. Actions use small, flat surfaces without an outline; paired actions have equal widths. Do not stretch numeric fields, key bindings or sliders across the entire content area. Input text has no shadow in either theme. The hub is at most 480 × 330 GUI pixels, and moves navigation to a compact top row on narrow or short screens.
 

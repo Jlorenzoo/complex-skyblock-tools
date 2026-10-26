@@ -176,7 +176,7 @@ public class BoosterHudOverlay implements HudElement {
         if (mc.gui != null && mc.gui.hud != null && mc.gui.hud.isHidden()) {
             return;
         }
-        if (toolkit.xpEarningsHud) { String label=XpTracker.averageLabel();extractor.text(mc.font,label,xpX(mc,label),xpY(mc),0xFFFFFFFF,true); }
+        if (toolkit.xpEarningsHud && XpTracker.shouldShowHud()) { String label=XpTracker.averageLabel();extractor.text(mc.font,label,xpX(mc,label),xpY(mc),0xFFFFFFFF,true); }
 
         boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
                 || mc.player.getOffhandItem().is(Items.FISHING_ROD);
