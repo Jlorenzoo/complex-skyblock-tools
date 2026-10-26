@@ -25,6 +25,7 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             check(Arrays.stream(channel.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$gainCeiling")), "OpenAL channel injection");
             var packets=Class.forName("net.minecraft.client.multiplayer.ClientPacketListener",false,getClass().getClassLoader());
             check(Arrays.stream(packets.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$experienceSync")),"XP synchronization injection");
+            check(Arrays.stream(packets.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$cropStats")),"crop statistics reply injection");
 
             var configDir = FabricLoader.getInstance().getConfigDir();
             Files.createDirectories(configDir);

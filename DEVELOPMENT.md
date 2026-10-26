@@ -96,6 +96,22 @@ On a configured Windows workstation, `python tests/run_smoke_windows.py` checks 
 
 ## Install
 
+### Crop statistics diagnostic
+
+`/toolkit crops start` requests vanilla block-mining statistics from the server
+and starts a sample only after its reply. Harvest a known number of crops, then
+use `/toolkit crops stop` to request the end counters and print per-crop changes,
+elapsed time and the reported hourly rate in local chat. `status` and `cancel`
+are also available. Requests are manual, at least five seconds apart; a missing
+reply after ten seconds or a disconnect discards the sample.
+
+This is a diagnostic, not a verified total-harvest tracker. Some servers do not
+maintain vanilla crop statistics, or omit crops broken by plugin/hoe effects;
+vanilla counts can include immature plants. Validate a known manual harvest and
+then a known hoe-effect harvest before using this counter for comparisons. A
+zero result after harvesting means this data source is unsuitable. It does not
+read rune/ability messages, earnings, inventory yields or nearby block changes.
+
 Run `python scripts/install.py --wait` to wait for clients using the configured profile to close. `--mods PATH` and `--source PATH` override the target and built jar. Check `toolkit-installation-status.txt` before relaunching.
 
 The installer verifies backups and the installed checksum, preserves unrelated mods and settings/history, and rolls back failed replacement. Keep a rollback copy outside `mods` as the in-game updater cleans old `.bak` files. Do not force-close a player's running client to install an update. Never commit launcher tokens, workstation paths, logs, compiled jars, or private game history.

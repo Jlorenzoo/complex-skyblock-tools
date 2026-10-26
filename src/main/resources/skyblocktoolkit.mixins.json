@@ -7,6 +7,7 @@
     "ChannelGainMixin",
     "ChatScreenMixin",
     "ExperienceSyncMixin",
+    "CropStatsMixin",
     "ChatComponentAccessor",
     "BossHealthOverlayAccessor"
   ],

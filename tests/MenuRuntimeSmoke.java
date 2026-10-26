@@ -37,6 +37,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
+                    var cropCommands = net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("toolkit");
+                    CropStatsProbe.register(cropCommands);
+                    var cropDispatcher = new com.mojang.brigadier.CommandDispatcher<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource>();
+                    cropDispatcher.register(cropCommands);
+                    check(cropDispatcher.execute("toolkit crops start", null)==0,"Crop stats refuses requests without a player/connection");
+                    check(cropDispatcher.execute("toolkit crops stop", null)==0,"Crop stats refuses stop without a connection");
+                    check(cropDispatcher.execute("toolkit crops status", null)==1,"Crop stats status works offline");
+                    check(cropDispatcher.execute("toolkit crops cancel", null)==1,"Crop stats cancellation works offline");
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
