@@ -4,7 +4,16 @@ public final class ToolkitLayoutTest {
   for(int w:new int[]{240,320,426,640,960})for(int h:new int[]{180,240,360,540}){
    check(ToolkitLayout.of(w,h),w,h);check(ToolkitLayout.hub(w,h),w,h);check(ToolkitLayout.popup(w,h),w,h);
   }
-  System.out.println("PASS: responsive panel and popup bounds, narrow navigation, fixed footer and scroll limits");
+  for(String query:new String[]{"sell all","SELL ALL","sellall","  sell   all  ","farming sell all"}){
+   var results=com.skyblocktoolkit.ToolkitSearch.find(query);
+   if(results.size()!=1||!results.getFirst().setting().equals("Sell all key")||results.getFirst().page()!=10)
+    throw new AssertionError("Expected one canonical sell-all setting: "+query);
+  }
+  var minimum=com.skyblocktoolkit.ToolkitSearch.find("  MiNiMuM   boost ");
+  if(minimum.size()!=1||!minimum.getFirst().setting().equals("Minimum boost (%)"))throw new AssertionError("Individual setting terms");
+  if(!com.skyblocktoolkit.ToolkitSearch.find("coconut history").isEmpty())throw new AssertionError("Unrelated controls must not combine keywords");
+  if(!com.skyblocktoolkit.ToolkitSearch.find("no-such-setting").isEmpty())throw new AssertionError("No matches");
+  System.out.println("PASS: global setting search, canonical sell-all result, responsive bounds, fixed footer and scroll limits");
  }
  static void check(ToolkitLayout l,int w,int h){
    if(l.x()<0||l.y()<0||l.x()+l.width()>w||l.y()+l.height()>h)throw new AssertionError("frame bounds");

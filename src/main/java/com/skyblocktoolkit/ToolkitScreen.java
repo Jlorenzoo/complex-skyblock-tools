@@ -24,7 +24,7 @@ public final class ToolkitScreen extends Screen {
     private boolean fishEarnings;
     private final Set<Integer> expandedPages=new HashSet<>();
     private int advancedDivider=-1;
-    private String query="",jumpSection="";
+    private String query="",jumpSection="",jumpSetting="";
     private EditBox searchBox;
     private int savedScroll,layoutReturnPage=1;
     private final List<EditBox> priceFields=new ArrayList<>();
@@ -98,17 +98,27 @@ public final class ToolkitScreen extends Screen {
     private void buildBody(){
         if(!query.isBlank()){
             var results=ToolkitSearch.find(query);
-            label(results.isEmpty()?"No settings found. Try sound, HUD or key.":results.size()+" sections found · select to open",0);
+            label(results.isEmpty()?"No settings found. Try sound, HUD or key.":results.size()+(results.size()==1?" setting found":" settings found")+" · select to open",0);
             int top=18;
             for(var result:results){
                 button(()->result.title(),top,0,layout.bodyWidth(),()->{
                     persist();page=result.page();fishEarnings=false;query="";scroll=0;
-                    jumpSection=result.section();expandedPages.add(page);rebuildWidgets();
+                    jumpSection=result.section();jumpSetting=result.setting();expandedPages.add(page);rebuildWidgets();
                 });
                 top+=24;
             }
         }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();case 11->mining();}
-        jumpSection="";updateControls();
+        if(!jumpSetting.isEmpty()){
+            for(var control:controls){
+                if(searchTarget(control.widget(),jumpSetting)){scroll=control.top();break;}
+            }
+        }
+        jumpSection="";jumpSetting="";updateControls();
+    }
+    static boolean searchTarget(AbstractWidget widget,String setting){
+        String message=widget.getMessage().getString();
+        return message.equals(setting)||message.startsWith(setting+":")||
+            (setting.equals("Minimum boost (%)")&&message.equals("Minimum coconut money booster percentage"));
     }
     private void section(String title,int top){
         label(()->title,top,ToolkitTheme.palette().accent(),1);
@@ -201,8 +211,6 @@ public final class ToolkitScreen extends Screen {
         thresholdField(258);
         label("Alert at or above this %. 0 = every money boost.",286);
         button("Preview sound",302,CoconutNotifier::preview);
-        section("Quick selling",338);
-        sellAllBinding(354);
     }
     private void thresholdField(int top){
         var cfg=ToolkitConfig.get();
@@ -248,10 +256,9 @@ public final class ToolkitScreen extends Screen {
         label("Dim immature crops to spot ready plants.",42);
         section("Crop earnings",68);
         toggle("Crop earnings HUD",84,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        sellAllBinding(108);
-        if(advanced(140)){
-            toggle("Include boosters in crop average",194,money::includesBoostersInAverage,money::toggleAverageBoosters);
-            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},220);
+        if(advanced(116)){
+            toggle("Include boosters in crop average",170,money::includesBoostersInAverage,money::toggleAverageBoosters);
+            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},196);
         }
     }
     private void mining(){

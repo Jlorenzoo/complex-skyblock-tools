@@ -253,7 +253,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     BoosterManager.timers.observe(BoosterTimers.Type.MONEY,new BoosterSidebar.State(true,61,-1,false),System.currentTimeMillis());
                     BoosterStatsManager.tick();
                     check(!BoosterManager.isActive()&&BoosterStatsManager.history().activeId()<0,"Expired coconut stops money accounting and history despite lingering sidebar");
-                    mc.setScreenAndShow(new ToolkitScreen(null,1));scrollBottom(mc);
+                    mc.setScreenAndShow(new ToolkitScreen(null,10));
                     if(System.getProperty("toolkit.migrationOptions")==null)
                         check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound on a fresh profile");
                     press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
@@ -265,7 +265,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(ToolkitMod.sellAllKey.isUnbound(),"Delete clears sell all binding");
                     press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
                     net.minecraft.client.KeyMapping.click(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_G));
-                    search(mc,"coconut");press(mc,"Boosters / Coconut alerts");
+                    search(mc,"coconut sound");press(mc,"Boosters / Coconut sound");
                     boolean oldSound=ToolkitConfig.get().coconutSoundEnabled;press(mc,"Coconut sound");
                     check(ToolkitConfig.get().coconutSoundEnabled!=oldSound,"Coconut alert toggle");
                     var threshold=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.EditBox).map(c->(net.minecraft.client.gui.components.EditBox)c).filter(c->c.getMessage().getString().startsWith("Minimum coconut")).findFirst().orElseThrow();
@@ -284,20 +284,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==36){capture(mc,"coconut-settings-light");mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();mc.setScreenAndShow(new ToolkitScreen(null,1));scrollBottom(mc);stage++;return;}
                 if(stage==37){capture(mc,"coconut-settings-light-compact");switchTheme(mc);stage++;return;}
-                if(stage==38){capture(mc,"coconut-settings-dark-compact");mc.setScreenAndShow(new ToolkitScreen(null,9));scrollBottom(mc);stage++;return;}
-                if(stage==39){capture(mc,"sellall-farming-dark-compact");switchTheme(mc);stage++;return;}
-                if(stage==40){capture(mc,"sellall-farming-light-compact");stage++;return;}
+                if(stage==38){capture(mc,"coconut-settings-dark-compact");mc.setScreenAndShow(new ToolkitScreen(null,9));search(mc,"sell all");stage++;return;}
+                if(stage==39){capture(mc,"sellall-search-dark-compact");switchTheme(mc);stage++;return;}
+                if(stage==40){capture(mc,"sellall-search-light-compact");stage++;return;}
                 if(stage==41){
                     mc.setScreenAndShow(new ToolkitScreen(null,1));
                     search(mc,"  MiNiMuM   boost ");
-                    check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Boosters / Coconut alerts")),"Search matches multiple terms across labels and keywords");
+                    check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Boosters / Minimum boost (%)")),"Search matches multiple terms across labels and keywords");
                     stage++;return;
                 }
                 if(stage==42){capture(mc,"search-light-compact");switchTheme(mc);stage++;return;}
                 if(stage==43){
-                    capture(mc,"search-dark-compact");press(mc,"Boosters / Coconut alerts");
+                    capture(mc,"search-dark-compact");press(mc,"Boosters / Minimum boost (%)");
                     check(searchField(mc).getValue().isEmpty(),"Opening a result clears search");
-                    press(mc,"Coconut sound");
+                    search(mc,"coconut sound");press(mc,"Boosters / Coconut sound");press(mc,"Coconut sound");
                     mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_F,0,GLFW.GLFW_MOD_CONTROL));
                     check(searchField(mc).isFocused(),"Ctrl+F focuses search");
                     search(mc,"no-such-setting");stage++;return;
@@ -307,24 +307,25 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&b.getMessage().getString().contains(" / ")),"No-match search has no stale results");
                     var sameScreen=mc.gui.screen();sameScreen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
                     check(mc.gui.screen()==sameScreen&&searchField(mc).getValue().isEmpty(),"Escape clears search without closing menu");
-                    press(mc,"Coconut sound");
+                    search(mc,"coconut sound");press(mc,"Boosters / Coconut sound");press(mc,"Coconut sound");
                     mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
                     search(mc,"hud");stage++;return;
                 }
                 if(stage==45){capture(mc,"search-dark");switchTheme(mc);stage++;return;}
                 if(stage==46){
                     capture(mc,"search-light");
-                    // Every indexed destination must resolve to its actual section on every category.
+                    for(int category:new int[]{1,9,11,2,3,4,7,10}){
+                        mc.setScreenAndShow(new ToolkitScreen(null,category));
+                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==10?1:0),"Single sell-all selector in General");
+                        search(mc,"sell all");
+                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().contains(" / ")).count()==1,"Sell all returns one global setting from every category");
+                        press(mc,"General / Sell all key");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&w.visible&&ToolkitScreen.searchTarget(w,"Sell all key")),"Sell-all search reveals binding");
+                    }
+                    // Every indexed destination must reveal its actual setting.
                     for(var entry:ToolkitSearch.ENTRIES){
                         search(mc,entry.title());press(mc,entry.title());
-                        var field=ToolkitScreen.class.getDeclaredField("labels");field.setAccessible(true);
-                        boolean found=false;
-                        for(Object label:(java.util.List<?>)field.get(mc.gui.screen())){
-                            var text=label.getClass().getDeclaredMethod("text");text.setAccessible(true);
-                            var supplier=(java.util.function.Supplier<?>)text.invoke(label);
-                            if(entry.section().equals(supplier.get()))found=true;
-                        }
-                        check(found,"Search destination resolves: "+entry.title());
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&w.visible&&ToolkitScreen.searchTarget(w,entry.setting())),"Search destination shows setting: "+entry.title());
                         assertControls(mc);
                     }
                     mc.setScreenAndShow(new ToolkitScreen(null,10));stage++;return;
@@ -398,7 +399,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==128){
                     if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
                     check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: global search, every section destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
