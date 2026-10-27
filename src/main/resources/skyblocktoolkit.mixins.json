@@ -3,6 +3,7 @@
   "package": "com.skyblocktoolkit.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "BlackoutScrollMixin",
     "AlertVolumeMixin",
     "ChannelGainMixin",
     "ChatScreenMixin",

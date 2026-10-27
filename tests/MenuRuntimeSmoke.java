@@ -16,6 +16,57 @@ import org.lwjgl.glfw.GLFW;
 public final class MenuRuntimeSmoke implements ClientModInitializer {
     int ticks,stage=Boolean.getBoolean("toolkit.testVoicechat")?-2:0;
     Path output=Path.of(System.getProperty("toolkit.preview"));
+    private static void checkBlackoutScroll(net.minecraft.client.Minecraft mc) throws Exception {
+        var previous = mc.gui.screen();
+        var cfg = ToolkitConfig.get();
+        double opacity = cfg.blackoutOpacity;
+        boolean hint = cfg.blackoutHint;
+        var hook = java.util.Arrays.stream(net.minecraft.client.MouseHandler.class.getDeclaredMethods())
+                .filter(m -> m.getName().contains("toolkit$blackoutScroll")).findFirst().orElseThrow();
+        hook.setAccessible(true);
+        ToolkitMod.blackoutKey.setDown(true);
+        var blocked = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("scroll", true);
+        hook.invoke(mc.mouseHandler, mc.getWindow().handle(), 0.0, -1.0, blocked);
+        check(!blocked.isCancelled() && cfg.blackoutOpacity == opacity, "Menu scrolling remains unchanged");
+        // A disconnected client turns setScreen(null) into the title screen.
+        // Clear the field only for this synchronous offline input check.
+        var screenField = java.util.Arrays.stream(net.minecraft.client.Minecraft.class.getDeclaredFields())
+                .filter(f -> f.getType() == net.minecraft.client.gui.screens.Screen.class).findFirst().orElseThrow();
+        screenField.setAccessible(true);screenField.set(mc, null);
+        cfg.blackoutOpacity = .5;
+        BlackoutManager.setActive(false);
+        BlackoutManager.updateKey(true, true, true);
+        var consumed = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("scroll", true);
+        hook.invoke(mc.mouseHandler, mc.getWindow().handle(), 0.0, -1.0, consumed);
+        check(consumed.isCancelled() && cfg.blackoutOpacity == .45 && BlackoutManager.isActive(), "Held blackout scroll clears by 5% and consumes hotbar scroll");
+        BlackoutManager.adjustOpacity(2);
+        check(cfg.blackoutOpacity == .55, "Scroll up darkens");
+        BlackoutManager.adjustOpacity(100);
+        check(cfg.blackoutOpacity == 1, "Opacity clamps at full black");
+        BlackoutManager.adjustOpacity(-100);
+        check(cfg.blackoutOpacity == 0, "Opacity clamps at transparent");
+        check(!BlackoutManager.adjustOpacity(0) && !BlackoutManager.adjustOpacity(Double.NaN), "Ignore empty and invalid scroll");
+        ToolkitMod.blackoutKey.setDown(false);
+        BlackoutManager.updateKey(false, false, true);
+        check(BlackoutManager.isActive(), "Release after scrolling keeps blackout active");
+        var ctor = ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);
+        check(ctor.newInstance().blackoutOpacity == 0, "Gesture saves opacity on release");
+        BlackoutManager.updateKey(true, true, true);
+        BlackoutManager.updateKey(false, false, true);
+        check(!BlackoutManager.isActive(), "Tap still toggles off");
+        BlackoutManager.updateKey(false, true, true);
+        check(BlackoutManager.isActive(), "Fast tap between ticks toggles on");
+        BlackoutManager.updateKey(true, true, true);
+        BlackoutManager.updateKey(false, false, false);
+        BlackoutManager.updateKey(false, false, true);
+        check(BlackoutManager.isActive(), "Opening a menu cancels a pending tap");
+        cfg.blackoutOpacity = opacity;cfg.blackoutHint = hint;cfg.save();
+        BlackoutManager.setActive(false);
+        mc.setScreenAndShow(previous);
+        Files.writeString(outputPath().resolve("blackout-scroll.txt"), "PASS: remapped mouse mixin, menu exclusion, hotbar consumption, 5% adjustment, limits, persistence, tap and gesture release\n");
+    }
+
+    private static Path outputPath() { return Path.of(System.getProperty("toolkit.preview")); }
     @Override public void onInitializeClient(){
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             try{
@@ -120,6 +171,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(cfg.xpBoosterHud!=xpWasVisible&&cfg.boosterHud!=old,"XP HUD eye toggles independently");
                     screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
                     check(mc.gui.screen()==screen&&!screen.children().isEmpty(),"HUD Escape returns to modules");
+                    checkBlackoutScroll(mc);
                     BlackoutManager.setActive(true);
                     check(BlackoutManager.isActive(),"Blackout active");
                     BlackoutManager.toggle();

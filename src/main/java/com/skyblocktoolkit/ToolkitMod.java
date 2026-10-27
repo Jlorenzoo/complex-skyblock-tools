@@ -62,7 +62,7 @@ public final class ToolkitMod implements ClientModInitializer {
             boolean sellClicked=false;while(sellAllKey.consumeClick())sellClicked=true;
             if(sellClicked&&mc.player!=null&&mc.getConnection()!=null&&mc.gui.screen()==null)
                 mc.getConnection().sendCommand("sellall");
-            if(blackoutClicked)BlackoutManager.toggle();
+            BlackoutManager.updateKey(blackoutKey.isDown(),blackoutClicked,mc.gui.screen()==null);
             if(requested||clicked){
                 if(clicked&&!requested)requestedPage=0;
                 requested=false;
