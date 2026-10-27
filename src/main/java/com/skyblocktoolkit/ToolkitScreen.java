@@ -356,9 +356,12 @@ public final class ToolkitScreen extends Screen {
         sellAllBinding(40);
         setting("Wake key",62,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
         section("HUD & layout",100);
-        button("HUD elements",116,()->{hudReturnPage=10;go(8);});
-        button("Edit positions",138,()->go(5));
-        button("Reset HUD positions",162,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;});
+        int actionWidth=(layout.bodyWidth()-8)/2;
+        button(()->"HUD elements",116,0,actionWidth,()->{hudReturnPage=10;go(8);});
+        button(()->"Edit positions",116,actionWidth+8,layout.bodyWidth()-actionWidth-8,()->go(5));
+        label("Restore defaults",154);
+        int resetWidth=Math.min(144,layout.bodyWidth());
+        button(()->"Reset HUD positions",148,layout.bodyWidth()-resetWidth,resetWidth,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;});
     }
     private void advancedSounds(){
         var cfg=ToolkitConfig.get();var fishing=ToolkitMod.FISHING;

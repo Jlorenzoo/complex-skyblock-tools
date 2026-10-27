@@ -389,7 +389,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     for(int page:new int[]{1,2,3,4,7,9,10,11}){
                         mc.setScreenAndShow(new ToolkitScreen(null,page));assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }
-                    mc.setScreenAndShow(new ToolkitScreen(null,10));stage++;return;
+                    mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);stage++;return;
                 }
                 if(stage==49){capture(mc,"general-dark-compact");switchTheme(mc);stage++;return;}
                 if(stage==50){capture(mc,"general-light-compact");stage++;return;}
