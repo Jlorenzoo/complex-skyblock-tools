@@ -26,6 +26,7 @@ public final class ToolkitScreen extends Screen {
     private int advancedDivider=-1;
     private String query="",jumpSection="",jumpSetting="";
     private EditBox searchBox;
+    private Button clearSearch;
     private int savedScroll,layoutReturnPage=1;
     private final List<EditBox> priceFields=new ArrayList<>();
     private final List<EditBox> settingFields=new ArrayList<>();
@@ -48,8 +49,8 @@ public final class ToolkitScreen extends Screen {
         String[] compactNames={"Boost","Farm","Mine","Fish","Chat","Sales","Dim","Keys"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
-            int by=layout.compact()?y+36:y+54+i*25,bw=layout.compact()?(w-12)/targets.length-2:104;
-            var nav=addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,20,page==target));
+            int by=layout.compact()?y+36:y+66+i*23,bw=layout.compact()?(w-12)/targets.length-2:104;
+            var nav=addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,20,page==target&&query.isBlank()));
             nav.setTooltip(Tooltip.create(Component.literal(names[i])));
         }
         addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+4,layout.footerY(),96,20));
@@ -62,7 +63,7 @@ public final class ToolkitScreen extends Screen {
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
                     UpdateManager.triggerUpdateFromCommand();
                     if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },x+4,y+54+8*25+2,104,20));
+                },x+4,y+250,104,20));
             }else{
                 int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
                 addRenderableWidget(ToolkitButton.action(updateText,b->{
@@ -77,19 +78,30 @@ public final class ToolkitScreen extends Screen {
     }
     private void go(int next){persist();if(next==5)layoutReturnPage=page==8?hudReturnPage:page;page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;fishEarnings=false;query="";jumpSection="";rebuildWidgets();}
     private void initSearch(){
-        int top=layout.y()+(layout.compact()?68:50);
-        searchBox=addRenderableWidget(new EditBox(font,layout.bodyX()+8,top+6,layout.bodyWidth()-54,14,Component.literal("Search all settings")));
+        int sx,sy,sw,editW,clearX,clearY,clearW,clearH;
+        if(!layout.compact()){
+            sx=layout.x()+4;sy=layout.y()+42;sw=104;
+            editW=sw-22;clearW=14;clearH=16;
+            clearX=sx+sw-16;clearY=sy+2;
+        }else{
+            sx=layout.bodyX();sy=layout.y()+60;sw=layout.bodyWidth();
+            editW=sw-30;clearW=22;clearH=20;
+            clearX=sx+sw-24;clearY=sy;
+        }
+        searchBox=addRenderableWidget(new EditBox(font,sx+6,sy+3,editW,14,Component.literal("Search all settings")));
         searchBox.setBordered(false);searchBox.setTextShadow(false);searchBox.setMaxLength(80);
         searchBox.setTextColor(ToolkitTheme.palette().text());
         searchBox.setTooltip(Tooltip.create(Component.literal("Search every category · Ctrl+F / Cmd+F")));
         searchBox.setValue(query);
+        clearSearch=addRenderableWidget(ToolkitButton.action("X",b->{searchBox.setValue("");setFocused(searchBox);},clearX,clearY,clearW,clearH));
+        clearSearch.setTooltip(Tooltip.create(Component.literal("Clear search (Escape)")));
+        clearSearch.visible=!query.isEmpty();
         searchBox.setResponder(text->{
             if(query.isBlank()&&!text.isBlank())savedScroll=scroll;
             query=text;scroll=text.isBlank()?savedScroll:0;
+            clearSearch.visible=!text.isBlank();
             clearBody();buildBody();
         });
-        var clear=addRenderableWidget(ToolkitButton.action("X",b->{searchBox.setValue("");setFocused(searchBox);},layout.bodyX()+layout.bodyWidth()-28,top,28,20));
-        clear.setTooltip(Tooltip.create(Component.literal("Clear search (Escape)")));
     }
     private void clearBody(){
         for(var control:controls)removeWidget(control.widget());
@@ -102,7 +114,12 @@ public final class ToolkitScreen extends Screen {
             int top=18;
             for(var result:results){
                 button(()->result.title(),top,0,layout.bodyWidth(),()->{
-                    persist();page=result.page();fishEarnings=false;query="";scroll=0;
+                    persist();page=result.page();
+                    boolean inFishPrices=result.page()==2&&("Fish prices".equals(result.section())||"Estimate".equals(result.section())||result.setting().endsWith("%"));
+                    fishEarnings=inFishPrices;
+                    if(result.page()==6)soundReturnPage=result.category().equals("Auction")?4:2;
+                    if(result.page()==8)hudReturnPage=result.page();
+                    query="";scroll=0;
                     jumpSection=result.section();jumpSetting=result.setting();expandedPages.add(page);rebuildWidgets();
                 });
                 top+=24;
@@ -117,7 +134,7 @@ public final class ToolkitScreen extends Screen {
     }
     static boolean searchTarget(AbstractWidget widget,String setting){
         String message=widget.getMessage().getString();
-        return message.equals(setting)||message.startsWith(setting+":")||
+        return message.equals(setting)||message.startsWith(setting+":")||message.startsWith(setting+" ")||
             (setting.equals("Minimum boost (%)")&&message.equals("Minimum coconut money booster percentage"));
     }
     private void section(String title,int top){
@@ -405,9 +422,9 @@ public final class ToolkitScreen extends Screen {
             g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.palette().text(),false);
         }else if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,112,h,6,ToolkitTheme.palette().sidebar());g.fill(x+104,y,x+112,y+h,ToolkitTheme.palette().sidebar());
-            g.blit(LOGO,x+8,y+10,x+44,y+46,0f,1f,0f,1f);
-            g.text(font,"SKYBLOCK",x+47,y+17,ToolkitTheme.palette().accent(),false);
-            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+47,y+29,ToolkitTheme.palette().muted(),false);
+            g.blit(LOGO,x+8,y+8,x+38,y+38,0f,1f,0f,1f);
+            g.text(font,"SKYBLOCK",x+42,y+13,ToolkitTheme.palette().accent(),false);
+            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+42,y+25,ToolkitTheme.palette().muted(),false);
             g.text(font,query.isBlank()?PAGES[page]:"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
             String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays","XP tracking & earnings"};
             g.text(font,query.isBlank()?descriptions[page]:"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
@@ -417,10 +434,17 @@ public final class ToolkitScreen extends Screen {
         }
         if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
         if(page!=8){
-            int sy=layout.y()+(layout.compact()?68:50);
-            ToolkitTheme.rounded(g,layout.bodyX(),sy,layout.bodyWidth()-34,20,3,ToolkitTheme.palette().surface());
-            if(searchBox.isFocused())g.fill(layout.bodyX()+8,sy+19,layout.bodyX()+layout.bodyWidth()-42,sy+20,ToolkitTheme.palette().accent());
-            if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY(),ToolkitTheme.palette().muted(),false);
+            if(!layout.compact()){
+                int sx=x+4,sy=y+42,sw=104;
+                ToolkitTheme.rounded(g,sx,sy,sw,20,3,ToolkitTheme.palette().surface());
+                if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-4,sy+20,ToolkitTheme.palette().accent());
+                if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
+            }else{
+                int sx=layout.bodyX(),sy=y+60,sw=layout.bodyWidth();
+                ToolkitTheme.rounded(g,sx,sy,sw-(clearSearch!=null&&clearSearch.visible?26:0),20,3,ToolkitTheme.palette().surface());
+                if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-(clearSearch!=null&&clearSearch.visible?30:4),sy+20,ToolkitTheme.palette().accent());
+                if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
+            }
         }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
         if(advancedDivider>=0){int lineY=layout.bodyY()+advancedDivider-scroll;
