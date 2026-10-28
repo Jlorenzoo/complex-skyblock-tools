@@ -156,6 +156,8 @@ public class BoosterHudOverlay implements HudElement {
     public static int fishY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().fishHudY));}
     public static int xpX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().xpHudX));}
     public static int xpY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().xpHudY));}
+    public static int cropHarvestX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().cropHarvestHudX));}
+    public static int cropHarvestY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().cropHarvestHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
         g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);
@@ -167,7 +169,7 @@ public class BoosterHudOverlay implements HudElement {
         var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
         boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
 
-        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud && !toolkit.xpEarningsHud) {
+        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud && !toolkit.xpEarningsHud && !toolkit.cropHarvestHud) {
             return;
         }
 
@@ -177,6 +179,7 @@ public class BoosterHudOverlay implements HudElement {
             return;
         }
         if (toolkit.xpEarningsHud && XpTracker.shouldShowHud()) { String label=XpTracker.averageLabel();extractor.text(mc.font,label,xpX(mc,label),xpY(mc),0xFFFFFFFF,true); }
+        if (toolkit.cropHarvestHud && com.skyblocktoolkit.CropHarvestTracker.shouldShowHud()) { String label=com.skyblocktoolkit.CropHarvestTracker.averageLabel();extractor.text(mc.font,label,cropHarvestX(mc,label),cropHarvestY(mc),0xFFFFFFFF,true); }
 
         boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
                 || mc.player.getOffhandItem().is(Items.FISHING_ROD);

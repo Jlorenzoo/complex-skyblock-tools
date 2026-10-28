@@ -100,6 +100,9 @@ public class BoosterManager {
             }).toList();
         long now = System.currentTimeMillis();
         for (var type : BoosterTimers.Type.values()) timers.observe(type, BoosterSidebar.parse(lines, type), now);
-        for (String line : lines) BoosterStatsManager.checkScoreboardLine(line);
+        for (String line : lines) {
+            BoosterStatsManager.checkScoreboardLine(line);
+            com.skyblocktoolkit.CropHarvestTracker.checkScoreboardLine(line);
+        }
     }
 }

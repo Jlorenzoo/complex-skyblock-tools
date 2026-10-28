@@ -44,11 +44,13 @@ public class MoneyBoosterMod implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.level != previousLevel) {
                 BoosterManager.reset(); BoosterStatsManager.resetConnection(); RateTracker.disconnect();
+                com.skyblocktoolkit.CropHarvestTracker.reset();
                 previousLevel = client.level;
             }
             BoosterManager.onClientTick(client);
             BoosterStatsManager.tick();
             XpTracker.tick(client);
+            com.skyblocktoolkit.CropHarvestTracker.tick();
             RateTracker.onClientTick();
 
             if (openMenuRequested) {

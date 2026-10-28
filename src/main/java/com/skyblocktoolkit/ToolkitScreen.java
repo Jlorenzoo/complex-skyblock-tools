@@ -207,7 +207,8 @@ public final class ToolkitScreen extends Screen {
         toggleCell("Fishing earnings",34,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
         toggleCell("Rate test info",68,0,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
         toggleCell("XP per hour",68,1,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),108);
+        toggleCell("Harvest / hour",102,0,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
+        pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),138);
     }
     private void money(){
         var cfg=ModConfig.getInstance();var toolkit=ToolkitConfig.get();
@@ -271,11 +272,14 @@ public final class ToolkitScreen extends Screen {
         section("Crop visibility",0);
         toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
         label("Dim immature crops to spot ready plants.",42);
-        section("Crop earnings",68);
+        section("Crop tracking",68);
         toggle("Crop earnings HUD",84,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        if(advanced(116)){
-            toggle("Include boosters in crop average",170,money::includesBoostersInAverage,money::toggleAverageBoosters);
-            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},196);
+        toggle("Harvest per hour HUD",108,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
+        label("Appears while harvesting (> 1,000/h).",134);
+        label(()->CropHarvestTracker.averageLabel(),148,ToolkitTheme.palette().accent(),1);
+        if(advanced(174)){
+            toggle("Include boosters in crop average",228,money::includesBoostersInAverage,money::toggleAverageBoosters);
+            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},254);
         }
     }
     private void mining(){
@@ -378,7 +382,7 @@ public final class ToolkitScreen extends Screen {
         button(()->"Edit positions",116,actionWidth+8,layout.bodyWidth()-actionWidth-8,()->go(5));
         label("Restore defaults",154);
         int resetWidth=Math.min(144,layout.bodyWidth());
-        button(()->"Reset HUD positions",148,layout.bodyWidth()-resetWidth,resetWidth,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;});
+        button(()->"Reset HUD positions",148,layout.bodyWidth()-resetWidth,resetWidth,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;});
     }
     private void advancedSounds(){
         var cfg=ToolkitConfig.get();var fishing=ToolkitMod.FISHING;
@@ -473,9 +477,11 @@ public final class ToolkitScreen extends Screen {
     private List<HudPart> hudParts(){
         var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
         String crops=BoosterStatsManager.averageLabel(),fish=ToolkitMod.fishingLabel();
+        String harvest=CropHarvestTracker.averageLabel();
         return List.of(new HudPart(2,crops,BoosterHudOverlay.averageX(mc,crops),BoosterHudOverlay.averageY(mc),cfg.cropEarningsHud),
             new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud),
-            new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud));
+            new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud),
+            new HudPart(5,harvest,BoosterHudOverlay.cropHarvestX(mc,harvest),BoosterHudOverlay.cropHarvestY(mc),cfg.cropHarvestHud));
     }
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
@@ -531,7 +537,7 @@ public final class ToolkitScreen extends Screen {
             for(var part:hudParts()){
                 int ex=eyeX(part.x(),font.width(part.text()));
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
-                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;else if(part.id()==3)cfg.fishEarningsHud=!cfg.fishEarningsHud;else cfg.xpEarningsHud=!cfg.xpEarningsHud;
+                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;else if(part.id()==3)cfg.fishEarningsHud=!cfg.fishEarningsHud;else if(part.id()==4)cfg.xpEarningsHud=!cfg.xpEarningsHud;else cfg.cropHarvestHud=!cfg.cropHarvestHud;
                     persist();return true;
                 }
             }
@@ -550,6 +556,7 @@ public final class ToolkitScreen extends Screen {
     }
     @Override public boolean mouseDragged(MouseButtonEvent event,double dx,double dy){
         var cfg=ModConfig.getInstance();
+        if(dragging==5){var c=ToolkitConfig.get();c.cropHarvestHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(CropHarvestTracker.averageLabel())-2));c.cropHarvestHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==4){var c=ToolkitConfig.get();c.xpHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(XpTracker.averageLabel())-2));c.xpHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==3){var c=ToolkitConfig.get();c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(ToolkitMod.fishingLabel())-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
