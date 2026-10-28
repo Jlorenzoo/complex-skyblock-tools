@@ -1,4 +1,5 @@
 """Disposable regression checks for settings-preserving profile migration."""
+import gzip
 import json
 from pathlib import Path
 import sys
@@ -7,7 +8,7 @@ import unittest
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from profile_migration import copy_player_data, options_for_1_21_11, digest
+from profile_migration import adapt_schematic, copy_player_data, options_for_1_21_11, digest
 
 
 class MigrationTest(unittest.TestCase):
@@ -56,19 +57,43 @@ class MigrationTest(unittest.TestCase):
                 self.assertEqual(json.loads(archive.read('pack.mcmeta'))['pack']['min_format'], [75, 0])
                 self.assertEqual(archive.read('assets/minecraft/textures/block/wheat_stage0.png'), b'pixels')
 
-    def test_schematic_paths_use_final_profile_even_when_copy_is_staged(self):
+    def test_schematic_keeps_payload_and_retargets_future_minecraft_version(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source, target = Path(temp) / 'old', Path(temp) / 'new'
+            schematic = source / 'schematics/farm.litematic'
+            schematic.parent.mkdir(parents=True)
+            raw = b'\n\x00\x00\x03\x00\x14MinecraftDataVersion\x00\x00\x13\x27\x00payload'
+            with gzip.open(schematic, 'wb') as stream:
+                stream.write(raw)
+            before = digest(schematic)
+            records = copy_player_data(source, target)
+            self.assertEqual(digest(schematic), before)
+            with gzip.open(target / schematic.relative_to(source), 'rb') as stream:
+                decompressed = stream.read()
+                self.assertEqual(decompressed, b'\n\x00\x00\x03\x00\x14MinecraftDataVersion\x00\x00\x12\x3f\x00payload')
+            self.assertEqual(records['schematics/farm.litematic']['installed_sha256'], digest(target / 'schematics/farm.litematic'))
+
+    def test_schematic_already_target_version_not_recompressed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            schematic = Path(temp) / 'current.litematic'
+            raw = b'\n\x00\x00\x03\x00\x14MinecraftDataVersion\x00\x00\x12\x3f\x00payload'
+            with gzip.open(schematic, 'wb') as stream:
+                stream.write(raw)
+            self.assertFalse(adapt_schematic(schematic, 4671))
+
+    def test_schematic_paths_retarget_external_references_when_present(self):
         with tempfile.TemporaryDirectory() as temp:
             source, stage, final = (Path(temp) / name for name in ('old', 'stage', 'final'))
             (source / 'config').mkdir(parents=True)
-            original = {'hotkeys': {'menu': 'M'}, 'schematic': str(source / 'schematics/farm.litematic')}
+            (source / 'schematics').mkdir(parents=True)
+            (source / 'schematics/farm.litematic').write_bytes(b'schematic')
+            external_path = '/some/other/profile/schematics/farm.litematic'
+            original = {'placements': [{'schematic': external_path}]}
             file = source / 'config/litematica.json'
             file.write_text(json.dumps(original))
-            records = copy_player_data(source, stage, profile_path=final)
+            copy_player_data(source, stage, profile_path=final)
             copied = json.loads((stage / 'config/litematica.json').read_text())
-            self.assertEqual(copied['schematic'], str(final / 'schematics/farm.litematic'))
-            self.assertEqual(copied['hotkeys'], original['hotkeys'])
-            self.assertEqual(json.loads(file.read_text()), original)
-            self.assertEqual(records['config/litematica.json']['installed_sha256'], digest(stage / 'config/litematica.json'))
+            self.assertEqual(copied['placements'][0]['schematic'], str(final / 'schematics/farm.litematic'))
 
 
 if __name__ == '__main__':

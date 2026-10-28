@@ -137,7 +137,7 @@ client to exit before the final snapshot so its last options/history saves are
 included. `scripts/profile_migration.py` copies and SHA-256 verifies player data,
 including options, mod configuration, voice device settings/volumes, server list,
 schematics, screenshots and worlds. It rejects overlapping/nonempty destinations
-and linked paths. It changes the options data version to 4671, the known
+and linked paths. It changes the options data version and future schematic data versions to 4671, the known
 Ready Crops pack's format to 75, and absolute configuration paths to the copied
 profile (including schematic placements); all keybindings and crop texture/model bytes stay
 unchanged. Launcher metadata, runtime caches and old mod binaries are separate.
