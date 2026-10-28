@@ -9,7 +9,9 @@
     "ChatScreenMixin",
     "ExperienceSyncMixin",
     "ChatComponentAccessor",
-    "BossHealthOverlayAccessor"
+    "BossHealthOverlayAccessor",
+    "LevelRendererResizeMixin",
+    "SectionOcclusionGraphAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -24,6 +24,20 @@ public final class ToolkitMod implements ClientModInitializer {
     }
     private static boolean requested;
     private static int requestedPage;
+    private static boolean optionsOptimized;
+
+    public static void optimizeOptions(net.minecraft.client.Minecraft mc) {
+        if (optionsOptimized || mc == null || mc.options == null) return;
+        optionsOptimized = true;
+        try {
+            if (mc.options.chunkSectionFadeInTime().get() > 0.0) {
+                mc.options.chunkSectionFadeInTime().set(0.0);
+            }
+            if (mc.options.inactivityFpsLimit().get() == net.minecraft.client.InactivityFpsLimit.AFK) {
+                mc.options.inactivityFpsLimit().set(net.minecraft.client.InactivityFpsLimit.MINIMIZED);
+            }
+        } catch (Throwable ignored) {}
+    }
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
         StartupConnection.init();
@@ -52,6 +66,7 @@ public final class ToolkitMod implements ClientModInitializer {
             }
         );
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
+            optimizeOptions(mc);
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
             if(mc!=null&&mc.player!=null){
                 UpdateManager.checkAndNotifyChat(mc.player);
