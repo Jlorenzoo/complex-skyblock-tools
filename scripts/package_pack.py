@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 from pathlib import Path
+from build_version import build_version
 import shutil
 import subprocess
 import urllib.request
@@ -104,14 +105,23 @@ def package(minecraft, toolkit_jar=None, output_dir=None):
     out = (output_dir or (ROOT / 'dist' / f'fabric-{minecraft}')).resolve()
     out.mkdir(parents=True, exist_ok=True)
 
-    jar_name = f"skyblock-toolkit-1.1.0+mc{minecraft}.jar"
+    version = build_version()
+    jar_name = f"skyblock-toolkit-{version}+mc{minecraft}.jar"
     if toolkit_jar is None:
         if minecraft == '26.2':
-            candidate = ROOT / 'build/skyblock-toolkit-1.1.0.jar'
+            candidate = ROOT / f'build/skyblock-toolkit-{version}.jar'
         else:
             candidate = ROOT / f'versions/{minecraft}/build/libs/{jar_name}'
         if candidate.is_file():
             toolkit_jar = candidate
+
+    if toolkit_jar and toolkit_jar.is_file():
+        with zipfile.ZipFile(toolkit_jar) as archive:
+            metadata = json.loads(archive.read('fabric.mod.json'))
+            if metadata['id'] != 'skyblocktoolkit' or metadata['depends']['minecraft'] != '~' + minecraft or archive.testzip():
+                raise ValueError('Toolkit jar does not match the requested Minecraft pack')
+            version = metadata['version']
+            jar_name = f"skyblock-toolkit-{version}+mc{minecraft}.jar"
 
     public_jar = out / jar_name
     if toolkit_jar and toolkit_jar.is_file():
@@ -157,7 +167,7 @@ def package(minecraft, toolkit_jar=None, output_dir=None):
     index = {
         'formatVersion': 1,
         'game': 'minecraft',
-        'versionId': f'1.1.0+mc{minecraft}',
+        'versionId': f'{version}+mc{minecraft}',
         'name': f'Complex Skyblock Toolkit ({minecraft})',
         'dependencies': {
             'minecraft': spec['minecraft'],

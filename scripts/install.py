@@ -114,12 +114,13 @@ def main():
     with installer_lock():
         with zipfile.ZipFile(SOURCE) as z:
             meta = json.loads(z.read("fabric.mod.json"))
-            assert meta["id"] == "skyblocktoolkit" and meta["version"] == "1.1.0" and z.testzip() is None
+            assert meta["id"] == "skyblocktoolkit" and isinstance(meta["version"], str) and bool(meta["version"]) and z.testzip() is None
             validate_target(meta, MODS)
 
+        installed_version = meta["version"]
         deadline = time.monotonic() + 86400
         while active_clients():
-            status("Queued: Skyblock Toolkit 1.1.0 replaces Booster HUD, Fishing Pings and Chat Copy after all shared Complex Skyblock clients close. Settings and history stay in place.")
+            status(f"Queued: Skyblock Toolkit {installed_version} replaces Booster HUD, Fishing Pings and Chat Copy after all shared Complex Skyblock clients close. Settings and history stay in place.")
             if not args.wait:
                 raise SystemExit("Close Minecraft and run again, or use --wait.")
             if time.monotonic() > deadline:
@@ -139,8 +140,8 @@ def main():
 
         dest = MODS / SOURCE.name
         if originals == [dest] and digest(dest) == digest(SOURCE):
-            status("Skyblock Toolkit 1.1.0 is already installed. Open with Right Shift or Escape -> Skyblock Toolkit.")
-            print("Skyblock Toolkit 1.1.0 is already up to date in mods folder.")
+            status(f"Skyblock Toolkit {installed_version} is already installed. Open with Right Shift or Escape -> Skyblock Toolkit.")
+            print(f"Skyblock Toolkit {installed_version} is already up to date in mods folder.")
             return
 
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
@@ -160,7 +161,7 @@ def main():
 
         if active_clients():
             temporary.unlink()
-            status("Client reopened during preparation. Close Minecraft and run the installer again.")
+            status(f"Client reopened during preparation. Close Minecraft and run the installer again.")
             raise SystemExit(1)
 
         removed = []
@@ -173,8 +174,8 @@ def main():
             installed = True
             if digest(dest) != digest(SOURCE):
                 raise RuntimeError("Installed checksum mismatch")
-            status("Installed Skyblock Toolkit 1.1.0. Start Minecraft, then press Right Shift or Escape -> Skyblock Toolkit. Original mods backed up; settings/history preserved.")
-            print("Installed Skyblock Toolkit 1.1.0 successfully.")
+            status(f"Installed Skyblock Toolkit {installed_version}. Start Minecraft, then press Right Shift or Escape -> Skyblock Toolkit. Original mods backed up; settings/history preserved.")
+            print(f"Installed Skyblock Toolkit {installed_version} successfully.")
         except Exception as error:
             if installed and dest.exists():
                 dest.unlink()

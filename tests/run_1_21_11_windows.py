@@ -16,7 +16,8 @@ import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from local_paths import settings
+from local_paths import settings, toolkit_jar
+from build_version import build_version
 
 VERSION = "1.21.11"
 LOADER = "0.18.4"
@@ -77,8 +78,8 @@ def main():
         checksum = response.read().decode().strip().split()[0]
     api = fetch(api_url, cache / f"fabric-api-{API}.jar", checksum)
     java = Path(os.environ.get("JAVA_21", str(install / "java/java-runtime-delta/bin/java.exe")))
-    toolkit = ROOT / "versions/1.21.11/build/libs/skyblock-toolkit-1.1.0+mc1.21.11.jar"
-    smoke = ROOT / "versions/1.21.11/build/libs/skyblock-toolkit-1.1.0-menu-smoke.jar"
+    toolkit = toolkit_jar("1.21.11")
+    smoke = ROOT / f"versions/1.21.11/build/libs/skyblock-toolkit-{build_version()}-menu-smoke.jar"
     with tempfile.TemporaryDirectory(prefix="toolkit-1.21.11-") as temp:
         game = Path(temp)
         mods = game / "mods"
@@ -89,11 +90,11 @@ def main():
                 if (cli.profile / folder).exists():
                     shutil.copytree(cli.profile / folder, game / folder)
             for mod in (cli.profile / 'mods').glob('*.jar'):
-                shutil.copy2(mod, mods / mod.name)
+                shutil.copy2(mod, mods / ("menu-smoke.jar" if mod == smoke else mod.name))
             shutil.copy2(cli.profile / 'options.txt', game / 'options.txt')
             migration_args = ['-Dtoolkit.migrationOptions=' + str(cli.profile / 'options.txt')]
         for mod in (toolkit, smoke, api):
-            shutil.copy2(mod, mods / mod.name)
+            shutil.copy2(mod, mods / ("menu-smoke.jar" if mod == smoke else mod.name))
         config = game / 'config/skyblocktoolkit.json'
         values = json.loads(config.read_text(encoding='utf-8')) if config.exists() else {}
         # A live pack may already auto-join. Always intercept that route in the

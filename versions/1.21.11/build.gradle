@@ -2,7 +2,11 @@ plugins {
     id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
 }
 
-version = '1.1.0'
+def versionOutput = providers.exec {
+    workingDir '../..'
+    commandLine (System.getProperty('os.name').toLowerCase().contains('win') ? 'python' : 'python3'), 'scripts/build_version.py'
+}
+version = versionOutput.standardOutput.asText.get().trim()
 group = 'com.skyblocktoolkit'
 base { archivesName = 'skyblock-toolkit' }
 repositories { mavenCentral() }
@@ -80,8 +84,9 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 21
 }
 tasks.named('processResources') {
+    inputs.property('toolkitVersion', project.version)
     filesMatching('fabric.mod.json') {
-        filter { it.replace('~26.2', '~1.21.11').replace('>=25', '>=21').replace('>=0.19.5', '>=0.18.4') }
+        filter { it.replaceFirst(/"version"\s*:\s*"[^"]+"/, '"version": "' + project.version + '"').replace('~26.2', '~1.21.11').replace('>=25', '>=21').replace('>=0.19.5', '>=0.18.4') }
     }
     filesMatching('skyblocktoolkit.mixins.json') { filter { it.replace('JAVA_25', 'JAVA_21') } }
     filesMatching('resourcepacks/clear_harvest/pack.mcmeta') { filter { it.replace('88', '75') } }

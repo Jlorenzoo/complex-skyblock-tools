@@ -10,7 +10,7 @@ parser.add_argument('--voicechat', action='store_true', help='Also load and rend
 parser.add_argument('--pack', action='store_true', help='Load every pinned 26.2 pack dependency')
 options = parser.parse_args()
 sys.path.insert(0, str(root / 'scripts'))
-toolkit = root / 'build/skyblock-toolkit-1.1.0.jar'
+toolkit = Path(build.OUTPUT_JAR)
 install = Path(build.MC_JAR).parents[2]
 output = root / 'artifacts/menu-preview'
 if options.voicechat:

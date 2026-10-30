@@ -21,30 +21,47 @@ Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity durin
 **Minecraft 1.21.11 / Java 21 is the maintained pack target.** Run
 `python build.py` to compile/remap the shared features and run all Java regression
 suites through the Gradle wrapper in [`versions/1.21.11`](versions/1.21.11/README.md).
-Output: `versions/1.21.11/build/libs/skyblock-toolkit-1.1.0+mc1.21.11.jar`.
+Output: `versions/1.21.11/build/libs/skyblock-toolkit-<patch>+mc1.21.11.jar`.
 Use a JDK 21 or newer (`JAVA_HOME`, or the configured `javac` JDK).
 `python scripts/install.py --wait` installs that target by default into the
 configured profile. Installer checks reject jars for a different known launcher
-Minecraft version. Routine changes keep version 1.1.0.
+Minecraft version. Every commit receives a numeric patch version (`1.1.<full Git commit count>`).
+`python scripts/build_version.py` prints the exact version. Commit before the final
+build/install; the same source commit produces the same version on every machine.
+Shallow clones are rejected; CI checks out full history. Keep the major/minor line
+in `src/main/resources/fabric.mod.json`; change that line for an intentional larger update.
+The patch component in that source template is replaced when building.
 
 The feature sources/assets remain shared in `src/main`. The Gradle target adapts
 26.2 API names and remaps the production 1.21.11 jar. Future feature work must
 build and exercise the 1.21.11 pack. The updater selects release assets for the
 running Minecraft version and checks jar metadata before replacement. The
 `Fabric 1.21.11` workflow builds the jar, runs regressions and installer/migration
-checks, and publishes a checksummed build artifact on relevant pushes.
+checks, and publishes a checksummed public GitHub Release on relevant main pushes.
+The 26.2 workflow publishes its own compatible patch too. Releases stay drafts
+until the jar and checksum are uploaded. Existing installed updaters already
+understand these numeric versions and Minecraft-specific asset names. Only the
+26.2 patch is marked GitHub Latest, preserving the original 26.2 updater that
+used `/releases/latest` without a Minecraft compatibility filter; 1.21.11
+clients select their own asset from the release list.
+After pushing, wait for both build/publication jobs and verify their public assets;
+a green local build alone does not deliver an update to another PC.
+The updater checks on startup, every 15 minutes while running, and retries failed
+checks after one minute. It notifies in chat after entering a world. `/toolkit update`
+refreshes a previously up-to-date result; available updates still require clicking
+to download and a restart to activate.
 
 The additional Java 25 / 26.2 build is explicit: `python build.py --minecraft 26.2`.
 It downloads public dependencies into ignored `.local/fabric-26.2`, verifies their
 upstream checksums, compiles the shared sources and runs the Java regressions.
 Set `JAVA_HOME` or `JAVAC` to JDK 25; configured launcher files are reused only
 when their bytes match the pinned upstream dependencies. No installed pack is
-needed. Its output remains `build/skyblock-toolkit-1.1.0.jar`; never put it into
+needed. Its output remains `build/skyblock-toolkit-<patch>.jar`; never put it into
 a 1.21.11 profile. `python scripts/package_26_2.py` creates the clearly named
-`skyblock-toolkit-1.1.0+mc26.2.jar`, a complete Prism ZIP, a Modrinth `.mrpack`,
+`skyblock-toolkit-<patch>+mc26.2.jar`, a complete Prism ZIP, a Modrinth `.mrpack`,
 installation instructions and SHA-256 checksums under `dist/fabric-26.2`.
 The `Fabric 26.2` GitHub workflow runs these steps on every relevant main push
-and uploads downloadable artifacts. It does not create a tag or release.
+and uploads downloadable artifacts. Successful main builds also publish the compatible jar as an in-game patch release.
 
 The full 26.2 dependency set is pinned in `modpack/fabric-26.2.json`. Pack exports
 use fresh defaults and the built-in crop pack, without reading any live player

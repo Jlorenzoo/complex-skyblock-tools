@@ -7,13 +7,15 @@ import tempfile
 import argparse
 import sys
 from scripts.local_paths import settings
+from scripts.build_version import build_version
+VERSION = build_version()
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_JAVA = os.path.join(PROJECT_DIR, "src", "main", "java")
 SRC_RESOURCES = os.path.join(PROJECT_DIR, "src", "main", "resources")
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 CLASSES_DIR = os.path.join(BUILD_DIR, "classes")
-OUTPUT_JAR = os.path.join(BUILD_DIR, "skyblock-toolkit-1.1.0.jar")
+OUTPUT_JAR = os.path.join(BUILD_DIR, f"skyblock-toolkit-{VERSION}.jar")
 
 LOCAL = settings()
 PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(os.path.expanduser("~"), ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))
@@ -101,6 +103,14 @@ def main():
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 shutil.copy2(src_path, dest_path)
         
+        import json
+        metadata_path = os.path.join(CLASSES_DIR, "fabric.mod.json")
+        with open(metadata_path, encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+        metadata["version"] = VERSION
+        with open(metadata_path, "w", encoding="utf-8") as metadata_file:
+            json.dump(metadata, metadata_file, indent=2)
+
         # 6. Create jar archive
         print("Packaging jar...")
         with zipfile.ZipFile(OUTPUT_JAR, "w", compression=zipfile.ZIP_DEFLATED) as z:

@@ -1,6 +1,9 @@
 """Render and exercise menus in an isolated offline Fabric client (requires a display)."""
 import json, os, shutil, subprocess, tempfile, zipfile
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from local_paths import toolkit_jar
 BASE=Path(__file__).resolve().parents[1]
 PRISM = Path(os.environ.get('PRISM_DATA', Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher'))
 JAVA=PRISM/'java/java-runtime-epsilon/bin'
@@ -18,7 +21,7 @@ output.mkdir(parents=True,exist_ok=True)
 for generated in [output/'PASS.txt',*output.glob('screenshots/*.png')]: generated.unlink(missing_ok=True)
 with tempfile.TemporaryDirectory(prefix='toolkit-menu-smoke-') as tmp:
     root=Path(tmp);classes=root/'classes';classes.mkdir();mods=root/'mods';mods.mkdir()
-    toolkit=BASE/'build/skyblock-toolkit-1.1.0.jar'
+    toolkit=toolkit_jar('26.2')
     shutil.copy2(toolkit,mods/toolkit.name)
     shutil.copy2(PRISM/'instances/Complex-Skyblock-2/.minecraft/mods/fabric-api-0.160.0+26.2.jar',mods)
     # Match the configured pack while leaving its files and settings untouched.

@@ -172,9 +172,9 @@ class VoicechatTest(unittest.TestCase):
         jar(game / 'mods/fabric-api-0.160.0+26.2.jar', 'fabric-api')
         jar(game / 'resourcepacks/Clear-Harvest-90pct-26.2.zip', 'fixture-pack')
         (self.root / 'build').mkdir()
-        jar(self.root / 'build/skyblock-toolkit-1.1.0.jar', 'skyblocktoolkit', '1.1.0')
+        jar(self.root / f'build/skyblock-toolkit-{package_prism.VERSION}.jar', 'skyblocktoolkit', package_prism.VERSION)
         for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'CHANGELOG.md', 'build.py',
-                     'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
+                     'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py', 'scripts/build_version.py'):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('fixture')

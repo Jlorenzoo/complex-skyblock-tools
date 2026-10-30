@@ -7,7 +7,7 @@ sys.path.insert(0, str(root))
 import build
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--loader', help='Exercise a specific Fabric Loader version')
-parser.add_argument('--source', type=Path, default=root / 'build/skyblock-toolkit-1.1.0.jar')
+parser.add_argument('--source', type=Path, default=Path(build.OUTPUT_JAR))
 parser.add_argument('--expect-loader-rejection', action='store_true', help='Require a clear version mismatch instead of a mixin crash')
 cli = parser.parse_args()
 build.configure_26_2(loader_version=cli.loader)

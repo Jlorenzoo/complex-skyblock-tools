@@ -67,6 +67,7 @@ public final class ToolkitMod implements ClientModInitializer {
         );
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             optimizeOptions(mc);
+            UpdateManager.tick();
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
             if(mc!=null&&mc.player!=null){
                 UpdateManager.checkAndNotifyChat(mc.player);

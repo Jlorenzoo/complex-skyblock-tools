@@ -23,7 +23,7 @@ class PackTest(unittest.TestCase):
 
     def write_jar(self, version, loader='>=0.19.5'):
         with zipfile.ZipFile(self.jar, 'w') as archive:
-            archive.writestr('fabric.mod.json', json.dumps({'id': 'skyblocktoolkit', 'version': '1.1.0',
+            archive.writestr('fabric.mod.json', json.dumps({'id': 'skyblocktoolkit', 'version': package_26_2.build_version(),
                 'depends': {'minecraft': version, 'java': '>=25', 'fabricloader': loader}}))
 
     def test_pack_cannot_publish_a_jar_that_allows_the_crashing_loader(self):

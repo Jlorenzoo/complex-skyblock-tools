@@ -35,7 +35,8 @@ public final class UpdateManager {
     private static volatile String downloadUrl = "";
     private static volatile String releaseNotes = "";
     private static volatile String lastError = "";
-    private static volatile boolean chatNotified = false;
+    private static volatile String notifiedVersion = "";
+    private static volatile long nextCheckNanos = 0;
     private static final Object LOCK = new Object();
 
     private UpdateManager() {}
@@ -66,7 +67,9 @@ public final class UpdateManager {
 
     public static void checkForUpdatesAsync(Runnable onComplete) {
         synchronized (LOCK) {
-            if (state == State.CHECKING || state == State.DOWNLOADING) return;
+            if (state == State.CHECKING || state == State.DOWNLOADING || state == State.READY_RESTART) return;
+            nextCheckNanos = System.nanoTime() + Duration.ofMinutes(15).toNanos();
+            lastError = "";
             state = State.CHECKING;
         }
 
@@ -144,9 +147,8 @@ public final class UpdateManager {
                     lastError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 }
             } finally {
-                if (onComplete != null) {
-                    onComplete.run();
-                }
+                if (state == State.ERROR) nextCheckNanos = System.nanoTime() + Duration.ofMinutes(1).toNanos();
+                if (onComplete != null) Minecraft.getInstance().execute(onComplete);
             }
         });
     }
@@ -254,10 +256,15 @@ public final class UpdateManager {
         });
     }
 
+    /** Recheck during long sessions and retry startup checks that failed offline. */
+    public static void tick() {
+        if (System.nanoTime() - nextCheckNanos >= 0) checkForUpdatesAsync();
+    }
+
     public static void checkAndNotifyChat(LocalPlayer player) {
-        if (player == null || chatNotified) return;
+        if (player == null || notifiedVersion.equals(latestVersion)) return;
         if (state == State.UPDATE_AVAILABLE) {
-            chatNotified = true;
+            notifiedVersion = latestVersion;
             MutableComponent msg = Component.literal("§8[§bSkyblock Toolkit§8] §aA new update §e§lv" + latestVersion + "§a is available! ");
             MutableComponent button = Component.literal("§b§l[Click to Update]")
                     .withStyle(s -> s
@@ -280,9 +287,8 @@ public final class UpdateManager {
             case DOWNLOADING -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §eAn update is already downloading..."));
             case READY_RESTART -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §aUpdate v" + latestVersion + " is installed! Restart Minecraft to apply."));
             case UPDATE_AVAILABLE -> downloadAndInstallAsync();
-            case UP_TO_DATE -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7You are running the latest version (§a" + getCurrentVersion() + "§7)."));
             case CHECKING -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7Checking for updates, please wait..."));
-            case IDLE, ERROR -> {
+            case IDLE, ERROR, UP_TO_DATE -> {
                 mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7Checking for updates..."));
                 checkForUpdatesAsync(() -> {
                     Minecraft m = Minecraft.getInstance();
@@ -371,25 +377,6 @@ public final class UpdateManager {
     }
 
     public static int compareVersions(String v1, String v2) {
-        if (v1 == null) return v2 == null ? 0 : -1;
-        if (v2 == null) return 1;
-        v1 = v1.trim().replaceFirst("^[vV]", "");
-        v2 = v2.trim().replaceFirst("^[vV]", "");
-        String[] parts1 = v1.split("[-+.]");
-        String[] parts2 = v2.split("[-+.]");
-        int len = Math.max(parts1.length, parts2.length);
-        for (int i = 0; i < len; i++) {
-            String p1 = i < parts1.length ? parts1[i] : "0";
-            String p2 = i < parts2.length ? parts2[i] : "0";
-            try {
-                int n1 = Integer.parseInt(p1);
-                int n2 = Integer.parseInt(p2);
-                if (n1 != n2) return Integer.compare(n1, n2);
-            } catch (NumberFormatException e) {
-                int cmp = p1.compareToIgnoreCase(p2);
-                if (cmp != 0) return cmp;
-            }
-        }
-        return 0;
+        return UpdateChannel.compareVersions(v1, v2);
     }
 }

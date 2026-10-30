@@ -15,9 +15,14 @@ def minecraft_version():
 
 
 def toolkit_jar(version=None):
+    try:
+        from .build_version import build_version
+    except ImportError:
+        from build_version import build_version
+    patch = build_version()
     version = version or minecraft_version()
     if version == "1.21.11":
-        return PROJECT_DIR / "versions/1.21.11/build/libs/skyblock-toolkit-1.1.0+mc1.21.11.jar"
+        return PROJECT_DIR / f"versions/1.21.11/build/libs/skyblock-toolkit-{patch}+mc1.21.11.jar"
     if version == "26.2":
-        return PROJECT_DIR / "build/skyblock-toolkit-1.1.0.jar"
+        return PROJECT_DIR / f"build/skyblock-toolkit-{patch}.jar"
     raise ValueError("Unsupported Minecraft target: " + version)

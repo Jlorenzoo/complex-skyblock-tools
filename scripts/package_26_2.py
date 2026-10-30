@@ -8,11 +8,12 @@ import shutil
 import subprocess
 import zipfile
 
+from build_version import build_version
 from fabric_26_2 import manifest, fetch_mod
 from voicechat import control_options
 
 ROOT = Path(__file__).resolve().parents[1]
-JAR_NAME = 'skyblock-toolkit-1.1.0+mc26.2.jar'
+JAR_NAME = f'skyblock-toolkit-{build_version()}+mc26.2.jar'
 README = '''Skyblock Toolkit - Minecraft 26.2
 
 Prism Launcher: Add Instance > Import > choose Full-Pack-Prism-26.2.zip.
@@ -36,7 +37,7 @@ def verify_toolkit(path):
     with zipfile.ZipFile(path) as archive:
         meta = json.loads(archive.read('fabric.mod.json'))
         if (archive.testzip() is not None or meta['id'] != 'skyblocktoolkit'
-                or meta['version'] != '1.1.0' or meta['depends']['minecraft'] != '~26.2'
+                or meta['version'] != build_version() or meta['depends']['minecraft'] != '~26.2'
                 or meta['depends']['java'] != '>=25' or meta['depends']['fabricloader'] != '>=0.19.5'):
             raise ValueError('Expected the Minecraft 26.2 / Java 25 toolkit jar')
 
@@ -71,7 +72,7 @@ def package(output, toolkit, sources=None):
                        {'uid': 'net.fabricmc.fabric-loader', 'version': spec['loader']}]}).encode()}
     write_archive(prism, prism_files)
 
-    index = {'formatVersion': 1, 'game': 'minecraft', 'versionId': '1.1.0+mc26.2',
+    index = {'formatVersion': 1, 'game': 'minecraft', 'versionId': f'{build_version()}+mc26.2',
              'name': 'Complex Skyblock Toolkit (26.2)',
              'dependencies': {'minecraft': spec['minecraft'], 'fabric-loader': spec['loader']}, 'files': []}
     for mod in spec['mods']:
@@ -103,6 +104,6 @@ def write_archive(path, files):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT / 'dist/fabric-26.2')
-    parser.add_argument('--source', type=Path, default=ROOT / 'build/skyblock-toolkit-1.1.0.jar')
+    parser.add_argument('--source', type=Path, default=ROOT / f'build/skyblock-toolkit-{build_version()}.jar')
     args = parser.parse_args()
     package(args.output, args.source)

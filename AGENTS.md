@@ -22,13 +22,13 @@ A unified Minecraft Fabric client mod bringing together booster tracking, fishin
 - For every requested change, complete the implementation, build it, and run the relevant checks. Verify mod changes work in the configured modpack using the available isolated Fabric/runtime checks; visually inspect UI changes in both themes and compact layouts.
 - Install each updated build into the live modpack using `python scripts/install.py --wait` (`python3` where available). If Minecraft is running, queue the installer safely and report that installation is pending; never force-close the player's game. Verify the installed jar checksum once installation completes. Do not describe a queued install as completed or claim live gameplay was verified when only isolated checks ran.
 - Commit the intended changes and publish them to `Jlorenzoo/complex-skyblock-tools` on GitHub's `main` branch as part of the same task. This is standing user authorization to install and update `main` without asking again. Preserve unrelated work, fetch remote changes first, and never force-push. If branch protection requires a pull request, follow that path through merge where permitted.
-- Keep the existing version for routine changes. Bump versions, create release tags, or publish a GitHub release only when the user explicitly requests a new version/release. Routine build, verification, installation and publication to `main` do not require a separate confirmation.
+- Every code change must reach the in-game updater, including home PCs. `scripts/build_version.py` assigns a numeric patch from the full Git commit count (currently the 1.1 line). Both Fabric workflows publish verified jars and checksums as public GitHub Releases on successful main builds. Do not leave changes only as Actions artifacts. Commit before the final build/install so the local jar has the same patch number as CI. Verify the published release contains the correct Minecraft jar and that the previous updater can discover it. New major/minor lines require an explicit user request; routine patches and publication are authorized. Never overwrite a published patch.
 
 - **Build Mod:**
   ```bash
   python3 build.py
   ```
-  Produces `versions/1.21.11/build/libs/skyblock-toolkit-1.1.0+mc1.21.11.jar` and runs the Java regression suites. The explicit `--minecraft 26.2` build remains available with legacy dependency paths.
+  Produces `versions/1.21.11/build/libs/skyblock-toolkit-<patch>+mc1.21.11.jar` and runs the Java regression suites. The explicit `--minecraft 26.2` build remains available with legacy dependency paths.
 - **Run Tests:**
   ```bash
   python3 tests/test_installer.py

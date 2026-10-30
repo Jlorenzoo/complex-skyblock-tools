@@ -4,6 +4,8 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from build_version import build_version
+VERSION = build_version()
 import zipfile
 from voicechat import fetch as fetch_voicechat, control_options
 
@@ -14,12 +16,12 @@ DEFAULT_INSTANCE = Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--instance', type=Path, default=DEFAULT_INSTANCE)
-    parser.add_argument('--output', type=Path, default=PROJECT / 'dist/Complex-Skyblock-Prism-1.1.0.zip')
+    parser.add_argument('--output', type=Path, default=PROJECT / f'dist/Complex-Skyblock-Prism-{VERSION}.zip')
     args = parser.parse_args()
     # This explicitly retained export is the historical 26.2 pack. The maintained
     # 1.21.11 profile uses the Gradle build and its own dependency manifest.
     game = args.instance / '.minecraft'
-    jar = PROJECT / 'build/skyblock-toolkit-1.1.0.jar'
+    jar = PROJECT / f'build/skyblock-toolkit-{VERSION}.jar'
     api = game / 'mods/fabric-api-0.160.0+26.2.jar'
     pack = game / 'resourcepacks/Clear-Harvest-90pct-26.2.zip'
     components = json.loads((args.instance / 'mmc-pack.json').read_text())
@@ -31,7 +33,7 @@ def main():
             assert archive.testzip() is None, path
     with zipfile.ZipFile(jar) as archive:
         metadata = json.loads(archive.read('fabric.mod.json'))
-        assert metadata['id'] == 'skyblocktoolkit' and metadata['version'] == '1.1.0'
+        assert metadata['id'] == 'skyblocktoolkit' and metadata['version'] == VERSION
     voicechat = fetch_voicechat(minecraft='26.2')
 
     files = {
@@ -49,10 +51,10 @@ def main():
         if path.is_file():
             files['toolkit-source/' + path.relative_to(PROJECT).as_posix()] = path
     for name in ('LICENSE', 'THIRD-PARTY.md', 'README.md', 'CHANGELOG.md', 'build.py',
-                 'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py'):
+                 'modpack/voicechat.json', 'modpack/voicechat-26.2.json', 'scripts/voicechat.py', 'scripts/install.py', 'scripts/local_paths.py', 'scripts/build_version.py'):
         files['toolkit-source/' + name] = PROJECT / name
 
-    readme = '''COMPLEX SKYBLOCK - PRISM PACK
+    readme = f'''COMPLEX SKYBLOCK - PRISM PACK
 
 Import this ZIP without extracting it:
 Prism Launcher > Add Instance > Import > Browse > choose this ZIP > OK.
@@ -60,7 +62,7 @@ Then launch the new Complex Skyblock Toolkit instance using your own account.
 Prism downloads Minecraft 26.2 and Fabric Loader 0.19.5. Java 25 is required;
 use Prism's automatic Java management or select Java 25 if prompted.
 
-Included: Skyblock Toolkit 1.1.0, Fabric API 0.160.0+26.2, Simple Voice Chat 2.6.22+26.2,
+Included: Skyblock Toolkit {VERSION}, Fabric API 0.160.0+26.2, Simple Voice Chat 2.6.22+26.2,
 Clear Harvest crop visibility texture pack (built-in & enabled), and toolkit settings.
 Press Right Shift in-game to open the Toolkit (toggle crop textures in Right Shift > Farming).
 Simple Voice Chat is by Max Henkel: https://modrinth.com/plugin/simple-voice-chat
