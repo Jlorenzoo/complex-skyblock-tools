@@ -23,7 +23,7 @@ public final class UpdateRuntimeSmoke implements PreLaunchEntrypoint {
             if (state.equals("UPDATE_AVAILABLE")) {
                 String url = updater.getMethod("getDownloadUrl").invoke(null).toString();
                 String minecraft = System.getProperty("toolkit.expectedMinecraft");
-                if (minecraft == null || !url.endsWith("+mc" + minecraft + ".jar"))
+                if (minecraft == null || !java.net.URI.create(url).getPath().endsWith("+mc" + minecraft + ".jar"))
                     throw new AssertionError("Unexpected compatible asset: " + url);
             }
             System.out.println("PASS: real Fabric updater " + state + ", latest " + version);
