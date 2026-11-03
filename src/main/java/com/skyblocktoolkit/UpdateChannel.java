@@ -11,12 +11,16 @@ public final class UpdateChannel {
     }
 
     public static String jarName(String version, String minecraft) {
-        return "skyblock-toolkit-" + version + (minecraft.equals("26.2") ? "" : "+mc" + minecraft) + ".jar";
+        return "complexify-" + version + (minecraft.equals("26.2") ? "" : "+mc" + minecraft) + ".jar";
     }
 
     public static boolean matches(String asset, String version, String minecraft) {
-        return !version.isEmpty() && (asset.equals(jarName(version, minecraft))
-            || asset.equals("skyblock-toolkit-" + version + "+mc" + minecraft + ".jar"));
+        if (version.isEmpty()) return false;
+        String c1 = "complexify-" + version + (minecraft.equals("26.2") ? "" : "+mc" + minecraft) + ".jar";
+        String c2 = "complexify-" + version + "+mc" + minecraft + ".jar";
+        String s1 = "skyblock-toolkit-" + version + (minecraft.equals("26.2") ? "" : "+mc" + minecraft) + ".jar";
+        String s2 = "skyblock-toolkit-" + version + "+mc" + minecraft + ".jar";
+        return asset.equals(c1) || asset.equals(c2) || asset.equals(s1) || asset.equals(s2);
     }
     public static int compareVersions(String v1, String v2) {
         if (v1 == null) return v2 == null ? 0 : -1;

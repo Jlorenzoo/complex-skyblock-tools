@@ -134,14 +134,14 @@ def main():
                 if mod_id(path) in IDS:
                     originals.append(path)
             except (zipfile.BadZipFile, json.JSONDecodeError, KeyError):
-                if path.name.startswith(("money-booster-hud", "fishing-pings", "chattextselect", "skyblock-toolkit")):
+                if path.name.startswith(("money-booster-hud", "fishing-pings", "chattextselect", "skyblock-toolkit", "complexify")):
                     status("Stopped: could not identify " + path.name + ". No mods replaced.")
                     raise SystemExit(1)
 
         dest = MODS / SOURCE.name
         if originals == [dest] and digest(dest) == digest(SOURCE):
-            status(f"Skyblock Toolkit {installed_version} is already installed. Open with Right Shift or Escape -> Skyblock Toolkit.")
-            print(f"Skyblock Toolkit {installed_version} is already up to date in mods folder.")
+            status(f"Complexify {installed_version} is already installed. Open with Right Shift or Escape -> Complexify.")
+            print(f"Complexify {installed_version} is already up to date in mods folder.")
             return
 
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
@@ -174,8 +174,8 @@ def main():
             installed = True
             if digest(dest) != digest(SOURCE):
                 raise RuntimeError("Installed checksum mismatch")
-            status(f"Installed Skyblock Toolkit {installed_version}. Start Minecraft, then press Right Shift or Escape -> Skyblock Toolkit. Original mods backed up; settings/history preserved.")
-            print(f"Installed Skyblock Toolkit {installed_version} successfully.")
+            status(f"Installed Complexify {installed_version}. Start Minecraft, then press Right Shift or Escape -> Complexify. Original mods backed up; settings/history preserved.")
+            print(f"Installed Complexify {installed_version} successfully.")
         except Exception as error:
             if installed and dest.exists():
                 dest.unlink()

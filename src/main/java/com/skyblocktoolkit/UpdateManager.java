@@ -115,7 +115,8 @@ public final class UpdateManager {
                         }
                     }
 
-                    if (!assetUrl.isEmpty() && !assetUrl.startsWith("https://github.com/" + DEFAULT_REPO + "/releases/download/")) {
+                    if (!assetUrl.isEmpty() && !assetUrl.startsWith("https://github.com/" + DEFAULT_REPO + "/releases/download/")
+                            && !assetUrl.startsWith("https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/")) {
                         throw new SecurityException("Untrusted download URL domain: " + assetUrl);
                     }
 
@@ -330,7 +331,7 @@ public final class UpdateManager {
                             }
                         } catch (Exception ignored) {}
                     }
-                    if (name.startsWith("skyblock-toolkit-") && name.endsWith(".jar")) {
+                    if ((name.startsWith("complexify-") || name.startsWith("skyblock-toolkit-")) && name.endsWith(".jar")) {
                         try { Files.deleteIfExists(p); } catch (Exception ignored) {}
                     }
                 }

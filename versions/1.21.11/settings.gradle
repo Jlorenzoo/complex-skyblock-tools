@@ -4,4 +4,4 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'skyblock-toolkit-1.21.11'
+rootProject.name = 'complexify-1.21.11'

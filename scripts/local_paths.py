@@ -22,7 +22,11 @@ def toolkit_jar(version=None):
     patch = build_version()
     version = version or minecraft_version()
     if version == "1.21.11":
+        p1 = PROJECT_DIR / f"versions/1.21.11/build/libs/complexify-{patch}+mc1.21.11.jar"
+        if p1.is_file(): return p1
         return PROJECT_DIR / f"versions/1.21.11/build/libs/skyblock-toolkit-{patch}+mc1.21.11.jar"
     if version == "26.2":
+        p1 = PROJECT_DIR / f"build/complexify-{patch}.jar"
+        if p1.is_file(): return p1
         return PROJECT_DIR / f"build/skyblock-toolkit-{patch}.jar"
     raise ValueError("Unsupported Minecraft target: " + version)

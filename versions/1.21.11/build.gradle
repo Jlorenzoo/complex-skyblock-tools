@@ -8,7 +8,7 @@ def versionOutput = providers.exec {
 }
 version = versionOutput.standardOutput.asText.get().trim()
 group = 'com.skyblocktoolkit'
-base { archivesName = 'skyblock-toolkit' }
+base { archivesName = 'complexify' }
 repositories { mavenCentral() }
 dependencies {
     minecraft 'com.mojang:minecraft:1.21.11'
@@ -130,4 +130,13 @@ tasks.register('remapMenuSmoke', net.fabricmc.loom.task.RemapJarTask) {
     classpath.from(sourceSets.main.output, sourceSets.main.compileClasspath)
     archiveClassifier = 'menu-smoke'
     addNestedDependencies = false
+}
+
+remapJar.doLast {
+    def outDir = layout.buildDirectory.dir("libs").get().asFile
+    def complexJar = new File(outDir, "complexify-${version}+mc1.21.11.jar")
+    def legacyJar = new File(outDir, "skyblock-toolkit-${version}+mc1.21.11.jar")
+    if (complexJar.exists()) {
+        java.nio.file.Files.copy(complexJar.toPath(), legacyJar.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
 }

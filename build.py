@@ -15,7 +15,8 @@ SRC_JAVA = os.path.join(PROJECT_DIR, "src", "main", "java")
 SRC_RESOURCES = os.path.join(PROJECT_DIR, "src", "main", "resources")
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 CLASSES_DIR = os.path.join(BUILD_DIR, "classes")
-OUTPUT_JAR = os.path.join(BUILD_DIR, f"skyblock-toolkit-{VERSION}.jar")
+OUTPUT_JAR = os.path.join(BUILD_DIR, f"complexify-{VERSION}.jar")
+LEGACY_JAR = os.path.join(BUILD_DIR, f"skyblock-toolkit-{VERSION}.jar")
 
 LOCAL = settings()
 PRISM_DATA = os.environ.get("PRISM_DATA", os.path.join(os.path.expanduser("~"), ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"))
@@ -121,6 +122,7 @@ def main():
                     rel_name = os.path.relpath(src_file, CLASSES_DIR)
                     z.write(src_file, rel_name)
         
+        shutil.copyfile(OUTPUT_JAR, LEGACY_JAR)
         print(f"Jar created at: {OUTPUT_JAR} ({os.path.getsize(OUTPUT_JAR)} bytes)")
         
         print("Run python scripts/install.py to install safely, or add --wait to queue until Minecraft closes.")
