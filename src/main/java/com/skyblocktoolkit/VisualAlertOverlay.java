@@ -31,6 +31,20 @@ public final class VisualAlertOverlay {
         startTime = System.currentTimeMillis();
     }
 
+    public static void triggerMoneyBooster(int percentage, String sourceName, long seconds) {
+        title = "§a§l+" + percentage + "% MONEY BOOSTER!";
+        subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
+        accentColor = 0x2ECC71; // Emerald green
+        startTime = System.currentTimeMillis();
+    }
+
+    public static void triggerXpBooster(int percentage, String sourceName, long seconds) {
+        title = "§b§l+" + percentage + "% XP BOOSTER!";
+        subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
+        accentColor = 0x9D9AEB; // Amethyst purple
+        startTime = System.currentTimeMillis();
+    }
+
     public static void triggerExpiring(BoosterTimers.Type type, int secondsRemaining) {
         String name = type == BoosterTimers.Type.MONEY ? "MONEY" : "XP";
         title = "§c§l" + name + " BOOSTER EXPIRING!";
@@ -49,6 +63,10 @@ public final class VisualAlertOverlay {
 
     public static void previewExpiringAlert() {
         triggerExpiring(BoosterTimers.Type.MONEY, 5);
+    }
+
+    public static void previewXpAlert() {
+        triggerXpBooster(100, "Experience booster", 300);
     }
 
     public static boolean isActive() {

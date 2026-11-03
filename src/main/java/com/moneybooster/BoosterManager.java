@@ -49,11 +49,19 @@ public class BoosterManager {
             var source = activation.server()
                 ? new BoosterSources.Source("Server booster", "Server booster", null, false) : BoosterSources.recent();
             var config = com.skyblocktoolkit.ToolkitConfig.get();
-            if (CoconutAlert.qualifies(activation, source.type(), true, config.coconutSoundThreshold)) {
-                if (config.coconutSoundEnabled)
-                    com.skyblocktoolkit.CoconutNotifier.preview();
-                if (config.coconutVisualAlert)
-                    com.skyblocktoolkit.VisualAlertOverlay.triggerCoconut(activation.percentage(), config.coconutSoundThreshold);
+            if (money) {
+                if ("Coconut".equals(source.type())) {
+                    if (CoconutAlert.qualifies(activation, source.type(), true, config.coconutSoundThreshold)) {
+                        if (config.coconutSoundEnabled)
+                            com.skyblocktoolkit.CoconutNotifier.preview();
+                        if (config.coconutVisualAlert)
+                            com.skyblocktoolkit.VisualAlertOverlay.triggerCoconut(activation.percentage(), config.coconutSoundThreshold);
+                    }
+                } else if (config.moneyVisualAlert) {
+                    com.skyblocktoolkit.VisualAlertOverlay.triggerMoneyBooster(activation.percentage(), source.name(), activation.seconds());
+                }
+            } else if (config.xpVisualAlert) {
+                com.skyblocktoolkit.VisualAlertOverlay.triggerXpBooster(activation.percentage(), source.name(), activation.seconds());
             }
             // XP can be recorded as a non-money effect without replacing the active money ledger.
             BoosterStatsManager.recordEffect(money ? activation.percentage() : 0, activation.seconds(),

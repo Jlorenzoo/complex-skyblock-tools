@@ -66,14 +66,32 @@ public final class VisualAlertTest {
         check(!VisualAlertOverlay.isAlertedMoney(), "disabled setting does not alert");
         check(!VisualAlertOverlay.isActive(215000), "overlay remains inactive when setting disabled");
 
-        // 5. Preview methods
+        // 5. General Money and XP booster activations
+        VisualAlertOverlay.reset();
+        VisualAlertOverlay.triggerMoneyBooster(50, "Money booster item", 300);
+        check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after money booster trigger");
+        check(VisualAlertOverlay.getTitle().contains("+50% MONEY BOOSTER"), "title has money percentage");
+        check(VisualAlertOverlay.getSubtitle().contains("Money booster item"), "subtitle mentions item source");
+        check(VisualAlertOverlay.getAccentColor() == 0x2ECC71, "emerald green accent");
+
+        VisualAlertOverlay.reset();
+        VisualAlertOverlay.triggerXpBooster(150, "Experience booster item", 600);
+        check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after xp booster trigger");
+        check(VisualAlertOverlay.getTitle().contains("+150% XP BOOSTER"), "title has xp percentage");
+        check(VisualAlertOverlay.getSubtitle().contains("Experience booster item"), "subtitle mentions xp item source");
+        check(VisualAlertOverlay.getAccentColor() == 0x9D9AEB, "amethyst purple accent color");
+
+        // 6. Preview methods
         VisualAlertOverlay.reset();
         VisualAlertOverlay.previewCoconutAlert();
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "preview coconut active");
         VisualAlertOverlay.previewExpiringAlert();
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "preview expiring active");
+        VisualAlertOverlay.previewXpAlert();
+        check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "preview xp active");
+        check(VisualAlertOverlay.getAccentColor() == 0x9D9AEB, "preview xp has amethyst color");
 
         VisualAlertOverlay.reset();
-        System.out.println("PASS: VisualAlertOverlay coconut hit, expiring countdown, single-trigger and preview logic");
+        System.out.println("PASS: VisualAlertOverlay coconut hit, money & XP activation, expiring countdown, single-trigger and preview logic");
     }
 }

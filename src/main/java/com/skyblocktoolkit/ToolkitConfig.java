@@ -8,7 +8,7 @@ public final class ToolkitConfig {
     public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true;
     public boolean lightMode=false;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
-    public boolean coconutSoundEnabled=true,coconutVisualAlert=true;
+    public boolean coconutSoundEnabled=true,coconutVisualAlert=true,moneyVisualAlert=true,xpVisualAlert=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
     public int xpHudX=12,xpHudY=74;
@@ -38,6 +38,8 @@ public final class ToolkitConfig {
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
             if(j.has("coconutSoundEnabled"))coconutSoundEnabled=j.get("coconutSoundEnabled").getAsBoolean();
             if(j.has("coconutVisualAlert"))coconutVisualAlert=j.get("coconutVisualAlert").getAsBoolean();
+            if(j.has("moneyVisualAlert"))moneyVisualAlert=j.get("moneyVisualAlert").getAsBoolean();
+            if(j.has("xpVisualAlert"))xpVisualAlert=j.get("xpVisualAlert").getAsBoolean();
             if(j.has("coconutSoundThreshold"))coconutSoundThreshold=Math.clamp(j.get("coconutSoundThreshold").getAsInt(),0,100000);
             if(j.has("xpEarningsHud"))xpEarningsHud=j.get("xpEarningsHud").getAsBoolean();
             if(j.has("xpIncludesBoosters"))xpIncludesBoosters=j.get("xpIncludesBoosters").getAsBoolean();
@@ -83,6 +85,7 @@ public final class ToolkitConfig {
             j.addProperty("lightMode",lightMode);
             j.addProperty("startupServer",startupServer);
             j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutVisualAlert",coconutVisualAlert);
+            j.addProperty("moneyVisualAlert",moneyVisualAlert);j.addProperty("xpVisualAlert",xpVisualAlert);
             j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
             j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);

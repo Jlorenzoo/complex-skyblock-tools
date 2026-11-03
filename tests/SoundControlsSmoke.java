@@ -54,10 +54,10 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             check(!legacySettings.boosterHud&&!legacySettings.xpBoosterHud&&!legacySettings.boosterReminder&&!legacySettings.lightMode,"legacy visibility and dark theme stay unchanged on migration");
             check(!legacySettings.xpEarningsHud&&legacySettings.xpIncludesBoosters&&!legacySettings.rateTestXp,"legacy XP rate defaults");
             check(legacySettings.coconutSoundEnabled&&legacySettings.coconutSoundThreshold==0,"legacy coconut defaults alert for every money coconut");
-            check(legacySettings.coconutVisualAlert&&legacySettings.boosterExpiringAlert,"visual alert defaults");
-            Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"coconutSoundEnabled\":false,\"coconutVisualAlert\":false,\"boosterExpiringAlert\":false,\"coconutSoundThreshold\":-10}");
+            check(legacySettings.coconutVisualAlert&&legacySettings.boosterExpiringAlert&&legacySettings.moneyVisualAlert&&legacySettings.xpVisualAlert,"visual alert defaults");
+            Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"coconutSoundEnabled\":false,\"coconutVisualAlert\":false,\"moneyVisualAlert\":false,\"xpVisualAlert\":false,\"boosterExpiringAlert\":false,\"coconutSoundThreshold\":-10}");
             var coconutSettings=constructor.newInstance();
-            check(!coconutSettings.coconutSoundEnabled&&!coconutSettings.coconutVisualAlert&&!coconutSettings.boosterExpiringAlert&&coconutSettings.coconutSoundThreshold==0,"disabled coconut preference, visual alerts and lower threshold clamp");
+            check(!coconutSettings.coconutSoundEnabled&&!coconutSettings.coconutVisualAlert&&!coconutSettings.moneyVisualAlert&&!coconutSettings.xpVisualAlert&&!coconutSettings.boosterExpiringAlert&&coconutSettings.coconutSoundThreshold==0,"disabled coconut preference, visual alerts and lower threshold clamp");
             Files.writeString(configDir.resolve("skyblocktoolkit.json"),"{\"coconutSoundThreshold\":100001}");
             check(constructor.newInstance().coconutSoundThreshold==100000,"upper threshold clamp");
             var unsafeClass=Class.forName("sun.misc.Unsafe");

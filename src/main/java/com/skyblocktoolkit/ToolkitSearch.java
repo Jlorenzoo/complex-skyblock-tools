@@ -16,8 +16,12 @@ public final class ToolkitSearch {
     public static final List<Entry> ENTRIES=List.of(
         new Entry(1,"Boosters","Timers","Money timer","money booster visibility hud timer"),
         new Entry(1,"Boosters","Timers","XP timer","experience booster visibility hud timer xp"),
+        new Entry(1,"Boosters","Timers","Money alert flash","money booster activation screen flash title banner"),
+        new Entry(1,"Boosters","Timers","XP alert flash","xp experience booster activation screen flash title banner"),
         new Entry(1,"Boosters","Timers","5-second reminder","five ending highlight soft reminder booster"),
         new Entry(1,"Boosters","Timers","Expiring screen alert","ending warning screen flash title banner booster expiring alert"),
+        new Entry(1,"Boosters","Timers","Preview XP alert","xp experience visual flash banner test preview"),
+        new Entry(1,"Boosters","Timers","Preview expiring","expiring ending warning flash banner test preview"),
         new Entry(1,"Boosters","Earnings & history","History","session bonus latest past earnings booster"),
         new Entry(1,"Boosters","Earnings & history","Rate tests","hourly average base rate test tracker statistics"),
         new Entry(1,"Boosters","Earnings & history","Include boosters in crop average","money base earnings crop average booster"),
