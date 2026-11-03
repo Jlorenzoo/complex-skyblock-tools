@@ -215,8 +215,9 @@ public final class ToolkitScreen extends Screen {
         section("Timers",0);
         toggleCell("Money timer",16,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
         toggleCell("XP timer",16,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
-        toggle("5-second reminder",40,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
-        label("Soft highlight when a visible timer is ending.",62);
+        toggleCell("5-second reminder",40,0,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
+        toggleCell("Expiring screen alert",40,1,()->toolkit.boosterExpiringAlert,()->toolkit.boosterExpiringAlert=!toolkit.boosterExpiringAlert);
+        label("Soft highlight & visual alert when a visible timer is ending.",62);
         label(()->timerStatus(BoosterTimers.Type.MONEY),78,ToolkitTheme.palette().moneyText(),1);
         label(()->timerStatus(BoosterTimers.Type.XP),90,ToolkitTheme.palette().xpText(),1);
         section("Earnings & history",116);
@@ -225,10 +226,11 @@ public final class ToolkitScreen extends Screen {
         label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),180,ToolkitTheme.palette().text(),1);
         label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},194,ToolkitTheme.palette().muted(),1);
         section("Coconut alerts",218);
-        toggle("Coconut sound",234,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
+        toggleCell("Coconut sound",234,0,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
+        toggleCell("Visual alert",234,1,()->toolkit.coconutVisualAlert,()->toolkit.coconutVisualAlert=!toolkit.coconutVisualAlert);
         thresholdField(258);
         label("Alert at or above this %. 0 = every money boost.",286);
-        button("Preview sound",302,CoconutNotifier::preview);
+        pair(()->"Preview sound",CoconutNotifier::preview,()->"Preview alert",VisualAlertOverlay::previewCoconutAlert,302);
     }
     private void thresholdField(int top){
         var cfg=ToolkitConfig.get();
@@ -471,6 +473,9 @@ public final class ToolkitScreen extends Screen {
             ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
             g.centeredText(font,Component.literal(bindingTarget==1?"Press your menu key":bindingTarget==2?"Press your black screen key":"Press your sell all key"),x+w/2,y+h/2-12,com.skyblocktoolkit.ToolkitTheme.palette().text());
             g.centeredText(font,Component.literal("Escape cancels · Delete clears"),x+w/2,y+h/2+8,ToolkitTheme.palette().muted());
+        }
+        if(VisualAlertOverlay.isActive()){
+            VisualAlertOverlay.render(g,width,height);
         }
     }
     private record HudPart(int id,String text,int x,int y,boolean visible){}

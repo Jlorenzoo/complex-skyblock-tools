@@ -65,6 +65,13 @@ public final class ToolkitMod implements ClientModInitializer {
                     BlackoutManager.render(extractor,extractor.guiWidth(),extractor.guiHeight());
             }
         );
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","visual_alert"),
+            (extractor,deltaTracker)->{
+                if(!BlackoutManager.isActive()&&net.minecraft.client.Minecraft.getInstance().gui.screen()==null)
+                    VisualAlertOverlay.render(extractor,extractor.guiWidth(),extractor.guiHeight());
+            }
+        );
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             optimizeOptions(mc);
             UpdateManager.tick();

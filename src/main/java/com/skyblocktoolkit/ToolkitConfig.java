@@ -5,10 +5,10 @@ import java.nio.file.*;
 public final class ToolkitConfig {
     private static final ToolkitConfig INSTANCE=new ToolkitConfig();
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
-    public boolean xpBoosterHud=true,boosterReminder=false;
+    public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true;
     public boolean lightMode=false;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
-    public boolean coconutSoundEnabled=true;
+    public boolean coconutSoundEnabled=true,coconutVisualAlert=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
     public int xpHudX=12,xpHudY=74;
@@ -34,8 +34,10 @@ public final class ToolkitConfig {
             if(j.has("boosterHud"))boosterHud=j.get("boosterHud").getAsBoolean();
             xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
             if(j.has("boosterReminder"))boosterReminder=j.get("boosterReminder").getAsBoolean();
+            if(j.has("boosterExpiringAlert"))boosterExpiringAlert=j.get("boosterExpiringAlert").getAsBoolean();
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
             if(j.has("coconutSoundEnabled"))coconutSoundEnabled=j.get("coconutSoundEnabled").getAsBoolean();
+            if(j.has("coconutVisualAlert"))coconutVisualAlert=j.get("coconutVisualAlert").getAsBoolean();
             if(j.has("coconutSoundThreshold"))coconutSoundThreshold=Math.clamp(j.get("coconutSoundThreshold").getAsInt(),0,100000);
             if(j.has("xpEarningsHud"))xpEarningsHud=j.get("xpEarningsHud").getAsBoolean();
             if(j.has("xpIncludesBoosters"))xpIncludesBoosters=j.get("xpIncludesBoosters").getAsBoolean();
@@ -77,9 +79,11 @@ public final class ToolkitConfig {
             Files.createDirectories(path.getParent());temp=Files.createTempFile(path.getParent(),"toolkit-",".tmp");
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
+            j.addProperty("boosterExpiringAlert",boosterExpiringAlert);
             j.addProperty("lightMode",lightMode);
             j.addProperty("startupServer",startupServer);
-            j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
+            j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutVisualAlert",coconutVisualAlert);
+            j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
             j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);

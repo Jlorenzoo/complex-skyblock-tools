@@ -45,6 +45,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             if (client.level != previousLevel) {
                 BoosterManager.reset(); BoosterStatsManager.resetConnection(); RateTracker.disconnect();
                 com.skyblocktoolkit.CropHarvestTracker.reset();
+                com.skyblocktoolkit.VisualAlertOverlay.reset();
                 previousLevel = client.level;
             }
             BoosterManager.onClientTick(client);
@@ -52,6 +53,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             XpTracker.tick(client);
             com.skyblocktoolkit.CropHarvestTracker.tick();
             RateTracker.onClientTick();
+            com.skyblocktoolkit.VisualAlertOverlay.tick(System.currentTimeMillis());
 
             if (openMenuRequested) {
                 openMenuRequested = false;
