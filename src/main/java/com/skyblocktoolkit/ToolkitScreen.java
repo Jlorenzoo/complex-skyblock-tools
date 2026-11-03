@@ -38,7 +38,7 @@ public final class ToolkitScreen extends Screen {
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
     private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General","Mining"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Skyblock Toolkit"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,11);}
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,11);}
     @Override protected void init(){
         layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
         if(page==5){initLayout();return;}
@@ -436,14 +436,14 @@ public final class ToolkitScreen extends Screen {
         }else if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,112,h,6,ToolkitTheme.palette().sidebar());g.fill(x+104,y,x+112,y+h,ToolkitTheme.palette().sidebar());
             g.blit(LOGO,x+8,y+8,x+38,y+38,0f,1f,0f,1f);
-            g.text(font,"SKYBLOCK",x+42,y+13,ToolkitTheme.palette().accent(),false);
+            g.text(font,"COMPLEXIFY",x+42,y+13,ToolkitTheme.palette().accent(),false);
             g.text(font,"v"+UpdateManager.getCurrentVersion(),x+42,y+25,ToolkitTheme.palette().muted(),false);
             g.text(font,query.isBlank()?PAGES[page]:"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
             String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays","XP tracking & earnings"};
             g.text(font,query.isBlank()?descriptions[page]:"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
-            g.text(font,"Skyblock Toolkit",x+30,y+15,ToolkitTheme.palette().text(),false);
+            g.text(font,"Complexify",x+30,y+15,ToolkitTheme.palette().text(),false);
         }
         if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
         if(page!=8){

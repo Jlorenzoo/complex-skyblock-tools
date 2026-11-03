@@ -95,22 +95,24 @@ public final class ToolkitMod implements ClientModInitializer {
             }
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher,access)->{
-            var command=ClientCommands.literal("toolkit").executes(ctx->{requestedPage=0;requested=true;return 1;});
-            command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
-            command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
-            String[] modules={"boosters","fishing","chat","auction","hud","blackout","farming","farm"};
-            int[] pages={1,2,3,4,5,7,9,9};
-            for(int i=0;i<modules.length;i++){
-                final int target=pages[i];
-                command.then(ClientCommands.literal(modules[i]).executes(ctx->{requestedPage=target;requested=true;return 1;}));
+            for(String rootName:new String[]{"complexify","toolkit"}){
+                var command=ClientCommands.literal(rootName).executes(ctx->{requestedPage=0;requested=true;return 1;});
+                command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
+                command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
+                String[] modules={"boosters","fishing","chat","auction","hud","blackout","farming","farm"};
+                int[] pages={1,2,3,4,5,7,9,9};
+                for(int i=0;i<modules.length;i++){
+                    final int target=pages[i];
+                    command.then(ClientCommands.literal(modules[i]).executes(ctx->{requestedPage=target;requested=true;return 1;}));
+                }
+                dispatcher.register(command);
             }
-            dispatcher.register(command);
         });
         ScreenEvents.AFTER_INIT.register((mc,screen,width,height)->{
             if(!(screen instanceof OptionsScreen)&&!(screen instanceof PauseScreen p&&p.showsPauseMenu()))return;
             var widgets=Screens.getWidgets(screen);int bw=Math.min(112,width-16),bx=width-bw-8,by=8;
             for(var widget:widgets)if(widget.visible&&bx<widget.getRight()&&bx+bw>widget.getX()&&by<widget.getBottom()&&by+20>widget.getY()){bx=8;break;}
-            widgets.add(com.moneybooster.FlatButton.flat(Component.literal("Skyblock Toolkit"),b->mc.setScreenAndShow(new ToolkitScreen(screen,0))).bounds(bx,by,bw,20).build());
+            widgets.add(com.moneybooster.FlatButton.flat(Component.literal("Complexify"),b->mc.setScreenAndShow(new ToolkitScreen(screen,0))).bounds(bx,by,bw,20).build());
         });
     }
 }

@@ -164,7 +164,7 @@ public final class UpdateManager {
             state = State.DOWNLOADING;
         }
 
-        sendFeedback("§8[§bSkyblock Toolkit§8] §7Downloading update §bv" + latestVersion + "§7...");
+        sendFeedback("§8[§cComplexify§8] §7Downloading update §cv" + latestVersion + "§7...");
 
         CompletableFuture.runAsync(() -> {
             Path tempDownload = null;
@@ -242,7 +242,7 @@ public final class UpdateManager {
                 synchronized (LOCK) {
                     state = State.READY_RESTART;
                 }
-                sendFeedback("§8[§bSkyblock Toolkit§8] §a§lUpdate installed! §fRestart Minecraft to activate §bv" + latestVersion + "§f.");
+                sendFeedback("§8[§cComplexify§8] §a§lUpdate installed! §fRestart Minecraft to activate §cv" + latestVersion + "§f.");
             } catch (Exception e) {
                 if (tempDownload != null) {
                     try { Files.deleteIfExists(tempDownload); } catch (Exception ignored) {}
@@ -251,7 +251,7 @@ public final class UpdateManager {
                     state = State.ERROR;
                     lastError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 }
-                sendFeedback("§8[§bSkyblock Toolkit§8] §cUpdate installation failed: " + lastError);
+                sendFeedback("§8[§cComplexify§8] §cUpdate installation failed: " + lastError);
             }
         });
     }
@@ -265,14 +265,14 @@ public final class UpdateManager {
         if (player == null || notifiedVersion.equals(latestVersion)) return;
         if (state == State.UPDATE_AVAILABLE) {
             notifiedVersion = latestVersion;
-            MutableComponent msg = Component.literal("§8[§bSkyblock Toolkit§8] §aA new update §e§lv" + latestVersion + "§a is available! ");
-            MutableComponent button = Component.literal("§b§l[Click to Update]")
+            MutableComponent msg = Component.literal("§8[§cComplexify§8] §aA new update §e§lv" + latestVersion + "§a is available! ");
+            MutableComponent button = Component.literal("§c§l[Click to Update]")
                     .withStyle(s -> s
-                            .withColor(ChatFormatting.AQUA)
+                            .withColor(ChatFormatting.RED)
                             .withBold(true)
                             .withUnderlined(true)
-                            .withClickEvent(new ClickEvent.RunCommand("/toolkit update"))
-                            .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to automatically download & install §bv" + latestVersion + "§7!")))
+                            .withClickEvent(new ClickEvent.RunCommand("/complexify update"))
+                            .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to automatically download & install §cv" + latestVersion + "§7!")))
                     );
             msg.append(button);
             player.sendSystemMessage(msg);
@@ -284,21 +284,21 @@ public final class UpdateManager {
         if (mc.player == null) return;
 
         switch (state) {
-            case DOWNLOADING -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §eAn update is already downloading..."));
-            case READY_RESTART -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §aUpdate v" + latestVersion + " is installed! Restart Minecraft to apply."));
+            case DOWNLOADING -> mc.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §eAn update is already downloading..."));
+            case READY_RESTART -> mc.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §aUpdate v" + latestVersion + " is installed! Restart Minecraft to apply."));
             case UPDATE_AVAILABLE -> downloadAndInstallAsync();
-            case CHECKING -> mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7Checking for updates, please wait..."));
+            case CHECKING -> mc.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §7Checking for updates, please wait..."));
             case IDLE, ERROR, UP_TO_DATE -> {
-                mc.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7Checking for updates..."));
+                mc.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §7Checking for updates..."));
                 checkForUpdatesAsync(() -> {
                     Minecraft m = Minecraft.getInstance();
                     if (m.player == null) return;
                     if (state == State.UPDATE_AVAILABLE) {
                         checkAndNotifyChat(m.player);
                     } else if (state == State.UP_TO_DATE) {
-                        m.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §7You are running the latest version (§a" + getCurrentVersion() + "§7)."));
+                        m.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §7You are running the latest version (§a" + getCurrentVersion() + "§7)."));
                     } else if (state == State.ERROR) {
-                        m.player.sendSystemMessage(Component.literal("§8[§bSkyblock Toolkit§8] §cUpdate check failed: " + lastError));
+                        m.player.sendSystemMessage(Component.literal("§8[§cComplexify§8] §cUpdate check failed: " + lastError));
                     }
                 });
             }

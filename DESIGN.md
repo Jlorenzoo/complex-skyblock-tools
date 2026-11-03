@@ -1,20 +1,20 @@
-# Skyblock Toolkit — Design System & Style Guide
+# Complexify — Design System & Style Guide
 
-Welcome to the **Skyblock Toolkit** design guide. This document establishes the visual language, design principles, color tokens, HUD specifications, and interface standards for all Skyblock Toolkit modules.
+Welcome to the **Complexify** design guide. This document establishes the visual language, design principles, color tokens, HUD specifications, and interface standards for all Complexify modules.
 
 ---
 
 ## 1. Brand Identity & Philosophy
 
-Skyblock Toolkit’s visual identity is inspired by high-performance esports HUDs and modern precision instrumentation, as seen in [`assets/logo.png`](assets/logo.png) and [`assets/banner.png`](assets/banner.png).
+Complexify’s visual identity is inspired by high-performance esports HUDs and modern precision instrumentation, as seen in [`assets/logo.png`](assets/logo.png) and [`assets/banner.png`](assets/banner.png).
 
 ```
    ┌─────────────────────────────────────────────────────────────┐
-   │                       [ HUD ]                               │
+   │                     [ TELEMETRY ]                           │
    │                          ▲                                  │
    │                    /───────────\                            │
-   │                   /  SKYBLOCK   \   ◄── Bold Crimson Red    │
-   │                  │   TOOLKIT     │  ◄── Crisp Pure White    │
+   │                   /  COMPLEXIFY \   ◄── Bold Crimson Red    │
+   │                  │  CLIENT SUITE │  ◄── Crisp Pure White    │
    │                   \─────────────/                           │
    │                          ▼                                  │
    │               Carbon Slate & Crimson Glow                   │

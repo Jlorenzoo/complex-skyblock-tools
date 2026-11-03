@@ -1,12 +1,12 @@
 <div align="center">
 
-![Skyblock Toolkit Banner](assets/banner.png)
+![Complexify Banner](assets/banner.png)
 
-<img src="assets/logo.png" width="110" alt="Skyblock Toolkit Logo" />
+<img src="assets/logo.png" width="110" alt="Complexify Logo" />
 
-# Skyblock Toolkit
+# Complexify
 
-**The Essential Quality-of-Life HUD & Stats Suite for Complex Gaming Skyblock**
+**The Precision Quality-of-Life HUD & Telemetry Suite for Complex Gaming Skyblock**
 
 [![Minecraft 1.21.11](https://img.shields.io/badge/Minecraft-1.21.11-ED1C24?style=for-the-badge&logo=minecraft&logoColor=white)](#)
 [![Fabric Loader](https://img.shields.io/badge/Fabric-0.18.4+-white?style=for-the-badge&logo=fabric&logoColor=black)](#)
@@ -26,7 +26,7 @@ Every release automatically provides 1-click modpack bundles and standalone mod 
 | :--- | :--- | :--- |
 | **Modrinth App** (1-Click) | **`Full-Pack-Modrinth-1.21.11.mrpack`** | **`Full-Pack-Modrinth-26.2.mrpack`** |
 | **Prism Launcher** (1-Click) | **`Full-Pack-Prism-1.21.11.zip`** | **`Full-Pack-Prism-26.2.zip`** |
-| **Standalone JAR** (Existing Mods Folder) | **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** | **`skyblock-toolkit-1.1.0+mc26.2.jar`** |
+| **Standalone JAR** (Existing Mods Folder) | **`complexify-1.1.0+mc1.21.11.jar`** | **`complexify-1.1.0+mc26.2.jar`** |
 
 > **Tip for Teammates:**  
 > - **Want the full modpack with Litematica & Voice Chat?** Download the `.mrpack` (Modrinth App) or `.zip` (Prism Launcher). Just click **Import** in your launcher—it automatically sets up the right Minecraft version, Java, and all required mods in 1 click. You do not need to configure anything manually.
@@ -39,23 +39,23 @@ Minecraft **1.21.11 uses Java 21**; Minecraft **26.2 uses Java 25** and **Fabric
 ### ⚡ Automatic Updates
 Once installed, you never need to visit GitHub or drag files again:
 - The mod automatically checks for updates in the background on startup.
-- When an update is ready, an alert appears in chat: `[Skyblock Toolkit] A new update is available! [Click to Update]`
-- Click the message or type `/toolkit update` to auto-download and install with one click.
+- When an update is ready, an alert appears in chat: `[Complexify] A new update is available! [Click to Update]`
+- Click the message or type `/complexify update` to auto-download and install with one click.
 
 ---
 
 ## Controls & Shortcuts
 
-Use the **Dark mode / Light mode** button in the toolkit menu header to switch between charcoal/red and off-white/red themes. The choice applies immediately, is saved across restarts, and covers module pages, history, rate tests, sliders and price inputs. Gameplay HUD colors remain consistent.
+Use the **Dark mode / Light mode** button in the Complexify menu header to switch between charcoal/red and off-white/red themes. The choice applies immediately, is saved across restarts, and covers module pages, history, rate tests, sliders and price inputs. Gameplay HUD colors remain consistent.
 
 | Action | Shortcut / Command |
 | :--- | :--- |
-| **Open Toolkit Hub** | **`Right Shift`** (or `Escape` → *Skyblock Toolkit*) |
+| **Open Complexify Hub** | **`Right Shift`** (or `Escape` → *Complexify*) |
 | **Toggle Blackout** | **`F6`** *(customizable in settings)* |
-| **Main Menu** | `/toolkit` |
-| **Drag & Drop HUD Canvas** | `/toolkit hud` |
-| **Check & Install Updates** | `/toolkit update` |
-| **Module Shortcuts** | `/toolkit farming`, `/toolkit boosters`, `/toolkit fishing`, `/toolkit chat`, `/toolkit auction`, `/toolkit blackout` |
+| **Main Menu** | `/complexify` *(or `/toolkit`)* |
+| **Drag & Drop HUD Canvas** | `/complexify hud` |
+| **Check & Install Updates** | `/complexify update` |
+| **Module Shortcuts** | `/complexify farming`, `/complexify boosters`, `/complexify fishing`, `/complexify chat`, `/complexify auction`, `/complexify blackout` |
 
 ### Proximity voice chat on Complex
 
