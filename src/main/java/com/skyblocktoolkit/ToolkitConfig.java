@@ -5,10 +5,10 @@ import java.nio.file.*;
 public final class ToolkitConfig {
     private static final ToolkitConfig INSTANCE=new ToolkitConfig();
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true,gcCodeClick=true;
-    public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true;
+    public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true,expiringFlash=false;
     public boolean lightMode=false;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
-    public boolean coconutSoundEnabled=true,coconutVisualAlert=true,moneyVisualAlert=true,xpVisualAlert=true;
+    public boolean coconutSoundEnabled=true,coconutVisualAlert=true,coconutFlash=false,moneyVisualAlert=true,xpVisualAlert=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
     public int xpHudX=12,xpHudY=74;
@@ -35,9 +35,11 @@ public final class ToolkitConfig {
             xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
             if(j.has("boosterReminder"))boosterReminder=j.get("boosterReminder").getAsBoolean();
             if(j.has("boosterExpiringAlert"))boosterExpiringAlert=j.get("boosterExpiringAlert").getAsBoolean();
+            if(j.has("expiringFlash"))expiringFlash=j.get("expiringFlash").getAsBoolean();
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
             if(j.has("coconutSoundEnabled"))coconutSoundEnabled=j.get("coconutSoundEnabled").getAsBoolean();
             if(j.has("coconutVisualAlert"))coconutVisualAlert=j.get("coconutVisualAlert").getAsBoolean();
+            if(j.has("coconutFlash"))coconutFlash=j.get("coconutFlash").getAsBoolean();
             if(j.has("moneyVisualAlert"))moneyVisualAlert=j.get("moneyVisualAlert").getAsBoolean();
             if(j.has("xpVisualAlert"))xpVisualAlert=j.get("xpVisualAlert").getAsBoolean();
             if(j.has("coconutSoundThreshold"))coconutSoundThreshold=Math.clamp(j.get("coconutSoundThreshold").getAsInt(),0,100000);
@@ -84,9 +86,11 @@ public final class ToolkitConfig {
             j.addProperty("gcCodeClick",gcCodeClick);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
             j.addProperty("boosterExpiringAlert",boosterExpiringAlert);
+            j.addProperty("expiringFlash",expiringFlash);
             j.addProperty("lightMode",lightMode);
             j.addProperty("startupServer",startupServer);
             j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutVisualAlert",coconutVisualAlert);
+            j.addProperty("coconutFlash",coconutFlash);
             j.addProperty("moneyVisualAlert",moneyVisualAlert);j.addProperty("xpVisualAlert",xpVisualAlert);
             j.addProperty("coconutSoundThreshold",coconutSoundThreshold);
             j.addProperty("xpEarningsHud",xpEarningsHud);j.addProperty("xpIncludesBoosters",xpIncludesBoosters);

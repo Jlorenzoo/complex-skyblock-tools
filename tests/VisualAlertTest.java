@@ -26,7 +26,7 @@ public final class VisualAlertTest {
         VisualAlertOverlay.reset();
         VisualAlertOverlay.triggerExpiring(BoosterTimers.Type.MONEY, 5);
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after expiring trigger");
-        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER EXPIRING"), "title mentions expiring money booster");
+        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER ENDING"), "title mentions ending money booster");
         check(VisualAlertOverlay.getSubtitle().contains("5s remaining"), "subtitle has countdown: " + VisualAlertOverlay.getSubtitle());
         check(VisualAlertOverlay.getAccentColor() == 0xE5254A, "crimson red accent color");
 
@@ -48,7 +48,7 @@ public final class VisualAlertTest {
         VisualAlertOverlay.tick(156000, true);
         check(VisualAlertOverlay.isAlertedMoney(), "alerted flag set when entering window");
         check(VisualAlertOverlay.isActive(156000), "overlay active at 4s remaining");
-        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER EXPIRING"), "triggered money expiring alert");
+        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER ENDING"), "triggered money ending alert");
 
         // Tick again at t=157000 (3s remaining): should NOT re-trigger / restart overlay
         VisualAlertOverlay.tick(157000, true);
@@ -65,6 +65,21 @@ public final class VisualAlertTest {
         VisualAlertOverlay.tick(215000, false);
         check(!VisualAlertOverlay.isAlertedMoney(), "disabled setting does not alert");
         check(!VisualAlertOverlay.isActive(215000), "overlay remains inactive when setting disabled");
+
+        // 4b. XP expiring timer respect xpEnabled flag
+        VisualAlertOverlay.reset();
+        timers.reset();
+        timers.onChat("✔ You have gained the effect of a 100% Experience Booster for 60 seconds!", 300000);
+        // At 4s remaining with xpEnabled = false: must NOT alert
+        VisualAlertOverlay.tick(356000, true, false);
+        check(!VisualAlertOverlay.isAlertedXp(), "XP expiring ignored when xp alert disabled");
+        check(!VisualAlertOverlay.isActive(356000), "overlay inactive when xp alert disabled");
+
+        // With xpEnabled = true: must alert
+        VisualAlertOverlay.tick(356000, true, true);
+        check(VisualAlertOverlay.isAlertedXp(), "XP expiring alerted when xp alert enabled");
+        check(VisualAlertOverlay.isActive(356000), "overlay active for XP ending");
+        check(VisualAlertOverlay.getTitle().contains("XP BOOSTER ENDING"), "title has XP BOOSTER ENDING");
 
         // 5. General Money and XP booster activations
         VisualAlertOverlay.reset();

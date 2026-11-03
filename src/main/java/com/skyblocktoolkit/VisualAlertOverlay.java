@@ -5,19 +5,21 @@ import com.moneybooster.BoosterTimers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
-import java.util.Locale;
-
 /**
- * Prominent on-screen title banner and screen flash/vignette notifications for
- * qualifying coconut hits and expiring booster timers.
+ * Prominent on-screen title banner and subtle border flash notifications for
+ * qualifying coconut hits, general boosters, and expiring booster timers.
  */
 public final class VisualAlertOverlay {
+    public enum AlertKind { COCONUT, MONEY, XP, EXPIRING }
+
+    private static AlertKind currentKind = AlertKind.COCONUT;
     private static String title = "";
     private static String subtitle = "";
     private static int accentColor = 0;
     private static long startTime = 0;
-    public static final long DURATION_MS = 2000;
-    public static final long FADE_DURATION_MS = 600;
+    private static boolean isPreview = false;
+    public static final long DURATION_MS = 1800;
+    public static final long FADE_DURATION_MS = 500;
 
     private static boolean alertedMoney = false;
     private static boolean alertedXp = false;
@@ -25,6 +27,8 @@ public final class VisualAlertOverlay {
     private VisualAlertOverlay() {}
 
     public static void triggerCoconut(int percentage, int threshold) {
+        currentKind = AlertKind.COCONUT;
+        isPreview = false;
         title = "§a§l+" + percentage + "% MONEY BOOSTER!";
         subtitle = "§f§lRELEASE RIGHT-CLICK §7· Threshold met (≥" + threshold + "%)";
         accentColor = 0x2ECC71; // Emerald green
@@ -32,6 +36,8 @@ public final class VisualAlertOverlay {
     }
 
     public static void triggerMoneyBooster(int percentage, String sourceName, long seconds) {
+        currentKind = AlertKind.MONEY;
+        isPreview = false;
         title = "§a§l+" + percentage + "% MONEY BOOSTER!";
         subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
         accentColor = 0x2ECC71; // Emerald green
@@ -39,15 +45,22 @@ public final class VisualAlertOverlay {
     }
 
     public static void triggerXpBooster(int percentage, String sourceName, long seconds) {
+        currentKind = AlertKind.XP;
+        isPreview = false;
         title = "§b§l+" + percentage + "% XP BOOSTER!";
         subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
         accentColor = 0x9D9AEB; // Amethyst purple
         startTime = System.currentTimeMillis();
     }
 
+    private static BoosterTimers.Type currentExpiringType = BoosterTimers.Type.MONEY;
+
     public static void triggerExpiring(BoosterTimers.Type type, int secondsRemaining) {
+        currentKind = AlertKind.EXPIRING;
+        currentExpiringType = type;
+        isPreview = false;
         String name = type == BoosterTimers.Type.MONEY ? "MONEY" : "XP";
-        title = "§c§l" + name + " BOOSTER EXPIRING!";
+        title = "§c§l" + name + " BOOSTER ENDING!";
         subtitle = "§e" + secondsRemaining + "s remaining §7· Prepare another booster!";
         accentColor = 0xE5254A; // Brand Crimson Red
         startTime = System.currentTimeMillis();
@@ -59,14 +72,17 @@ public final class VisualAlertOverlay {
             thresh = ToolkitConfig.get().coconutSoundThreshold;
         } catch (Throwable ignored) {}
         triggerCoconut(Math.max(thresh, 50), thresh);
+        isPreview = true;
     }
 
     public static void previewExpiringAlert() {
         triggerExpiring(BoosterTimers.Type.MONEY, 5);
+        isPreview = true;
     }
 
     public static void previewXpAlert() {
         triggerXpBooster(100, "Experience booster", 300);
+        isPreview = true;
     }
 
     public static boolean isActive() {
@@ -79,26 +95,43 @@ public final class VisualAlertOverlay {
 
     public static void reset() {
         startTime = 0;
+        isPreview = false;
         alertedMoney = false;
         alertedXp = false;
     }
 
     public static void tick(long now) {
-        boolean enabled = true;
+        boolean expiringAlertEnabled = false;
+        boolean moneyEnabled = true;
+        boolean xpEnabled = false;
         try {
-            enabled = ToolkitConfig.get().boosterExpiringAlert;
+            var cfg = ToolkitConfig.get();
+            expiringAlertEnabled = cfg.boosterExpiringAlert || cfg.expiringFlash;
+            moneyEnabled = cfg.boosterHud || cfg.moneyVisualAlert;
+            xpEnabled = cfg.xpVisualAlert && cfg.xpBoosterHud;
         } catch (Throwable ignored) {}
-        tick(now, enabled);
+        tick(now, expiringAlertEnabled, moneyEnabled, xpEnabled);
     }
 
     public static void tick(long now, boolean expiringAlertEnabled) {
+        tick(now, expiringAlertEnabled, true, true);
+    }
+
+    public static void tick(long now, boolean expiringAlertEnabled, boolean xpEnabled) {
+        tick(now, expiringAlertEnabled, true, xpEnabled);
+    }
+
+    public static void tick(long now, boolean expiringAlertEnabled, boolean moneyEnabled, boolean xpEnabled) {
         if (!expiringAlertEnabled) {
             alertedMoney = false;
             alertedXp = false;
             return;
         }
-        checkTimerExpiring(BoosterTimers.Type.MONEY, now);
-        checkTimerExpiring(BoosterTimers.Type.XP, now);
+        if (moneyEnabled) checkTimerExpiring(BoosterTimers.Type.MONEY, now);
+        else alertedMoney = false;
+
+        if (xpEnabled) checkTimerExpiring(BoosterTimers.Type.XP, now);
+        else alertedXp = false;
     }
 
     private static void checkTimerExpiring(BoosterTimers.Type type, long now) {
@@ -125,6 +158,35 @@ public final class VisualAlertOverlay {
         long elapsed = now - startTime;
         if (elapsed >= DURATION_MS) return;
 
+        boolean showBanner = true;
+        boolean showFlash = false;
+        try {
+            var cfg = ToolkitConfig.get();
+            if (isPreview) {
+                showBanner = true;
+                showFlash = (currentKind == AlertKind.COCONUT) ? cfg.coconutFlash : (currentKind == AlertKind.EXPIRING ? cfg.expiringFlash : true);
+            } else if (currentKind == AlertKind.COCONUT) {
+                showBanner = cfg.coconutVisualAlert;
+                showFlash = cfg.coconutFlash;
+            } else if (currentKind == AlertKind.EXPIRING) {
+                if (currentExpiringType == BoosterTimers.Type.XP && (!cfg.xpVisualAlert || !cfg.xpBoosterHud)) {
+                    showBanner = false;
+                    showFlash = false;
+                } else {
+                    showBanner = cfg.boosterExpiringAlert;
+                    showFlash = cfg.expiringFlash;
+                }
+            } else if (currentKind == AlertKind.MONEY) {
+                showBanner = cfg.moneyVisualAlert;
+                showFlash = false;
+            } else if (currentKind == AlertKind.XP) {
+                showBanner = cfg.xpVisualAlert;
+                showFlash = false;
+            }
+        } catch (Throwable ignored) {}
+
+        if (!showBanner && !showFlash) return;
+
         float alpha;
         if (elapsed < 100) {
             alpha = elapsed / 100.0f;
@@ -137,72 +199,68 @@ public final class VisualAlertOverlay {
 
         int color = accentColor & 0xFFFFFF;
 
-        // 1. Full-screen soft tint wash
-        int tintAlpha = (int) (alpha * 36);
-        if (tintAlpha > 0) {
-            g.fill(0, 0, width, height, (tintAlpha << 24) | color);
+        // Subtle, toned-down border vignette glow (NO full-screen wash)
+        if (showFlash) {
+            drawVignette(g, width, height, color, alpha);
         }
 
-        // 2. Screen border vignette glow
-        drawVignette(g, width, height, color, alpha);
+        // Center-top prominent banner card
+        if (showBanner) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc == null || mc.font == null) return;
 
-        // 3. Center-top prominent banner card
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null || mc.font == null) return;
+            float titleScale = 1.3f;
+            float titleW = mc.font.width(title) * titleScale;
+            float subW = mc.font.width(subtitle);
+            int cardW = (int) Math.max(titleW, subW) + 24;
+            int cardH = 38;
+            int cardX = (width - cardW) / 2;
+            int cardY = Math.max(14, height / 4 - 18);
 
-        float titleScale = 1.4f;
-        float titleW = mc.font.width(title) * titleScale;
-        float subW = mc.font.width(subtitle);
-        int cardW = (int) Math.max(titleW, subW) + 32;
-        int cardH = 42;
-        int cardX = (width - cardW) / 2;
-        int cardY = Math.max(16, height / 4 - 20);
+            int bgAlpha = (int) (alpha * 200);
+            int bgColor = (bgAlpha << 24) | 0x111317;
+            ToolkitTheme.rounded(g, cardX, cardY, cardW, cardH, 4, bgColor);
 
-        int bgAlpha = (int) (alpha * 220);
-        int bgColor = (bgAlpha << 24) | 0x111317;
-        ToolkitTheme.rounded(g, cardX, cardY, cardW, cardH, 5, bgColor);
+            int borderAlpha = (int) (alpha * 170);
+            int borderCol = (borderAlpha << 24) | color;
+            g.outline(cardX, cardY, cardW, cardH, borderCol);
+            g.fill(cardX + 4, cardY + 1, cardX + cardW - 4, cardY + 2, borderCol);
 
-        int borderAlpha = (int) (alpha * 200);
-        int borderCol = (borderAlpha << 24) | color;
-        g.outline(cardX, cardY, cardW, cardH, borderCol);
-        g.fill(cardX + 4, cardY + 1, cardX + cardW - 4, cardY + 3, borderCol);
+            // Title text
+            float tx = cardX + (cardW - titleW) / 2.0f;
+            float ty = cardY + 6;
+            g.pose().pushMatrix();
+            g.pose().translate(tx, ty);
+            g.pose().scale(titleScale, titleScale);
+            g.text(mc.font, title, 0, 0, 0xFFFFFFFF, true);
+            g.pose().popMatrix();
 
-        // Title text
-        float tx = cardX + (cardW - titleW) / 2.0f;
-        float ty = cardY + 7;
-        g.pose().pushMatrix();
-        g.pose().translate(tx, ty);
-        g.pose().scale(titleScale, titleScale);
-        g.text(mc.font, title, 0, 0, 0xFFFFFFFF, true);
-        g.pose().popMatrix();
-
-        // Subtitle text
-        float sx = cardX + (cardW - subW) / 2.0f;
-        float sy = cardY + 25;
-        g.text(mc.font, subtitle, (int) sx, (int) sy, 0xFFFFFFFF, true);
+            // Subtitle text
+            float sx = cardX + (cardW - subW) / 2.0f;
+            float sy = cardY + 23;
+            g.text(mc.font, subtitle, (int) sx, (int) sy, 0xFFFFFFFF, true);
+        }
     }
 
     private static void drawVignette(GuiGraphicsExtractor g, int width, int height, int color, float alpha) {
-        int[] depths = {4, 10, 18, 28};
-        float[] opacities = {0.45f, 0.30f, 0.16f, 0.07f};
-        int lastInset = 0;
-        for (int i = 0; i < depths.length; i++) {
-            int inset = depths[i];
-            int bandAlpha = (int) (alpha * opacities[i] * 255);
-            if (bandAlpha <= 0) continue;
-            int col = (bandAlpha << 24) | color;
-            g.fill(lastInset, lastInset, width - lastInset, inset, col);
-            g.fill(lastInset, height - inset, width - lastInset, height - lastInset, col);
-            g.fill(lastInset, inset, inset, height - inset, col);
-            g.fill(width - inset, inset, width - lastInset, height - inset, col);
-            lastInset = inset;
+        int c = color & 0xFFFFFF;
+        // Subtle, crisp edge frame: 2px soft outline along the viewport perimeter
+        int outerAlpha = (int) (alpha * 70); // max ~27% opacity
+        int innerAlpha = (int) (alpha * 30); // max ~12% opacity
+        if (outerAlpha > 0) {
+            g.outline(0, 0, width, height, (outerAlpha << 24) | c);
+            if (innerAlpha > 0 && width > 4 && height > 4) {
+                g.outline(1, 1, width - 2, height - 2, (innerAlpha << 24) | c);
+            }
         }
     }
 
     // Accessors for testing
+    public static AlertKind getCurrentKind() { return currentKind; }
     public static String getTitle() { return title; }
     public static String getSubtitle() { return subtitle; }
     public static int getAccentColor() { return accentColor; }
     public static boolean isAlertedMoney() { return alertedMoney; }
     public static boolean isAlertedXp() { return alertedXp; }
+    public static BoosterTimers.Type getCurrentExpiringType() { return currentExpiringType; }
 }

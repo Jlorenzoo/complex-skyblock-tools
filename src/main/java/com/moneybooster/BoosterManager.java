@@ -54,7 +54,7 @@ public class BoosterManager {
                     if (CoconutAlert.qualifies(activation, source.type(), true, config.coconutSoundThreshold)) {
                         if (config.coconutSoundEnabled)
                             com.skyblocktoolkit.CoconutNotifier.preview();
-                        if (config.coconutVisualAlert)
+                        if (config.coconutVisualAlert || config.coconutFlash)
                             com.skyblocktoolkit.VisualAlertOverlay.triggerCoconut(activation.percentage(), config.coconutSoundThreshold);
                     }
                 } else if (config.moneyVisualAlert) {
