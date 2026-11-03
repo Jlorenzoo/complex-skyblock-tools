@@ -47,6 +47,7 @@ public final class ToolkitSearch {
         new Entry(2,"Fishing","Advanced settings","Alert sounds","gain amplification snapped depleted audio alert sounds volume"),
         new Entry(3,"Chat Copy","Selection","Chat selection","enabled drag copy clipboard ctrl text select"),
         new Entry(3,"Chat Copy","Selection","Select word","double triple click word line expand selection"),
+        new Entry(3,"Chat Copy","Selection","Quick /gc code click","gc gift code card tebex copy click redeem menu quick"),
         new Entry(3,"Chat Copy","Appearance","Highlight color","selection theme style"),
         new Entry(3,"Chat Copy","Appearance","Highlight strength","selection opacity alpha strength visibility"),
         new Entry(3,"Chat Copy","Appearance","Chat size","scale font size height zoom"),

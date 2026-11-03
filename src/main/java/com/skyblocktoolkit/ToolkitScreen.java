@@ -348,14 +348,16 @@ public final class ToolkitScreen extends Screen {
         section("Selection",0);
         toggle("Chat selection",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
         toggle("Select word",40,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
-        label("Drag to select · Ctrl+C / Cmd+C to copy",66);
-        label("Double-click a word · Triple-click a line",78);
-        section("Appearance",102);
-        setting("Highlight color",118,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
-        slider("Highlight strength",142,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
-        slider("Chat size",166,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
-        slider("Chat width",188,options.chatWidth().get(),1,v->options.chatWidth().set(v));
-        slider("Chat opacity",212,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
+        toggle("Quick /gc code click",64,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
+        label("Click a 16-digit gift code to copy & open /gc",90);
+        label("Drag to select · Ctrl+C / Cmd+C to copy",104);
+        label("Double-click a word · Triple-click a line",116);
+        section("Appearance",140);
+        setting("Highlight color",156,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
+        slider("Highlight strength",180,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
+        slider("Chat size",204,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
+        slider("Chat width",226,options.chatWidth().get(),1,v->options.chatWidth().set(v));
+        slider("Chat opacity",250,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
     }
     private void utilities(){
         var cfg=ToolkitConfig.get();

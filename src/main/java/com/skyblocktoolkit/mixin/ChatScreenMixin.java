@@ -57,6 +57,13 @@ public abstract class ChatScreenMixin extends Screen {
 
         Minecraft mc = Minecraft.getInstance();
         if (toolkit$selection.isInChatArea(mc, event.x(), event.y())) {
+            // Priority 1: Click 16-digit GC code to copy & open /gc
+            if (ToolkitConfig.get().gcCodeClick && toolkit$selection.handleGcCodeClick(mc, this.getFont(), event.x(), event.y())) {
+                cir.setReturnValue(true);
+                cir.cancel();
+                return;
+            }
+
             // Allow clickable links to take priority on single click if no prior selection
             if (toolkit$getClickableStyleAt(event.x(), event.y()) != null && !toolkit$selection.hasSelection()) {
                 toolkit$selection.clear();
@@ -112,6 +119,6 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void toolkit$onRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        toolkit$selection.render(graphics, this.getFont(), Minecraft.getInstance());
+        toolkit$selection.render(graphics, this.getFont(), Minecraft.getInstance(), mouseX, mouseY);
     }
 }
