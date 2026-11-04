@@ -6,7 +6,7 @@ public final class ToolkitLayoutTest {
   }
   for(String query:new String[]{"sell all","SELL ALL","sellall","  sell   all  ","farming sell all"}){
    var results=com.skyblocktoolkit.ToolkitSearch.find(query);
-   if(results.size()!=1||!results.getFirst().setting().equals("Sell all key")||results.getFirst().page()!=10)
+   if(results.size()!=1||!results.getFirst().setting().equals("Sell all key")||results.getFirst().page()!=4)
     throw new AssertionError("Expected one canonical sell-all setting: "+query);
   }
   var minimum=com.skyblocktoolkit.ToolkitSearch.find("  MiNiMuM   boost ");

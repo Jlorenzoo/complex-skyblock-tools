@@ -37,19 +37,36 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General","Mining","Seasonal"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,12);}
+    private static final String[] PAGES={"Boosters","Boosters","Skills","HUD & Overlays","Utilities","HUD layout"};
+    private static final String[] DESCRIPTIONS={
+        "",
+        "Timers, coconut alerts & session statistics",
+        "Farming, fishing, seasonal & mining helpers",
+        "On-screen displays & layout configuration",
+        "Chat selection, auction sales & blackout mode",
+        "Interactive HUD placement canvas"
+    };
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=routePage(page);}
+    private static int routePage(int p){
+        return switch(p){
+            case 0,1->1;
+            case 2,9,11,12->2;
+            case 3,8->3;
+            case 4,7,10->4;
+            case 5->5;
+            default->Math.clamp(p,1,5);
+        };
+    }
     @Override protected void init(){
-        layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
+        layout=ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
-        if(page==8){hudElements();updateControls();return;}
-        int[] targets={1,9,11,2,12,3,4,7,10};String[] names={"Boosters","Farming","Mining","Fishing","Seasonal","Chat Copy","Auction","Blackout","General"};
-        String[] compactNames={"Boost","Farm","Mine","Fish","Season","Chat","Sales","Dim","Keys"};
+        int[] targets={1,2,3,4};String[] names={"Boosters","Skills","HUD & Overlays","Utilities"};
+        String[] compactNames={"Boosters","Skills","HUD","Utilities"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
-            int by=layout.compact()?y+36:y+66+i*23,bw=layout.compact()?(w-12)/targets.length-2:104;
+            int by=layout.compact()?y+36:y+66+i*24,bw=layout.compact()?(w-12)/targets.length-2:104;
             var nav=addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,20,page==target&&query.isBlank()));
             nav.setTooltip(Tooltip.create(Component.literal(names[i])));
         }
@@ -69,7 +86,7 @@ public final class ToolkitScreen extends Screen {
         initSearch();
         buildBody();
     }
-    private void go(int next){persist();if(next==5)layoutReturnPage=page==8?hudReturnPage:page;page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;fishEarnings=false;query="";jumpSection="";rebuildWidgets();}
+    private void go(int next){persist();if(next==5)layoutReturnPage=page==5?1:page;page=next==0?1:next;scroll=0;dragging=0;bindingTarget=0;fishEarnings=false;query="";jumpSection="";rebuildWidgets();}
     private void initSearch(){
         int sx,sy,sw,editW,clearX,clearY,clearW,clearH;
         if(!layout.compact()){
@@ -108,16 +125,19 @@ public final class ToolkitScreen extends Screen {
             for(var result:results){
                 button(()->result.title(),top,0,layout.bodyWidth(),()->{
                     persist();page=result.page();
-                    boolean inFishPrices=result.page()==2&&("Fish prices".equals(result.section())||"Estimate".equals(result.section())||result.setting().endsWith("%"));
-                    fishEarnings=inFishPrices;
-                    if(result.page()==6)soundReturnPage=result.category().equals("Auction")?4:result.category().equals("Seasonal")?12:2;
-                    if(result.page()==8)hudReturnPage=result.page();
                     query="";scroll=0;
-                    jumpSection=result.section();jumpSetting=result.setting();expandedPages.add(page);rebuildWidgets();
+                    jumpSection=result.section();jumpSetting=result.setting();
+                    rebuildWidgets();
                 });
                 top+=24;
             }
-        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();case 11->mining();case 12->seasonal();}
+        }else switch(page){
+            case 1->boosters();
+            case 2->skills();
+            case 3->hudOverlays();
+            case 4->utilities();
+            default->boosters();
+        }
         if(!jumpSetting.isEmpty()){
             for(var control:controls){
                 if(searchTarget(control.widget(),jumpSetting)){scroll=control.top();break;}
@@ -192,20 +212,9 @@ public final class ToolkitScreen extends Screen {
         var b=addRenderableWidget(ToolkitButton.toggle(text,unused->{action.run();persist();updateControls();},layout.bodyX()+offset,layout.bodyY()+top-scroll,width,20,state));
         controls.add(new Control(b,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
-    private void hudElements(){
-        var cfg=ToolkitConfig.get();
-        toggleCell("Money timer",0,0,()->cfg.boosterHud,()->cfg.boosterHud=!cfg.boosterHud);
-        toggleCell("XP timer",0,1,()->cfg.xpBoosterHud,()->cfg.xpBoosterHud=!cfg.xpBoosterHud);
-        toggleCell("Crop earnings",34,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        toggleCell("Fishing earnings",34,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
-        toggleCell("Rate test info",68,0,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
-        toggleCell("XP per hour",68,1,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        toggleCell("Harvest / hour",102,0,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
-        pair(()->"Back",()->go(hudReturnPage),()->"Edit positions",()->go(5),138);
-    }
-    private void money(){
+    private void boosters(){
         var cfg=ModConfig.getInstance();var toolkit=ToolkitConfig.get();
-        section("Timers",0);
+        section("Booster timers",0);
         toggleCell("Money timer",16,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
         toggleCell("XP timer",16,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
         toggleCell("Ending banner",40,0,()->toolkit.boosterExpiringAlert,()->toolkit.boosterExpiringAlert=!toolkit.boosterExpiringAlert);
@@ -217,18 +226,117 @@ public final class ToolkitScreen extends Screen {
         label(()->timerStatus(BoosterTimers.Type.MONEY),126,ToolkitTheme.palette().moneyText(),1);
         label(()->timerStatus(BoosterTimers.Type.XP),138,ToolkitTheme.palette().xpText(),1);
         pair(()->"Preview XP alert",VisualAlertOverlay::previewXpAlert,()->"Preview ending",VisualAlertOverlay::previewExpiringAlert,152);
-        section("Earnings & history",180);
-        pair(()->"History",()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),196);
-        toggle("Include boosters in crop average",218,cfg::includesBoostersInAverage,cfg::toggleAverageBoosters);
-        label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),244,ToolkitTheme.palette().text(),1);
-        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},258,ToolkitTheme.palette().muted(),1);
-        section("Coconut alerts",282);
-        toggleCell("Coconut sound",298,0,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
-        toggleCell("Coconut banner",298,1,()->toolkit.coconutVisualAlert,()->toolkit.coconutVisualAlert=!toolkit.coconutVisualAlert);
-        toggle("Coconut screen flash",322,()->toolkit.coconutFlash,()->toolkit.coconutFlash=!toolkit.coconutFlash);
-        thresholdField(346);
-        label("Alert at or above this %. 0 = every money boost.",374);
-        pair(()->"Preview sound",CoconutNotifier::preview,()->"Preview coconut",VisualAlertOverlay::previewCoconutAlert,390);
+
+        section("Coconut alerts",180);
+        toggleCell("Coconut sound",196,0,()->toolkit.coconutSoundEnabled,()->toolkit.coconutSoundEnabled=!toolkit.coconutSoundEnabled);
+        toggleCell("Coconut banner",196,1,()->toolkit.coconutVisualAlert,()->toolkit.coconutVisualAlert=!toolkit.coconutVisualAlert);
+        toggle("Coconut screen flash",220,()->toolkit.coconutFlash,()->toolkit.coconutFlash=!toolkit.coconutFlash);
+        thresholdField(244);
+        label("Alert at or above this %. 0 = every money boost.",272);
+        pair(()->"Preview sound",CoconutNotifier::preview,()->"Preview coconut",VisualAlertOverlay::previewCoconutAlert,288);
+
+        section("Earnings & statistics",316);
+        pair(()->"History",()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),332);
+        toggle("Include boosters in crop average",354,cfg::includesBoostersInAverage,cfg::toggleAverageBoosters);
+        label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),380,ToolkitTheme.palette().text(),1);
+        label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},394,ToolkitTheme.palette().muted(),1);
+    }
+    private void skills(){
+        var toolkit=ToolkitConfig.get();var money=ModConfig.getInstance();
+        var fishing=ToolkitMod.FISHING;var fishCfg=fishing.settings();
+
+        section("Farming",0);
+        toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
+        label("Dim immature crops to spot ready plants.",40);
+        toggleCell("Crop earnings HUD",56,0,()->toolkit.cropEarningsHud,()->toolkit.cropEarningsHud=!toolkit.cropEarningsHud);
+        toggleCell("Harvest per hour HUD",56,1,()->toolkit.cropHarvestHud,()->toolkit.cropHarvestHud=!toolkit.cropHarvestHud);
+        label("Appears while harvesting (> 1,000/h).",80);
+        label(()->CropHarvestTracker.averageLabel(),94,ToolkitTheme.palette().accent(),1);
+        toggle("Include boosters in crop average",110,money::includesBoostersInAverage,money::toggleAverageBoosters);
+
+        section("Fishing & Void Rod",138);
+        toggleCell("Depleted area",154,0,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
+        toggleCell("Ready to reel",154,1,()->fishCfg.depthEnabled,()->fishCfg.depthEnabled=!fishCfg.depthEnabled);
+        toggle("Snapped line (Void Rod)",178,()->fishCfg.snapEnabled,()->fishCfg.snapEnabled=!fishCfg.snapEnabled);
+        slider("Fishing volume",202,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+        label("Target depth for the Void Rod reel alert.",228);
+        label(()->"Reel depth: "+(int)fishCfg.target+" blocks",242,ToolkitTheme.palette().text(),1);
+        pair(()->"- 1 block",()->fishCfg.target=Math.max(1,fishCfg.target-1),()->"+ 1 block",()->fishCfg.target=Math.min(1000,fishCfg.target+1),256);
+        pair(()->"Preview ready",fishing::previewDepth,()->"Preview snap",fishing::previewSnap,280);
+        button("Preview depleted warning",304,fishing::previewWarning);
+
+        section("Fish sell prices",332);
+        label("Sell price per fish ($ each; accepts 1.5k / 2m)",348);
+        priceField("Cod · 60%",362,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
+        priceField("Salmon · 25%",384,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
+        priceField("Puffer · 13%",406,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
+        priceField("Tropical · 2%",428,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
+        setting("Earnings window",454,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
+        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),480,ToolkitTheme.palette().accent(),1);
+        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),fishCfg.earningsWindow);return n+" fish in last "+(fishCfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*fishCfg.averageFishPrice());},494,ToolkitTheme.palette().text(),1);
+        label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",508,ToolkitTheme.palette().text(),1);
+
+        section("Mining & XP",528);
+        toggle("XP per hour HUD",544,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
+        label("Appears while you collect XP.",568);
+        label(()->XpTracker.averageLabel(),582,ToolkitTheme.palette().xpText(),1);
+        toggle("Include XP boosters",598,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
+    }
+    private void hudOverlays(){
+        var cfg=ToolkitConfig.get();
+        section("Active HUD elements",0);
+        toggleCell("Money timer",16,0,()->cfg.boosterHud,()->cfg.boosterHud=!cfg.boosterHud);
+        toggleCell("XP timer",16,1,()->cfg.xpBoosterHud,()->cfg.xpBoosterHud=!cfg.xpBoosterHud);
+        toggleCell("Crop earnings",40,0,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
+        toggleCell("Fishing earnings",40,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
+        toggleCell("XP per hour",64,0,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
+        toggleCell("Harvest / hour",64,1,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
+        toggle("Rate test info",88,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
+
+        section("Layout & positioning",116);
+        button("Edit HUD positions",132,()->go(5));
+        label("Drag elements directly on-screen to reposition them.",156);
+        label("Click the eye icons on the canvas to toggle visibility.",168);
+        label("Restore defaults",188);
+        int resetWidth=Math.min(144,layout.bodyWidth());
+        button(()->"Reset HUD positions",182,layout.bodyWidth()-resetWidth,resetWidth,()->{
+            var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);
+            cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;
+        });
+    }
+    private void utilities(){
+        var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
+        section("Chat selection & copy",0);
+        toggle("Chat selection",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
+        toggle("Select word",40,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
+        toggle("Quick /gc code click",64,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
+        label("Click a 16-digit gift code to copy & open /gc",88);
+        label("Drag to select · Ctrl+C / Cmd+C to copy",100);
+        label("Double-click a word · Triple-click a line",112);
+        setting("Highlight color",130,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
+        slider("Highlight strength",154,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
+        slider("Chat size",178,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
+        slider("Chat width",200,options.chatWidth().get(),1,v->options.chatWidth().set(v));
+        slider("Chat opacity",224,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
+
+        section("Auction notifications",252);
+        toggle("Sale alert",268,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
+        setting("Sound",292,cfg::ahSoundName,()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
+        slider("Volume",314,cfg.ahSoundVolume,1,v->cfg.ahSoundVolume=v);
+        slider("Sound amplification",338,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
+        button("Preview sale sound",362,AhSaleNotifier::playPreviewSound);
+
+        section("Blackout (AFK)",390);
+        button("Turn blackout on",406,()->{persist();BlackoutManager.setActive(true);onClose();});
+        slider("Opacity",430,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
+        toggle("Wake hint",454,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
+        setting("Wake key",478,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        label("Dim the game while keeping audio active.",504);
+
+        section("Keyboard shortcuts",524);
+        setting("Menu key",540,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);
+        sellAllBinding(564);
+        setting("Wake key",588,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
     }
     private void thresholdField(int top){
         var cfg=ToolkitConfig.get();
@@ -267,61 +375,6 @@ public final class ToolkitScreen extends Screen {
         if(open){advancedDivider=top+28;section("Advanced settings",top+36);}
         return open;
     }
-    private void farming(){
-        var cfg=ToolkitConfig.get();var money=ModConfig.getInstance();
-        section("Crop visibility",0);
-        toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-        label("Dim immature crops to spot ready plants.",42);
-        section("Crop tracking",68);
-        toggle("Crop earnings HUD",84,()->cfg.cropEarningsHud,()->cfg.cropEarningsHud=!cfg.cropEarningsHud);
-        toggle("Harvest per hour HUD",108,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
-        label("Appears while harvesting (> 1,000/h).",134);
-        label(()->CropHarvestTracker.averageLabel(),148,ToolkitTheme.palette().accent(),1);
-        if(advanced(174)){
-            toggle("Include boosters in crop average",228,money::includesBoostersInAverage,money::toggleAverageBoosters);
-            pair(()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),()->"HUD elements",()->{hudReturnPage=9;go(8);},254);
-        }
-    }
-    private void mining(){
-        var cfg=ToolkitConfig.get();
-        section("Minecraft XP",0);
-        toggle("XP per hour HUD",16,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
-        label("Appears while you collect XP.",42);
-        label(()->XpTracker.averageLabel(),60,ToolkitTheme.palette().xpText(),1);
-        button("Rate tests",82,()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)));
-        if(advanced(114)){
-            toggle("Include XP boosters",168,()->cfg.xpIncludesBoosters,()->cfg.xpIncludesBoosters=!cfg.xpIncludesBoosters);
-            button("HUD elements",194,()->{hudReturnPage=11;go(8);});
-        }
-    }
-    private void fishing(){
-        if(fishEarnings){fishPrices();return;}
-        var mod=ToolkitMod.FISHING;var cfg=mod.settings();
-        section("Catch alerts",0);
-        toggle("Depleted area",16,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
-        slider("Volume",40,cfg.volume,3,v->cfg.volume=(float)v);
-        button("Void Rod settings (Seasonal)",64,()->go(12));
-        section("Earnings & prices",94);
-        toggle("Fishing earnings HUD",110,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
-        button("Fish prices",134,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
-        if(advanced(166)){
-            pair(()->"Preview warning",mod::previewWarning,()->"Alert sounds",()->{soundReturnPage=2;go(6);},220);
-        }
-    }
-    private void seasonal(){
-        var mod=ToolkitMod.FISHING;var cfg=mod.settings();
-        section("Void Rod",0);
-        toggle("Ready to reel",16,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
-        toggle("Snapped line (Void Rod)",40,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
-        label("Alerts for the Void Rod depth bar and broken line.",66);
-        label(()->"Reel depth: "+(int)cfg.target+" blocks",80,ToolkitTheme.palette().text(),1);
-        pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),96);
-        pair(()->"Preview ready",mod::previewDepth,()->"Preview snap",mod::previewSnap,122);
-        section("Bone Leggings",152);
-        label("Seasonal armor piece with the Burning Rush rune.",168);
-        label("Grants Regeneration or a health-draining Speed boost.",182);
-    }
-
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
         labels.add(new Label(()->name,top+5,ToolkitTheme.palette().text(),1,6));
         EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name+" price per fish")));
@@ -329,88 +382,6 @@ public final class ToolkitScreen extends Screen {
         field.setTextColor(ToolkitTheme.palette().text());
         field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().error());if(Double.isFinite(value))write.accept(value);});
         priceFields.add(field);controls.add(new Control(field,top+5,14));contentHeight=Math.max(contentHeight,top+22);
-    }
-    private void fishPrices(){
-        var cfg=ToolkitMod.FISHING.settings();
-        button("Back to fishing",0,()->{fishEarnings=false;scroll=0;rebuildWidgets();});
-        label("Sell price per fish ($ each; accepts 1.5k / 2m)",24);
-        priceField("Cod · 60%",40,()->cfg.codPrice,v->cfg.codPrice=v);
-        priceField("Salmon · 25%",62,()->cfg.salmonPrice,v->cfg.salmonPrice=v);
-        priceField("Puffer · 13%",84,()->cfg.pufferPrice,v->cfg.pufferPrice=v);
-        priceField("Tropical · 2%",106,()->cfg.tropicalPrice,v->cfg.tropicalPrice=v);
-        setting("Earnings window",132,()->cfg.earningsWindow==60?"60 seconds":"5 minutes",()->cfg.earningsWindow=cfg.earningsWindow==60?300:60);
-
-        section("Estimate",164);
-        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),180,ToolkitTheme.palette().accent(),1);
-        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},194,ToolkitTheme.palette().text(),1);
-        label(()->cfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",208,ToolkitTheme.palette().text(),1);
-        label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",224,ToolkitTheme.palette().muted(),1);
-        label("For stack prices, divide by 64 before entering.",238);
-
-    }
-    private void chat(){
-        var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
-        section("Selection",0);
-        toggle("Chat selection",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
-        toggle("Select word",40,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
-        toggle("Quick /gc code click",64,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
-        label("Click a 16-digit gift code to copy & open /gc",90);
-        label("Drag to select · Ctrl+C / Cmd+C to copy",104);
-        label("Double-click a word · Triple-click a line",116);
-        section("Appearance",140);
-        setting("Highlight color",156,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
-        slider("Highlight strength",180,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
-        slider("Chat size",204,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
-        slider("Chat width",226,options.chatWidth().get(),1,v->options.chatWidth().set(v));
-        slider("Chat opacity",250,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
-    }
-    private void utilities(){
-        var cfg=ToolkitConfig.get();
-        section("Sale notifications",0);
-        toggle("Sale alert",16,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
-        setting("Sound",40,cfg::ahSoundName,()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
-        slider("Volume",62,cfg.ahSoundVolume,1,v->cfg.ahSoundVolume=v);
-        slider("Sound amplification",86,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
-        button("Preview",110,AhSaleNotifier::playPreviewSound);
-    }
-    private void blackout(){
-        var cfg=ToolkitConfig.get();
-        section("Blackout controls",0);
-        button("Turn blackout on",16,()->{persist();BlackoutManager.setActive(true);onClose();});
-        slider("Opacity",40,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
-        toggle("Wake hint",62,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
-        setting("Wake key",86,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
-        label("Dim the game while keeping audio active.",112);
-    }
-    private void general(){
-        var cfg=ToolkitConfig.get();
-        section("Keyboard shortcuts",0);
-        setting("Menu key",16,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);
-        sellAllBinding(40);
-        setting("Wake key",62,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
-        section("HUD & layout",100);
-        int actionWidth=(layout.bodyWidth()-8)/2;
-        button(()->"HUD elements",116,0,actionWidth,()->{hudReturnPage=10;go(8);});
-        button(()->"Edit positions",116,actionWidth+8,layout.bodyWidth()-actionWidth-8,()->go(5));
-        label("Restore defaults",154);
-        int resetWidth=Math.min(144,layout.bodyWidth());
-        button(()->"Reset HUD positions",148,layout.bodyWidth()-resetWidth,resetWidth,()->{var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;});
-    }
-    private void advancedSounds(){
-        var cfg=ToolkitConfig.get();var fishing=ToolkitMod.FISHING;
-        button("Back to "+PAGES[soundReturnPage],0,()->go(soundReturnPage));
-        if(soundReturnPage==2){
-            slider("Ready to reel gain",30,cfg.readySoundGain,3,v->cfg.readySoundGain=v);
-            button("Preview ready",52,fishing::previewDepth);
-            slider("Depleted area gain",82,cfg.areaSoundGain,3,v->cfg.areaSoundGain=v);
-            button("Preview area",102,fishing::previewWarning);
-            slider("Snapped line gain",132,cfg.snapSoundGain,3,v->cfg.snapSoundGain=v);
-            button("Preview snapped line",154,fishing::previewSnap);
-        }else{
-            button(()->"Sound: "+cfg.ahSoundName(),30,0,Math.min(180,layout.bodyWidth()),()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
-            slider("Auction gain",60,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
-            button("Preview auction sale",84,AhSaleNotifier::playPreviewSound);
-        }
     }
     private void initLayout(){} // Only the HUD elements and their eye controls live on this canvas.
     private int eyeX(int x,int elementWidth){return x+elementWidth+15<=width?x+elementWidth+5:Math.max(1,x-14);}
@@ -433,34 +404,25 @@ public final class ToolkitScreen extends Screen {
         ToolkitTheme.rounded(g,x-2,y+3,w+4,h+2,7,com.skyblocktoolkit.ToolkitTheme.palette().shadow());
         ToolkitTheme.rounded(g,x-1,y-1,w+2,h+2,7,ToolkitTheme.palette().border());
         ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
-        if(page==8){
-            g.blit(LOGO,layout.bodyX(),y+12,layout.bodyX()+18,y+30,0f,1f,0f,1f);
-            g.text(font,"HUD elements",layout.bodyX()+22,y+16,ToolkitTheme.palette().text(),false);
-        }else if(!layout.compact()){
+        if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,112,h,6,ToolkitTheme.palette().sidebar());g.fill(x+104,y,x+112,y+h,ToolkitTheme.palette().sidebar());
             g.blit(LOGO,x+8,y+8,x+38,y+38,0f,1f,0f,1f);
             g.text(font,"COMPLEXIFY",x+42,y+13,ToolkitTheme.palette().accent(),false);
             g.text(font,"v"+UpdateManager.getCurrentVersion(),x+42,y+25,ToolkitTheme.palette().muted(),false);
             g.text(font,query.isBlank()?(page<PAGES.length?PAGES[page]:""):"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
-            String[] descriptions={"","Bonus & earnings","Catch alerts","Select & copy","Sale notifications","","Per-alert gain","Dim the game, keep audio","Choose what stays on screen","Crop visibility & earnings","Keys & on-screen displays","XP tracking & earnings","Void Rod & Bone Leggings"};
-            g.text(font,query.isBlank()?(page<descriptions.length?descriptions[page]:""):"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
+            g.text(font,query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
+            g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
+            int sx=x+4,sy=y+42,sw=104;
+            ToolkitTheme.rounded(g,sx,sy,sw,20,3,ToolkitTheme.palette().surface());
+            if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-4,sy+20,ToolkitTheme.palette().accent());
+            if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
             g.text(font,"Complexify",x+30,y+15,ToolkitTheme.palette().text(),false);
-        }
-        if(page!=8&&!layout.compact())g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
-        if(page!=8){
-            if(!layout.compact()){
-                int sx=x+4,sy=y+42,sw=104;
-                ToolkitTheme.rounded(g,sx,sy,sw,20,3,ToolkitTheme.palette().surface());
-                if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-4,sy+20,ToolkitTheme.palette().accent());
-                if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
-            }else{
-                int sx=layout.bodyX(),sy=y+60,sw=layout.bodyWidth();
-                ToolkitTheme.rounded(g,sx,sy,sw-(clearSearch!=null&&clearSearch.visible?26:0),20,3,ToolkitTheme.palette().surface());
-                if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-(clearSearch!=null&&clearSearch.visible?30:4),sy+20,ToolkitTheme.palette().accent());
-                if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
-            }
+            int sx=layout.bodyX(),sy=y+60,sw=layout.bodyWidth();
+            ToolkitTheme.rounded(g,sx,sy,sw-(clearSearch!=null&&clearSearch.visible?26:0),20,3,ToolkitTheme.palette().surface());
+            if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-(clearSearch!=null&&clearSearch.visible?30:4),sy+20,ToolkitTheme.palette().accent());
+            if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
         }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
         if(advancedDivider>=0){int lineY=layout.bodyY()+advancedDivider-scroll;
@@ -471,10 +433,7 @@ public final class ToolkitScreen extends Screen {
             g.text(font,clipped,0,0,label.color(),false);g.pose().popMatrix();
         }
         for(var field:settingFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-4,field.getWidth()+12,20,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
-        if(page==2&&fishEarnings){
-            for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-4,field.getWidth()+12,20,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
-
-        }
+        for(var field:priceFields)if(field.visible)ToolkitTheme.rounded(g,field.getX()-6,field.getY()-4,field.getWidth()+12,20,3,field.isFocused()?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
         g.disableScissor();
         if(layout.maxScroll(contentHeight)>0){int track=layout.viewport(),thumb=Math.max(12,track*track/contentHeight),ty=layout.bodyY()+scroll*(track-thumb)/layout.maxScroll(contentHeight);g.fill(x+w-5,ty,x+w-3,ty+thumb,com.skyblocktoolkit.ToolkitTheme.palette().muted());}
         super.extractRenderState(g,mx,my,tick);
@@ -535,9 +494,8 @@ public final class ToolkitScreen extends Screen {
             bindingTarget=0;
             return true;
         }
-        if(page!=5&&page!=8&&event.key()==GLFW.GLFW_KEY_F&&(event.modifiers()&(GLFW.GLFW_MOD_CONTROL|GLFW.GLFW_MOD_SUPER))!=0){setFocused(searchBox);return true;}
-        if(page!=5&&page!=8&&event.key()==GLFW.GLFW_KEY_ESCAPE&&!query.isEmpty()){searchBox.setValue("");return true;}
-        if(page==8&&event.key()==GLFW.GLFW_KEY_ESCAPE){go(hudReturnPage);return true;}
+        if(page!=5&&event.key()==GLFW.GLFW_KEY_F&&(event.modifiers()&(GLFW.GLFW_MOD_CONTROL|GLFW.GLFW_MOD_SUPER))!=0){setFocused(searchBox);return true;}
+        if(page!=5&&event.key()==GLFW.GLFW_KEY_ESCAPE&&!query.isEmpty()){searchBox.setValue("");return true;}
         if(page==5&&event.key()==GLFW.GLFW_KEY_ESCAPE){go(layoutReturnPage);return true;}
         if(page!=5&&!(getFocused() instanceof EditBox)){
             if(event.key()==GLFW.GLFW_KEY_PAGE_DOWN||event.key()==GLFW.GLFW_KEY_PAGE_UP){scroll+=(event.key()==GLFW.GLFW_KEY_PAGE_DOWN?1:-1)*Math.max(24,layout.viewport()-24);updateControls();return true;}

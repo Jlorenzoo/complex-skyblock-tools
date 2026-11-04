@@ -366,12 +366,12 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==45){capture(mc,"search-dark");switchTheme(mc);stage++;return;}
                 if(stage==46){
                     capture(mc,"search-light");
-                    for(int category:new int[]{1,9,11,2,12,3,4,7,10}){
+                    for(int category:new int[]{1,2,3,4}){
                         mc.setScreenAndShow(new ToolkitScreen(null,category));
-                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==10?1:0),"Single sell-all selector in General");
+                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==4?1:0),"Single sell-all selector in Utilities");
                         search(mc,"sell all");
                         check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().contains(" / ")).count()==1,"Sell all returns one global setting from every category");
-                        press(mc,"General / Sell all key");
+                        press(mc,"Utilities / Sell all key");
                         check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&w.visible&&ToolkitScreen.searchTarget(w,"Sell all key")),"Sell-all search reveals binding");
                     }
                     // Every indexed destination must reveal its actual setting.
