@@ -12,6 +12,9 @@ public final class ToolkitLayoutTest {
   var minimum=com.skyblocktoolkit.ToolkitSearch.find("  MiNiMuM   boost ");
   if(minimum.size()!=1||!minimum.getFirst().setting().equals("Minimum boost (%)"))throw new AssertionError("Individual setting terms");
   if(!com.skyblocktoolkit.ToolkitSearch.find("coconut history").isEmpty())throw new AssertionError("Unrelated controls must not combine keywords");
+  var fbResults = com.skyblocktoolkit.ToolkitSearch.find("fullbright");
+  if(fbResults.isEmpty() || fbResults.stream().noneMatch(e -> e.setting().equals("Fullbright") && e.page() == 6))
+    throw new AssertionError("Expected fullbright setting in utilities");
   if(!com.skyblocktoolkit.ToolkitSearch.find("no-such-setting").isEmpty())throw new AssertionError("No matches");
   System.out.println("PASS: global setting search, canonical sell-all result, responsive bounds, fixed footer and scroll limits");
  }

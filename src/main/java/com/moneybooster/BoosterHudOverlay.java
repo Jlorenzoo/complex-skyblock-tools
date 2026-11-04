@@ -158,6 +158,13 @@ public class BoosterHudOverlay implements HudElement {
     public static int xpY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().xpHudY));}
     public static int cropHarvestX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().cropHarvestHudX));}
     public static int cropHarvestY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().cropHarvestHudY));}
+    public static int boneLeggingsX(Minecraft mc,String label){
+        int w=mc.getWindow().getGuiScaledWidth();int configured=com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudX;
+        int pillW=mc.font.width(label)+8;
+        if(configured<0)return Math.max(2,w-pillW-8);
+        return Math.max(2,Math.min(w-pillW-2,configured));
+    }
+    public static int boneLeggingsY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-14,com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
         g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);
@@ -166,19 +173,21 @@ public class BoosterHudOverlay implements HudElement {
     public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker) {
         var toolkit=com.skyblocktoolkit.ToolkitConfig.get();
         long now = System.currentTimeMillis();
-        var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
-        boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
-
-        boolean fishActive = toolkit.fishEarningsHud && com.skyblocktoolkit.ToolkitMod.FISHING.settings().hasPrices();
-        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !fishActive && !toolkit.xpEarningsHud && !toolkit.cropHarvestHud) {
-            return;
-        }
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
         if (mc.gui != null && mc.gui.hud != null && mc.gui.hud.isHidden()) {
             return;
         }
+
+        var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
+        boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
+
+        boolean fishActive = toolkit.fishEarningsHud && com.skyblocktoolkit.ToolkitMod.FISHING.settings().hasPrices();
+        boolean boneActive = toolkit.boneLeggingsHud && com.skyblocktoolkit.BoneLeggingsTracker.shouldShow(mc);
+        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !fishActive && !toolkit.xpEarningsHud && !toolkit.cropHarvestHud && !boneActive) {
+            return;
+        }
+        if (boneActive) com.skyblocktoolkit.BoneLeggingsTracker.render(extractor, mc);
         if (toolkit.xpEarningsHud && XpTracker.shouldShowHud()) { String label=XpTracker.averageLabel();extractor.text(mc.font,label,xpX(mc,label),xpY(mc),0xFFFFFFFF,true); }
         if (toolkit.cropHarvestHud && com.skyblocktoolkit.CropHarvestTracker.shouldShowHud()) { String label=com.skyblocktoolkit.CropHarvestTracker.averageLabel();extractor.text(mc.font,label,cropHarvestX(mc,label),cropHarvestY(mc),0xFFFFFFFF,true); }
 

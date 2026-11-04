@@ -16,8 +16,8 @@ public final class SeasonalRegistry {
         ),
         new SeasonalItem(
             "bone_pants",
-            "Bone Pants",
-            "Seasonal Armor Piece · Burning Rush Rune",
+            "Bone Leggings",
+            "Seasonal Armor Piece · Burning Rush Rune (Speed VI)",
             () -> new ItemStack(Items.CHAINMAIL_LEGGINGS),
             (screen, top) -> screen.buildBoneLeggingsSettings(top)
         )

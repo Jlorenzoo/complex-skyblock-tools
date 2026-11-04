@@ -11,7 +11,8 @@
     "ChatComponentAccessor",
     "BossHealthOverlayAccessor",
     "LevelRendererResizeMixin",
-    "SectionOcclusionGraphAccessor"
+    "SectionOcclusionGraphAccessor",
+    "LightTextureMixin"
   ],
   "injectors": {
     "defaultRequire": 1

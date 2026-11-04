@@ -2,5 +2,6 @@
   "key.category.skyblocktoolkit.main": "Complexify",
   "key.skyblocktoolkit.menu": "Open Complexify Menu",
   "key.skyblocktoolkit.blackout": "Toggle Black Screen",
-  "key.skyblocktoolkit.sellall": "Sell All (/sellall)"
+  "key.skyblocktoolkit.sellall": "Sell All (/sellall)",
+  "key.skyblocktoolkit.fullbright": "Toggle Fullbright"
 }

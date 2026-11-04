@@ -20,7 +20,7 @@ public final class ToolkitScreen extends Screen {
     private final Screen parent;
     private int page,scroll,contentHeight,dragging,soundReturnPage=2,hudReturnPage=1;
     private double grabX,grabY;
-    private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
+    private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall, 4=fullbright
     private boolean fishEarnings;
     private final Set<Integer> expandedPages=new HashSet<>();
     private final Set<String> expandedSeasonals=new HashSet<>();
@@ -347,11 +347,16 @@ public final class ToolkitScreen extends Screen {
     }
     public int buildBoneLeggingsSettings(int top){
         var cfg=ToolkitConfig.get();
-        toggle("Burning Rush Rune",top,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
+        toggleCell("HUD overlay",top,0,()->cfg.boneLeggingsHud,()->cfg.boneLeggingsHud=!cfg.boneLeggingsHud);
+        toggleCell("Always visible",top,1,()->cfg.boneLeggingsAlwaysVisible,()->cfg.boneLeggingsAlwaysVisible=!cfg.boneLeggingsAlwaysVisible);
         top+=24;
-        label("Triggers a speed cue when Burning Rush activates.",top);
+        toggle("Burning Rush audio alert",top,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
+        top+=24;
+        button("Reposition HUD overlay",top,()->go(5));
+        top+=24;
+        label("Displays Speed VI / Regen toggle state subtly in the top right.",top);
         top+=14;
-        label("Grants Regeneration or a health-draining Speed boost.",top);
+        label("Shows automatically when wearing Bone Leggings or Speed VI is active.",top);
         top+=14;
         return top;
     }
@@ -364,7 +369,8 @@ public final class ToolkitScreen extends Screen {
         toggleCell("Fishing earnings",40,1,()->cfg.fishEarningsHud,()->cfg.fishEarningsHud=!cfg.fishEarningsHud);
         toggleCell("XP per hour",64,0,()->cfg.xpEarningsHud,()->cfg.xpEarningsHud=!cfg.xpEarningsHud);
         toggleCell("Harvest / hour",64,1,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
-        toggle("Rate test info",88,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
+        toggleCell("Bone Leggings",88,0,()->cfg.boneLeggingsHud,()->cfg.boneLeggingsHud=!cfg.boneLeggingsHud);
+        toggleCell("Rate test info",88,1,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
 
         section("Layout & positioning",116);
         button("Edit HUD positions",132,()->go(5));
@@ -375,6 +381,7 @@ public final class ToolkitScreen extends Screen {
         button(()->"Reset HUD positions",182,layout.bodyWidth()-resetWidth,resetWidth,()->{
             var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);
             cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;
+            cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;
         });
     }
     private void utilities(){
@@ -399,17 +406,23 @@ public final class ToolkitScreen extends Screen {
         slider("Sound amplification",338,cfg.ahSoundGain,3,v->cfg.ahSoundGain=v);
         button("Preview sale sound",362,AhSaleNotifier::playPreviewSound);
 
-        section("Blackout (AFK)",390);
-        button("Turn blackout on",406,()->{persist();BlackoutManager.setActive(true);onClose();});
-        slider("Opacity",430,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
-        toggle("Wake hint",454,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
-        setting("Wake key",478,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
-        label("Dim the game while keeping audio active.",504);
+        section("Display & visuals",390);
+        toggle("Fullbright",406,()->cfg.fullBright,()->cfg.fullBright=!cfg.fullBright);
+        label("Full brightness across all caves, shadows & dimensions.",430);
+        setting("Fullbright key",444,()->ToolkitMod.fullBrightKey.getTranslatedKeyMessage().getString(),()->bindingTarget=4);
 
-        section("Keyboard shortcuts",524);
-        setting("Menu key",540,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);
-        sellAllBinding(564);
-        setting("Wake key",588,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        section("Blackout (AFK)",474);
+        button("Turn blackout on",490,()->{persist();BlackoutManager.setActive(true);onClose();});
+        slider("Opacity",514,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
+        toggle("Wake hint",538,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
+        setting("Wake key",562,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        label("Dim the game while keeping audio active.",588);
+
+        section("Keyboard shortcuts",608);
+        setting("Menu key",624,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);
+        sellAllBinding(648);
+        setting("Wake key",672,()->ToolkitMod.blackoutKey.getTranslatedKeyMessage().getString(),()->bindingTarget=2);
+        setting("Fullbright key",696,()->ToolkitMod.fullBrightKey.getTranslatedKeyMessage().getString(),()->bindingTarget=4);
     }
     private void thresholdField(int top){
         var cfg=ToolkitConfig.get();
@@ -526,10 +539,12 @@ public final class ToolkitScreen extends Screen {
         String crops=BoosterStatsManager.averageLabel(),fish=ToolkitMod.fishingLabel();
         if(fish.isEmpty())fish="Fishing est. ("+(ToolkitMod.FISHING.settings().earningsWindow==300?"5m":"60s")+"): $0/h";
         String harvest=CropHarvestTracker.averageLabel();
+        String bone=BoneLeggingsTracker.previewLabel();
         return List.of(new HudPart(2,crops,BoosterHudOverlay.averageX(mc,crops),BoosterHudOverlay.averageY(mc),cfg.cropEarningsHud),
             new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud),
             new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud),
-            new HudPart(5,harvest,BoosterHudOverlay.cropHarvestX(mc,harvest),BoosterHudOverlay.cropHarvestY(mc),cfg.cropHarvestHud));
+            new HudPart(5,harvest,BoosterHudOverlay.cropHarvestX(mc,harvest),BoosterHudOverlay.cropHarvestY(mc),cfg.cropHarvestHud),
+            new HudPart(6,bone,BoosterHudOverlay.boneLeggingsX(mc,bone),BoosterHudOverlay.boneLeggingsY(mc),cfg.boneLeggingsHud));
     }
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
@@ -544,9 +559,16 @@ public final class ToolkitScreen extends Screen {
             eye(g,eyeX(bx,BoosterHudOverlay.BAR_WIDTH),rowY-10,visible);
         }
         for(var part:hudParts()){
-            g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
-            g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
-            eye(g,eyeX(part.x(),font.width(part.text())),part.y()-3,part.visible());
+            if(part.id()==6){
+                BoneLeggingsTracker.renderPill(g,mc,part.text(),part.x(),part.y());
+                int pillW=font.width(part.text())+8;
+                g.outline(part.x()-2,part.y()-2,pillW+4,16,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),pillW),part.y()-2,part.visible());
+            }else{
+                g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
+                g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),font.width(part.text())),part.y()-3,part.visible());
+            }
         }
         if(dragging==0)g.centeredText(font,Component.literal("Drag to move · Eye to show / hide · Esc to return"),width/2,height-14,ToolkitPalette.DARK.muted());
         super.extractRenderState(g,mx,my,tick);
@@ -559,7 +581,7 @@ public final class ToolkitScreen extends Screen {
         if(bindingTarget>0){
             if(event.key()!=GLFW.GLFW_KEY_ESCAPE){
                 int key=event.key()==GLFW.GLFW_KEY_DELETE||event.key()==GLFW.GLFW_KEY_BACKSPACE?GLFW.GLFW_KEY_UNKNOWN:event.key();
-                KeyMapping target=bindingTarget==1?ToolkitMod.menuKey:bindingTarget==2?ToolkitMod.blackoutKey:ToolkitMod.sellAllKey;
+                KeyMapping target=bindingTarget==1?ToolkitMod.menuKey:bindingTarget==2?ToolkitMod.blackoutKey:bindingTarget==3?ToolkitMod.sellAllKey:ToolkitMod.fullBrightKey;
                 target.setKey(InputConstants.Type.KEYSYM.getOrCreate(key));
                 KeyMapping.resetMapping();
                 Minecraft.getInstance().options.save();
@@ -582,9 +604,14 @@ public final class ToolkitScreen extends Screen {
             var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
             int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc),tx=eyeX(bx,BoosterHudOverlay.BAR_WIDTH);
             for(var part:hudParts()){
-                int ex=eyeX(part.x(),font.width(part.text()));
+                int pw=part.id()==6?font.width(part.text())+8:font.width(part.text());
+                int ex=eyeX(part.x(),pw);
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
-                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;else if(part.id()==3)cfg.fishEarningsHud=!cfg.fishEarningsHud;else if(part.id()==4)cfg.xpEarningsHud=!cfg.xpEarningsHud;else cfg.cropHarvestHud=!cfg.cropHarvestHud;
+                    if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;
+                    else if(part.id()==3)cfg.fishEarningsHud=!cfg.fishEarningsHud;
+                    else if(part.id()==4)cfg.xpEarningsHud=!cfg.xpEarningsHud;
+                    else if(part.id()==5)cfg.cropHarvestHud=!cfg.cropHarvestHud;
+                    else if(part.id()==6)cfg.boneLeggingsHud=!cfg.boneLeggingsHud;
                     persist();return true;
                 }
             }
@@ -595,7 +622,12 @@ public final class ToolkitScreen extends Screen {
                     persist();return true;
                 }
             }
-            for(var part:hudParts())if(event.x()>=part.x()-3&&event.x()<=part.x()+font.width(part.text())+3&&event.y()>=part.y()-3&&event.y()<=part.y()+12){dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;}
+            for(var part:hudParts()){
+                int pw=part.id()==6?font.width(part.text())+8:font.width(part.text());
+                if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+14){
+                    dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;
+                }
+            }
             if(event.x()>=bx-4&&event.x()<=bx+BoosterHudOverlay.BAR_WIDTH+4&&event.y()>=by-12&&event.y()<=by+BoosterHudOverlay.TIMER_SPACING+10){var c=ModConfig.getInstance();c.setOffset(bx-10,by-16);c.setPosition(ModConfig.Position.TOP_LEFT);dragging=1;grabX=event.x()-bx;grabY=event.y()-by;return true;}
 
         }
@@ -603,6 +635,14 @@ public final class ToolkitScreen extends Screen {
     }
     @Override public boolean mouseDragged(MouseButtonEvent event,double dx,double dy){
         var cfg=ModConfig.getInstance();
+        if(dragging==6){
+            var c=ToolkitConfig.get();
+            String bone=BoneLeggingsTracker.previewLabel();
+            int pw=font.width(bone)+8;
+            c.boneLeggingsHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-pw-2));
+            c.boneLeggingsHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-14));
+            return true;
+        }
         if(dragging==5){var c=ToolkitConfig.get();c.cropHarvestHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(CropHarvestTracker.averageLabel())-2));c.cropHarvestHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==4){var c=ToolkitConfig.get();c.xpHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(XpTracker.averageLabel())-2));c.xpHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==3){var c=ToolkitConfig.get();String fish=ToolkitMod.fishingLabel();if(fish.isEmpty())fish="Fishing est. ("+(ToolkitMod.FISHING.settings().earningsWindow==300?"5m":"60s")+"): $0/h";c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(fish)-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}

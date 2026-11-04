@@ -52,13 +52,16 @@ public final class ToolkitSearch {
         new Entry(3,"Seasonals","Void Rod","+ 1 block","reel depth target increase void rod seasonal fishing"),
         new Entry(3,"Seasonals","Void Rod","Preview ready","reel ready sound preview test void rod seasonal fishing"),
         new Entry(3,"Seasonals","Void Rod","Preview snap","reel line snap sound preview test void rod seasonal fishing"),
-        new Entry(3,"Seasonals","Bone Pants","Burning Rush Rune","bone pants leggings burning rush rune seasonal armor speed boost speed"),
+        new Entry(3,"Seasonals","Bone Leggings","Burning Rush audio alert","bone pants leggings burning rush rune seasonal armor speed boost speed alert audio"),
+        new Entry(3,"Seasonals","Bone Leggings","HUD overlay","bone pants leggings speed 6 vi hud overlay top right seasonal armor"),
+        new Entry(3,"Seasonals","Bone Leggings","Always visible","bone pants leggings speed 6 vi preview always visible hud overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Money timer","money booster visibility hud timer overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","XP timer","experience booster visibility hud timer xp overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Crop earnings","money average visibility farm farming crop earnings hud overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Fishing earnings","money estimate visibility fishing earnings hud overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","XP per hour","experience earnings visibility xp per hour hud mining overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Harvest / hour","crops harvested crop/h harvest per hour hud farm farming rate overlay"),
+        new Entry(4,"HUD & Overlays","Active HUD elements","Bone Leggings","bone leggings pants speed 6 vi hud overlay active elements"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Rate test info","hourly average base rate test tracker statistics hud overlay"),
         new Entry(4,"HUD & Overlays","Layout & positioning","Edit HUD positions","hud layout edit move positions drag canvas screen"),
         new Entry(4,"HUD & Overlays","Layout & positioning","Reset HUD positions","layout reset defaults restore hud positions defaults"),
@@ -77,10 +80,12 @@ public final class ToolkitSearch {
         new Entry(6,"Utilities","Auction notifications","Preview sale sound","sound audio preview test auction"),
         new Entry(6,"Utilities","Blackout (AFK)","Turn blackout on","dim screen audio afk blackout activate start"),
         new Entry(6,"Utilities","Blackout (AFK)","Opacity","dim screen opacity darkness transparency blackout"),
-        new Entry(6,"Utilities","Blackout (AFK)","Wake hint","wake key reminder hint message afk blackout"),
+        new Entry(6,"Utilities","Display & visuals","Fullbright","fullbright gamma brightness lighting night vision dark light caves"),
+        new Entry(6,"Utilities","Display & visuals","Fullbright key","fullbright key binding toggle shortcut"),
         new Entry(6,"Utilities","Keyboard shortcuts","Menu key","binding shortcut toolkit menu open gui key general"),
         new Entry(6,"Utilities","Keyboard shortcuts","Sell all key","sellall command binding shortcut farming boosters general"),
-        new Entry(6,"Utilities","Keyboard shortcuts","Wake key","blackout dim binding shortcut wake key exit afk")
+        new Entry(6,"Utilities","Keyboard shortcuts","Wake key","blackout dim binding shortcut wake key exit afk"),
+        new Entry(6,"Utilities","Keyboard shortcuts","Fullbright key","fullbright lighting toggle binding shortcut key")
     );
     public static List<Entry> find(String query){return ENTRIES.stream().filter(e->e.matches(query)).toList();}
     private ToolkitSearch(){}
