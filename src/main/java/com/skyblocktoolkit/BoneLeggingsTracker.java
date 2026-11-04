@@ -12,33 +12,43 @@ import java.util.Locale;
 
 /** Tracks Bone Leggings / Burning Rush status and renders an item HUD overlay. */
 public final class BoneLeggingsTracker {
-    public static final int STYLE_ICON_NAME = 0;
+    public static final int STYLE_EFFECT_ICONS = 0;
     public static final int STYLE_ICON_STATUS = 1;
-    public static final int STYLE_ICON_SYMBOL = 2;
-    public static final int STYLE_NAME_ONLY = 3;
+    public static final int STYLE_ICON_SIMPLE = 2;
+    public static final int STYLE_STATUS_ONLY = 3;
 
     private static boolean lastSpeed6 = false;
     private static ItemStack lastServerStack = null;
 
     public static String styleName(int style) {
         return switch (style) {
-            case STYLE_ICON_STATUS -> "Icon & Status";
-            case STYLE_ICON_SYMBOL -> "Icon & Symbol";
-            case STYLE_NAME_ONLY -> "Name only";
-            default -> "Icon & Name";
+            case STYLE_ICON_STATUS -> "Icon & Effects";
+            case STYLE_ICON_SIMPLE -> "Icon & On/Off";
+            case STYLE_STATUS_ONLY -> "Effects only";
+            default -> "Effect icons";
         };
     }
 
     public static boolean hasIcon(int style) {
-        return style != STYLE_NAME_ONLY;
+        return style != STYLE_STATUS_ONLY;
+    }
+
+    public static String effectLabel(boolean speed, boolean regen) {
+        if (speed && regen) return "§bSpeed §dRegen";
+        if (speed) return "§bSpeed";
+        if (regen) return "§dRegen";
+        return "§7Idle";
     }
 
     public static String formatLabel(int style, boolean active) {
+        return labelForEffects(style, active, false);
+    }
+
+    public static String labelForEffects(int style, boolean speed, boolean regen) {
         return switch (style) {
-            case STYLE_ICON_STATUS -> active ? "§a✔ On" : "§c✖ Off";
-            case STYLE_ICON_SYMBOL -> active ? "§a✔" : "§c✖";
-            case STYLE_NAME_ONLY -> active ? "Bone Leggings: §aOn" : "Bone Leggings: §cOff";
-            default -> active ? "Bone Leggings: §a✔ On" : "Bone Leggings: §c✖ Off";
+            case STYLE_ICON_STATUS, STYLE_STATUS_ONLY -> effectLabel(speed, regen);
+            case STYLE_ICON_SIMPLE -> speed || regen ? "§aOn" : "§7Off";
+            default -> "";
         };
     }
 
@@ -81,7 +91,7 @@ public final class BoneLeggingsTracker {
     }
 
     public static boolean isActive(Minecraft mc) {
-        return hasSpeed6(mc);
+        return hasSpeed6(mc) || hasRegen(mc);
     }
 
     public static boolean shouldShow(Minecraft mc) {
@@ -93,8 +103,7 @@ public final class BoneLeggingsTracker {
 
     public static String currentLabel(Minecraft mc) {
         var cfg = ToolkitConfig.get();
-        boolean active = mc != null && isActive(mc);
-        return formatLabel(cfg.boneLeggingsHudStyle, active);
+        return labelForEffects(cfg.boneLeggingsHudStyle, hasSpeed6(mc), hasRegen(mc));
     }
 
     public static ItemStack getItemStack(Minecraft mc) {
@@ -138,24 +147,19 @@ public final class BoneLeggingsTracker {
 
     public static int getWidth(Minecraft mc) {
         var cfg = ToolkitConfig.get();
-        String label = currentLabel(mc);
+        int padding = cfg.boneLeggingsBackground ? 6 : 0;
+        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 46 + padding;
+        // Reserve the widest state so right alignment and HUD editor bounds never jump.
+        String label = cfg.boneLeggingsHudStyle == STYLE_ICON_SIMPLE ? "Off" : "Speed Regen";
         int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
-        int width = textW;
-        if (hasIcon(cfg.boneLeggingsHudStyle)) {
-            width += 19;
-        }
-        if (cfg.boneLeggingsBackground) {
-            width += 6;
-        }
-        return width;
+        return textW + (hasIcon(cfg.boneLeggingsHudStyle) ? 19 : 0) + padding;
     }
 
     public static int getHeight() {
         var cfg = ToolkitConfig.get();
-        if (hasIcon(cfg.boneLeggingsHudStyle)) {
-            return cfg.boneLeggingsBackground ? 18 : 16;
-        }
-        return cfg.boneLeggingsBackground ? 14 : 10;
+        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 20
+                : hasIcon(cfg.boneLeggingsHudStyle) ? 16 : 9;
+        return height + (cfg.boneLeggingsBackground ? 4 : 0);
     }
 
     public static void tick(Minecraft mc) {
@@ -184,10 +188,43 @@ public final class BoneLeggingsTracker {
     public static void renderWidget(GuiGraphicsExtractor extractor, Minecraft mc, int x, int y, boolean isPreview) {
         var cfg = ToolkitConfig.get();
         int style = cfg.boneLeggingsHudStyle;
-        boolean active = isPreview || (mc != null && isActive(mc));
-        String label = formatLabel(style, active);
+        boolean speed = isPreview || hasSpeed6(mc);
+        boolean regen = !isPreview && hasRegen(mc);
+        if (style == STYLE_EFFECT_ICONS) {
+            renderEffectIcons(extractor, getItemStack(mc), x, y, speed, regen, cfg.boneLeggingsBackground);
+            return;
+        }
+        String label = labelForEffects(style, speed, regen);
         ItemStack icon = hasIcon(style) ? getItemStack(mc) : null;
         renderItemStatus(extractor, mc != null ? mc.font : null, icon, label, x, y, hasIcon(style), cfg.boneLeggingsBackground);
+    }
+
+    /** Two sprite variants: speed trails and a regeneration heart. No title or status symbols. */
+    public static void renderEffectIcons(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
+                                         boolean speed, boolean regen, boolean background) {
+        if (g == null || stack == null || stack.isEmpty()) return;
+        if (background) g.fill(x, y, x + 52, y + 24, 0x40000000);
+        int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
+        renderEffectIcon(g, stack, dx, dy, speed, false);
+        renderEffectIcon(g, stack, dx + 24, dy, regen, true);
+    }
+
+    private static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
+                                         boolean active, boolean heart) {
+        g.item(stack, x + 2, y);
+        int color = active ? (heart ? 0xFFF29AAF : 0xFF8CD5E7) : 0xFF858991;
+        String[] pixels = heart
+                ? new String[]{".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."}
+                : new String[]{"...####", "...####", ".####..", ".####..", "####...", "####..."};
+        int bx = x + 13, by = y + 10;
+        // One-pixel dark silhouette keeps the small badge readable over any server sprite.
+        for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
+            if (pixels[row].charAt(col) == '#') g.fill(bx + col - 1, by + row - 1, bx + col + 2, by + row + 2, 0xE0181A20);
+        }
+        for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
+            if (pixels[row].charAt(col) == '#') g.fill(bx + col, by + row, bx + col + 1, by + row + 1, color);
+        }
+        g.fill(x + 3, y + 18, x + 17, y + 19, active ? color : 0x667C818A);
     }
 
     /**

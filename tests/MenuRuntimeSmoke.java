@@ -431,13 +431,39 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     if(stage==81){
                         capture(mc,"seasonals-overview-dark");
-                        press(mc,"Bone Pants");
+                        press(mc,"Bone Leggings");
                         stage++;return;
                     }
                     if(stage==82){
                         capture(mc,"seasonals-bone-pants-expanded");
-                        stage=128;return;
+                        ToolkitConfig.get().lightMode=true;
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));press(mc,"Bone Leggings");scrollBottom(mc);
+                        stage++;return;
                     }
+                    if(stage==83 || stage==84 || stage==85){
+                        capture(mc,"bone-settings-"+stage);
+                        if(stage==83){mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();}
+                        ToolkitConfig.get().lightMode=stage==83;
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));press(mc,"Bone Leggings");scrollBottom(mc);
+                        stage++;return;
+                    }
+                    if(stage==86){
+                        mc.setScreenAndShow(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("Bone icon states")) {
+                            @Override public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor g,int mx,int my,float tick) {
+                                for(int theme=0;theme<2;theme++) {
+                                    int y=20+theme*90;
+                                    g.fill(0,y-5,width,y+80,theme==0?0xFF1B1D21:0xFFF9F9FC);
+                                    for(int state=0;state<4;state++) {
+                                        int x=20+state*70;
+                                        g.text(font,new String[]{"Idle","Speed","Regen","Both"}[state],x,y,theme==0?0xFFE4E7EC:0xFF232632,false);
+                                        BoneLeggingsTracker.renderEffectIcons(g,BoneLeggingsTracker.getItemStack(mc),x,y+18,(state&1)!=0,(state&2)!=0,false);
+                                        BoneLeggingsTracker.renderEffectIcons(g,BoneLeggingsTracker.getItemStack(mc),x,y+48,(state&1)!=0,(state&2)!=0,true);
+                                    }
+                                }
+                            }
+                        });stage++;return;
+                    }
+                    if(stage==87){capture(mc,"bone-effect-icons");stage=128;return;}
                     stage=128;return;
                 }
                 if(stage==128){

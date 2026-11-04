@@ -19,42 +19,34 @@ public final class BoneLeggingsTrackerTest {
     }
 
     private static void testPreviewLabel() {
-        if (!"Bone Leggings: §a✔ On".equals(BoneLeggingsTracker.previewLabel())) {
-            throw new AssertionError("Preview label mismatch: " + BoneLeggingsTracker.previewLabel());
+        if (!BoneLeggingsTracker.previewLabel().isEmpty()) {
+            throw new AssertionError("Default effect icons must not include a title or checkmark");
         }
     }
 
     private static void testStylesAndLabels() {
-        if (!"Bone Leggings: §a✔ On".equals(BoneLeggingsTracker.formatLabel(0, true))) {
-            throw new AssertionError("Style 0 active label mismatch");
+        for (boolean speed : new boolean[]{false, true}) for (boolean regen : new boolean[]{false, true}) {
+            if (!BoneLeggingsTracker.labelForEffects(0, speed, regen).isEmpty())
+                throw new AssertionError("Icon mode must stay text-free for every effect state");
+            String effects = BoneLeggingsTracker.labelForEffects(1, speed, regen);
+            if (effects.contains("Speed") != speed || effects.contains("Regen") != regen)
+                throw new AssertionError("Effects must reflect speed and regen independently: " + effects);
+            if (BoneLeggingsTracker.labelForEffects(2, speed, regen).contains("On") != (speed || regen))
+                throw new AssertionError("On/Off must include regeneration");
         }
-        if (!"Bone Leggings: §c✖ Off".equals(BoneLeggingsTracker.formatLabel(0, false))) {
-            throw new AssertionError("Style 0 inactive label mismatch");
-        }
-        if (!"§a✔ On".equals(BoneLeggingsTracker.formatLabel(1, true))) {
-            throw new AssertionError("Style 1 active label mismatch");
-        }
-        if (!"§c✖ Off".equals(BoneLeggingsTracker.formatLabel(1, false))) {
-            throw new AssertionError("Style 1 inactive label mismatch");
-        }
-        if (!"§a✔".equals(BoneLeggingsTracker.formatLabel(2, true))) {
-            throw new AssertionError("Style 2 active label mismatch");
-        }
-        if (!"§c✖".equals(BoneLeggingsTracker.formatLabel(2, false))) {
-            throw new AssertionError("Style 2 inactive label mismatch");
-        }
-        if (!"Bone Leggings: §aOn".equals(BoneLeggingsTracker.formatLabel(3, true))) {
-            throw new AssertionError("Style 3 active label mismatch");
-        }
-        if (!"Bone Leggings: §cOff".equals(BoneLeggingsTracker.formatLabel(3, false))) {
-            throw new AssertionError("Style 3 inactive label mismatch");
-        }
-        if (!BoneLeggingsTracker.hasIcon(0) || !BoneLeggingsTracker.hasIcon(1) || !BoneLeggingsTracker.hasIcon(2) || BoneLeggingsTracker.hasIcon(3)) {
+        if (!BoneLeggingsTracker.hasIcon(0) || !BoneLeggingsTracker.hasIcon(1) || !BoneLeggingsTracker.hasIcon(2) || BoneLeggingsTracker.hasIcon(3))
             throw new AssertionError("hasIcon mismatch for styles");
+        var cfg = ToolkitConfig.get();
+        for (int style = 0; style < 4; style++) {
+            cfg.boneLeggingsHudStyle = style;
+            cfg.boneLeggingsBackground = false;
+            int width = BoneLeggingsTracker.getWidth(null), height = BoneLeggingsTracker.getHeight();
+            cfg.boneLeggingsBackground = true;
+            if (BoneLeggingsTracker.getWidth(null) != width + 6 || BoneLeggingsTracker.getHeight() != height + 4)
+                throw new AssertionError("Background padding must match renderer in style " + style);
         }
-        if (BoneLeggingsTracker.getWidth(null) <= 0 || BoneLeggingsTracker.getHeight() <= 0) {
-            throw new AssertionError("Invalid width/height from null mc");
-        }
+        cfg.boneLeggingsHudStyle = 0;
+        cfg.boneLeggingsBackground = false;
     }
 
     private static void testSeasonalRegistryLookup() {
@@ -96,8 +88,8 @@ public final class BoneLeggingsTrackerTest {
             throw new AssertionError("shouldShow(null) must be false by default");
         }
         String label = BoneLeggingsTracker.currentLabel(null);
-        if (label == null || label.isEmpty()) {
-            throw new AssertionError("currentLabel(null) must return fallback label");
+        if (label == null) {
+            throw new AssertionError("currentLabel(null) must return a non-null label");
         }
     }
 }

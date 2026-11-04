@@ -359,9 +359,9 @@ public final class ToolkitScreen extends Screen {
         top+=24;
         button("Reposition HUD overlay",top,()->go(5));
         top+=24;
-        label("Shows server item sprite with real-time toggle status (On / Off).",top);
+        label("Speed trails / regen heart. Gray means idle.",top);
         top+=14;
-        label("Shows automatically when wearing Bone Leggings or Speed VI is active.",top);
+        label("Shows while worn, held, or Speed VI is active.",top);
         top+=14;
         return top;
     }
