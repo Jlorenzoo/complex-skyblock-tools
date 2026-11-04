@@ -7,15 +7,43 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.util.Locale;
 
-/** Tracks Bone Leggings / Burning Rush status and renders a subtle top-right HUD pill. */
+/** Tracks Bone Leggings / Burning Rush status and renders an item HUD overlay. */
 public final class BoneLeggingsTracker {
-    public static final String PREVIEW_LABEL = "§b⚡ Speed VI";
+    public static final int STYLE_ICON_NAME = 0;
+    public static final int STYLE_ICON_STATUS = 1;
+    public static final int STYLE_ICON_SYMBOL = 2;
+    public static final int STYLE_NAME_ONLY = 3;
+
     private static boolean lastSpeed6 = false;
+    private static ItemStack lastServerStack = null;
+
+    public static String styleName(int style) {
+        return switch (style) {
+            case STYLE_ICON_STATUS -> "Icon & Status";
+            case STYLE_ICON_SYMBOL -> "Icon & Symbol";
+            case STYLE_NAME_ONLY -> "Name only";
+            default -> "Icon & Name";
+        };
+    }
+
+    public static boolean hasIcon(int style) {
+        return style != STYLE_NAME_ONLY;
+    }
+
+    public static String formatLabel(int style, boolean active) {
+        return switch (style) {
+            case STYLE_ICON_STATUS -> active ? "§a✔ On" : "§c✖ Off";
+            case STYLE_ICON_SYMBOL -> active ? "§a✔" : "§c✖";
+            case STYLE_NAME_ONLY -> active ? "Bone Leggings: §aOn" : "Bone Leggings: §cOff";
+            default -> active ? "Bone Leggings: §a✔ On" : "Bone Leggings: §c✖ Off";
+        };
+    }
 
     public static String previewLabel() {
-        return PREVIEW_LABEL;
+        return formatLabel(ToolkitConfig.get().boneLeggingsHudStyle, true);
     }
 
     public static boolean isBoneLeggings(ItemStack stack) {
@@ -52,6 +80,10 @@ public final class BoneLeggingsTracker {
         return mc.player.hasEffect(MobEffects.REGENERATION);
     }
 
+    public static boolean isActive(Minecraft mc) {
+        return hasSpeed6(mc);
+    }
+
     public static boolean shouldShow(Minecraft mc) {
         if (mc == null || mc.player == null) return false;
         var cfg = ToolkitConfig.get();
@@ -60,16 +92,70 @@ public final class BoneLeggingsTracker {
     }
 
     public static String currentLabel(Minecraft mc) {
-        if (hasSpeed6(mc)) {
-            return "§b⚡ Speed VI";
+        var cfg = ToolkitConfig.get();
+        boolean active = mc != null && isActive(mc);
+        return formatLabel(cfg.boneLeggingsHudStyle, active);
+    }
+
+    public static ItemStack getItemStack(Minecraft mc) {
+        if (mc != null && mc.player != null) {
+            try {
+                ItemStack legs = mc.player.getItemBySlot(EquipmentSlot.LEGS);
+                if (isBoneLeggings(legs)) {
+                    lastServerStack = legs.copy();
+                    return legs;
+                }
+                ItemStack main = mc.player.getMainHandItem();
+                if (isBoneLeggings(main)) {
+                    lastServerStack = main.copy();
+                    return main;
+                }
+                ItemStack off = mc.player.getOffhandItem();
+                if (isBoneLeggings(off)) {
+                    lastServerStack = off.copy();
+                    return off;
+                }
+                for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+                    ItemStack stack = mc.player.getInventory().getItem(i);
+                    if (isBoneLeggings(stack)) {
+                        lastServerStack = stack.copy();
+                        return stack;
+                    }
+                }
+            } catch (Throwable ignored) {}
         }
-        if (isWearingBoneLeggings(mc) || isEquippedOrHeld(mc)) {
-            if (hasRegen(mc)) {
-                return "§a✦ Regen";
-            }
-            return "§7⚡ Speed VI §8(Off)";
+        if (lastServerStack != null) {
+            return lastServerStack;
         }
-        return "§b⚡ Speed VI";
+        try {
+            var seasonal = SeasonalRegistry.find("bone_pants");
+            if (seasonal != null) return seasonal.icon();
+            return new ItemStack(Items.CHAINMAIL_LEGGINGS);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static int getWidth(Minecraft mc) {
+        var cfg = ToolkitConfig.get();
+        String label = currentLabel(mc);
+        int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
+        int width = textW;
+        if (hasIcon(cfg.boneLeggingsHudStyle)) {
+            width += 19;
+        }
+        if (cfg.boneLeggingsBackground) {
+            width += 6;
+        }
+        return width;
+    }
+
+    public static int getHeight() {
+        var cfg = ToolkitConfig.get();
+        if (hasIcon(cfg.boneLeggingsHudStyle)) {
+            return cfg.boneLeggingsBackground ? 18 : 16;
+        }
+        return cfg.boneLeggingsBackground ? 14 : 10;
     }
 
     public static void tick(Minecraft mc) {
@@ -86,25 +172,51 @@ public final class BoneLeggingsTracker {
 
     public static void render(GuiGraphicsExtractor extractor, Minecraft mc) {
         if (!shouldShow(mc)) return;
-        String label = currentLabel(mc);
-        int x = com.moneybooster.BoosterHudOverlay.boneLeggingsX(mc, label);
+        int x = com.moneybooster.BoosterHudOverlay.boneLeggingsX(mc, "");
         int y = com.moneybooster.BoosterHudOverlay.boneLeggingsY(mc);
-        renderPill(extractor, mc, label, x, y);
+        renderWidget(extractor, mc, x, y, false);
     }
 
     public static void renderPill(GuiGraphicsExtractor extractor, Minecraft mc, String label, int x, int y) {
-        Font font = mc.font;
+        renderWidget(extractor, mc, x, y, true);
+    }
+
+    public static void renderWidget(GuiGraphicsExtractor extractor, Minecraft mc, int x, int y, boolean isPreview) {
+        var cfg = ToolkitConfig.get();
+        int style = cfg.boneLeggingsHudStyle;
+        boolean active = isPreview || (mc != null && isActive(mc));
+        String label = formatLabel(style, active);
+        ItemStack icon = hasIcon(style) ? getItemStack(mc) : null;
+        renderItemStatus(extractor, mc != null ? mc.font : null, icon, label, x, y, hasIcon(style), cfg.boneLeggingsBackground);
+    }
+
+    /**
+     * Reusable renderer for item HUD overlays (Bone Leggings, Void Rod, and future seasonals).
+     */
+    public static void renderItemStatus(GuiGraphicsExtractor extractor, Font font, ItemStack stack,
+                                        String label, int x, int y, boolean showIcon, boolean background) {
+        if (extractor == null || font == null) return;
+        boolean hasSprite = showIcon && stack != null && !stack.isEmpty();
         int textW = font.width(label);
-        int pillW = textW + 8;
-        int pillH = 12;
+        int contentW = hasSprite ? (19 + textW) : textW;
+        int contentH = hasSprite ? 16 : 9;
+        int totalW = contentW + (background ? 6 : 0);
+        int totalH = contentH + (background ? 4 : 0);
 
-        // Dark translucent background with subtle outline matching Complexify telemetry style
-        extractor.fill(x, y, x + pillW, y + pillH, 0x90000000);
-        boolean active = hasSpeed6(mc);
-        int border = active ? 0x6000E5FF : 0x30FFFFFF;
-        extractor.outline(x, y, pillW, pillH, border);
+        if (background) {
+            // Subtle, non-intrusive dark glass background with no harsh border
+            extractor.fill(x, y, x + totalW, y + totalH, 0x40000000);
+        }
 
-        extractor.text(font, label, x + 4, y + 2, 0xFFFFFFFF, true);
+        int drawX = x + (background ? 3 : 0);
+        int drawY = y + (background ? 2 : 0);
+
+        if (hasSprite) {
+            extractor.item(stack, drawX, drawY);
+            extractor.text(font, label, drawX + 19, drawY + 3, 0xFFFFFFFF, true);
+        } else {
+            extractor.text(font, label, drawX, drawY, 0xFFFFFFFF, true);
+        }
     }
 
     private BoneLeggingsTracker() {}

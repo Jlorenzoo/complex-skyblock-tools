@@ -34,8 +34,16 @@ public class ModConfig {
     private final Path configPath;
 
     private ModConfig() {
-        this.configPath = FabricLoader.getInstance().getConfigDir().resolve("moneyboosterhud.json");
-        load();
+        Path p = null;
+        try {
+            var loader = FabricLoader.getInstance();
+            if (loader != null) {
+                var dir = loader.getConfigDir();
+                if (dir != null) p = dir.resolve("moneyboosterhud.json");
+            }
+        } catch (Throwable ignored) {}
+        this.configPath = p;
+        if (configPath != null) load();
     }
 
     public static ModConfig getInstance() {
@@ -109,6 +117,7 @@ public class ModConfig {
     }
 
     public void save() {
+        if (configPath == null) return;
         try {
             String json = "{\n" +
                     "  \"position\": \"" + this.position.name() + "\",\n" +

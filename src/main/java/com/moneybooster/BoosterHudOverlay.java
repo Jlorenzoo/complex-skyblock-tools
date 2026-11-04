@@ -160,11 +160,11 @@ public class BoosterHudOverlay implements HudElement {
     public static int cropHarvestY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().cropHarvestHudY));}
     public static int boneLeggingsX(Minecraft mc,String label){
         int w=mc.getWindow().getGuiScaledWidth();int configured=com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudX;
-        int pillW=mc.font.width(label)+8;
+        int pillW=com.skyblocktoolkit.BoneLeggingsTracker.getWidth(mc);
         if(configured<0)return Math.max(2,w-pillW-8);
         return Math.max(2,Math.min(w-pillW-2,configured));
     }
-    public static int boneLeggingsY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-14,com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudY));}
+    public static int boneLeggingsY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-com.skyblocktoolkit.BoneLeggingsTracker.getHeight()-2,com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
         g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);

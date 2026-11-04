@@ -29,12 +29,23 @@ public final class ToolkitConfig {
     public boolean boneLeggingsSpeedAlert=true;
     public boolean boneLeggingsHud=true,boneLeggingsAlwaysVisible=false;
     public int boneLeggingsHudX=-1,boneLeggingsHudY=12;
+    public int boneLeggingsHudStyle=0; // 0=Icon & Name, 1=Icon & Status, 2=Icon & Symbol, 3=Name only
+    public boolean boneLeggingsBackground=false;
     public boolean fullBright=false;
     public boolean showStatusEffects=true;
     public static ToolkitConfig get(){return INSTANCE;}
-    private final Path path=FabricLoader.getInstance().getConfigDir().resolve("skyblocktoolkit.json");
+    private final Path path;
     private ToolkitConfig(){
-        if(Files.exists(path))try{
+        Path p = null;
+        try {
+            var loader = FabricLoader.getInstance();
+            if (loader != null) {
+                var dir = loader.getConfigDir();
+                if (dir != null) p = dir.resolve("skyblocktoolkit.json");
+            }
+        } catch (Throwable ignored) {}
+        this.path = p;
+        if(path!=null&&Files.exists(path))try{
             var j=JsonParser.parseString(Files.readString(path)).getAsJsonObject();
             if(j.has("boosterHud"))boosterHud=j.get("boosterHud").getAsBoolean();
             xpBoosterHud=j.has("xpBoosterHud")?j.get("xpBoosterHud").getAsBoolean():boosterHud;
@@ -79,6 +90,8 @@ public final class ToolkitConfig {
             if(j.has("boneLeggingsAlwaysVisible"))boneLeggingsAlwaysVisible=j.get("boneLeggingsAlwaysVisible").getAsBoolean();
             if(j.has("boneLeggingsHudX"))boneLeggingsHudX=Math.clamp(j.get("boneLeggingsHudX").getAsInt(),-1,10000);
             if(j.has("boneLeggingsHudY"))boneLeggingsHudY=Math.clamp(j.get("boneLeggingsHudY").getAsInt(),0,10000);
+            if(j.has("boneLeggingsHudStyle"))boneLeggingsHudStyle=Math.clamp(j.get("boneLeggingsHudStyle").getAsInt(),0,3);
+            if(j.has("boneLeggingsBackground"))boneLeggingsBackground=j.get("boneLeggingsBackground").getAsBoolean();
             if(j.has("fullBright"))fullBright=j.get("fullBright").getAsBoolean();
             if(j.has("showStatusEffects"))showStatusEffects=j.get("showStatusEffects").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
@@ -92,6 +105,7 @@ public final class ToolkitConfig {
     public String highlightName(){return new String[]{"Blue","Sage","White"}[highlight];}
     public String ahSoundName(){return new String[]{"Pling","Level Up","Orb Pickup","Amethyst Chime","Bell"}[ahSoundType];}
     public void save(){
+        if(path==null)return;
         Path temp=null;try{
             Files.createDirectories(path.getParent());temp=Files.createTempFile(path.getParent(),"toolkit-",".tmp");
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
@@ -125,6 +139,8 @@ public final class ToolkitConfig {
             j.addProperty("boneLeggingsAlwaysVisible",boneLeggingsAlwaysVisible);
             j.addProperty("boneLeggingsHudX",boneLeggingsHudX);
             j.addProperty("boneLeggingsHudY",boneLeggingsHudY);
+            j.addProperty("boneLeggingsHudStyle",boneLeggingsHudStyle);
+            j.addProperty("boneLeggingsBackground",boneLeggingsBackground);
             j.addProperty("fullBright",fullBright);
             j.addProperty("showStatusEffects",showStatusEffects);
             Files.writeString(temp,new GsonBuilder().setPrettyPrinting().create().toJson(j)+"\n");

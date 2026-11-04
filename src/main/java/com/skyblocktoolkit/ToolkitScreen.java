@@ -350,11 +350,16 @@ public final class ToolkitScreen extends Screen {
         toggleCell("HUD overlay",top,0,()->cfg.boneLeggingsHud,()->cfg.boneLeggingsHud=!cfg.boneLeggingsHud);
         toggleCell("Always visible",top,1,()->cfg.boneLeggingsAlwaysVisible,()->cfg.boneLeggingsAlwaysVisible=!cfg.boneLeggingsAlwaysVisible);
         top+=24;
-        toggle("Burning Rush audio alert",top,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
+        button(()->"Display style: "+BoneLeggingsTracker.styleName(cfg.boneLeggingsHudStyle),top,0,layout.bodyWidth(),()->{
+            cfg.boneLeggingsHudStyle=(cfg.boneLeggingsHudStyle+1)%4;
+        });
+        top+=24;
+        toggleCell("Subtle background",top,0,()->cfg.boneLeggingsBackground,()->cfg.boneLeggingsBackground=!cfg.boneLeggingsBackground);
+        toggleCell("Audio chime alert",top,1,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
         top+=24;
         button("Reposition HUD overlay",top,()->go(5));
         top+=24;
-        label("Displays Speed VI / Regen toggle state subtly in the top right.",top);
+        label("Shows server item sprite with real-time toggle status (On / Off).",top);
         top+=14;
         label("Shows automatically when wearing Bone Leggings or Speed VI is active.",top);
         top+=14;
@@ -561,10 +566,11 @@ public final class ToolkitScreen extends Screen {
         }
         for(var part:hudParts()){
             if(part.id()==6){
-                BoneLeggingsTracker.renderPill(g,mc,part.text(),part.x(),part.y());
-                int pillW=font.width(part.text())+8;
-                g.outline(part.x()-2,part.y()-2,pillW+4,16,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
-                eye(g,eyeX(part.x(),pillW),part.y()-2,part.visible());
+                BoneLeggingsTracker.renderWidget(g,mc,part.x(),part.y(),true);
+                int pw=BoneLeggingsTracker.getWidth(mc);
+                int ph=BoneLeggingsTracker.getHeight();
+                g.outline(part.x()-2,part.y()-2,pw+4,ph+4,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),pw),part.y()-2,part.visible());
             }else{
                 g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
                 g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
@@ -605,7 +611,7 @@ public final class ToolkitScreen extends Screen {
             var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
             int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc),tx=eyeX(bx,BoosterHudOverlay.BAR_WIDTH);
             for(var part:hudParts()){
-                int pw=part.id()==6?font.width(part.text())+8:font.width(part.text());
+                int pw=part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
                 int ex=eyeX(part.x(),pw);
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
                     if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;
@@ -624,8 +630,9 @@ public final class ToolkitScreen extends Screen {
                 }
             }
             for(var part:hudParts()){
-                int pw=part.id()==6?font.width(part.text())+8:font.width(part.text());
-                if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+14){
+                int pw=part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int ph=part.id()==6?BoneLeggingsTracker.getHeight():11;
+                if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+ph+3){
                     dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;
                 }
             }
@@ -638,10 +645,10 @@ public final class ToolkitScreen extends Screen {
         var cfg=ModConfig.getInstance();
         if(dragging==6){
             var c=ToolkitConfig.get();
-            String bone=BoneLeggingsTracker.previewLabel();
-            int pw=font.width(bone)+8;
+            int pw=BoneLeggingsTracker.getWidth(Minecraft.getInstance());
+            int ph=BoneLeggingsTracker.getHeight();
             c.boneLeggingsHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-pw-2));
-            c.boneLeggingsHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-14));
+            c.boneLeggingsHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-ph-2));
             return true;
         }
         if(dragging==5){var c=ToolkitConfig.get();c.cropHarvestHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(CropHarvestTracker.averageLabel())-2));c.cropHarvestHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}

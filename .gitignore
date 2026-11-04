@@ -21,3 +21,4 @@ local-settings.json
 *-smoke.log
 installation-*.log
 update-record.json
+logs/

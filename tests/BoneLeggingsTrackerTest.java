@@ -3,11 +3,12 @@ package com.skyblocktoolkit;
 public final class BoneLeggingsTrackerTest {
     public static void main(String[] args) {
         testPreviewLabel();
+        testStylesAndLabels();
         testSeasonalRegistryLookup();
         testSearchDiscovery();
         testPotionIconsSearch();
         testNullSafety();
-        System.out.println("PASS: BoneLeggingsTracker preview label, null safety, seasonal registry lookup, and search discovery");
+        System.out.println("PASS: BoneLeggingsTracker preview label, styles, null safety, seasonal registry lookup, and search discovery");
     }
 
     private static void testPotionIconsSearch() {
@@ -18,8 +19,41 @@ public final class BoneLeggingsTrackerTest {
     }
 
     private static void testPreviewLabel() {
-        if (!"§b⚡ Speed VI".equals(BoneLeggingsTracker.previewLabel())) {
+        if (!"Bone Leggings: §a✔ On".equals(BoneLeggingsTracker.previewLabel())) {
             throw new AssertionError("Preview label mismatch: " + BoneLeggingsTracker.previewLabel());
+        }
+    }
+
+    private static void testStylesAndLabels() {
+        if (!"Bone Leggings: §a✔ On".equals(BoneLeggingsTracker.formatLabel(0, true))) {
+            throw new AssertionError("Style 0 active label mismatch");
+        }
+        if (!"Bone Leggings: §c✖ Off".equals(BoneLeggingsTracker.formatLabel(0, false))) {
+            throw new AssertionError("Style 0 inactive label mismatch");
+        }
+        if (!"§a✔ On".equals(BoneLeggingsTracker.formatLabel(1, true))) {
+            throw new AssertionError("Style 1 active label mismatch");
+        }
+        if (!"§c✖ Off".equals(BoneLeggingsTracker.formatLabel(1, false))) {
+            throw new AssertionError("Style 1 inactive label mismatch");
+        }
+        if (!"§a✔".equals(BoneLeggingsTracker.formatLabel(2, true))) {
+            throw new AssertionError("Style 2 active label mismatch");
+        }
+        if (!"§c✖".equals(BoneLeggingsTracker.formatLabel(2, false))) {
+            throw new AssertionError("Style 2 inactive label mismatch");
+        }
+        if (!"Bone Leggings: §aOn".equals(BoneLeggingsTracker.formatLabel(3, true))) {
+            throw new AssertionError("Style 3 active label mismatch");
+        }
+        if (!"Bone Leggings: §cOff".equals(BoneLeggingsTracker.formatLabel(3, false))) {
+            throw new AssertionError("Style 3 inactive label mismatch");
+        }
+        if (!BoneLeggingsTracker.hasIcon(0) || !BoneLeggingsTracker.hasIcon(1) || !BoneLeggingsTracker.hasIcon(2) || BoneLeggingsTracker.hasIcon(3)) {
+            throw new AssertionError("hasIcon mismatch for styles");
+        }
+        if (BoneLeggingsTracker.getWidth(null) <= 0 || BoneLeggingsTracker.getHeight() <= 0) {
+            throw new AssertionError("Invalid width/height from null mc");
         }
     }
 
