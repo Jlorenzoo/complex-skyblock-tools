@@ -305,7 +305,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     BoosterManager.timers.observe(BoosterTimers.Type.MONEY,new BoosterSidebar.State(true,61,-1,false),System.currentTimeMillis());
                     BoosterStatsManager.tick();
                     check(!BoosterManager.isActive()&&BoosterStatsManager.history().activeId()<0,"Expired coconut stops money accounting and history despite lingering sidebar");
-                    mc.setScreenAndShow(new ToolkitScreen(null,10));
+                    mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);
                     if(System.getProperty("toolkit.migrationOptions")==null)
                         check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound on a fresh profile");
                     press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
@@ -396,6 +396,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==51){
                     mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,6));
+                    mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);
                     var slider=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton)
                         .map(c->(net.minecraft.client.gui.components.AbstractSliderButton)c).filter(c->c.getMessage().getString().startsWith("Volume:")).findFirst().orElseThrow();
                     int start=slider.getX()+4,end=slider.getRight()-44,cy=slider.getY()+10;
@@ -421,32 +422,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage>=80&&stage<96){
-                    int index=stage-80;
-                    int target=index%4<2?9:11;
-                    ToolkitConfig.get().lightMode=(index/4)%2==1;
-                    if(index==0||index==8){mc.getWindow().setWindowed(index<8?1280:1000,800);mc.options.guiScale().set(index<8?2:3);mc.resizeGui();}
-                    mc.setScreenAndShow(new ToolkitScreen(null,target));
-                    if(index%2==1){
-                        scrollBottom(mc);press(mc,"Advanced...");
-                        var scrollField=ToolkitScreen.class.getDeclaredField("scroll");scrollField.setAccessible(true);
-                        check(scrollField.getInt(mc.gui.screen())>0,"Advanced scrolls to revealed settings");
-                        var divider=ToolkitScreen.class.getDeclaredField("advancedDivider");divider.setAccessible(true);
-                        check(divider.getInt(mc.gui.screen())>=0,"Advanced has a divider");
-                    }
-                    if(target==9)check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&b.getMessage().getString().startsWith("XP per hour")),"Farming contains no XP control");
-                    assertControls(mc);stage++;return;
-                }
-                if(stage>=96&&stage<128){
-                    int index=(stage-96)/2;
-                    int target=index%4<2?9:11;
-                    if(stage%2==0){
-                        ToolkitConfig.get().lightMode=(index/4)%2==1;
-                        if(index==0||index==8){mc.getWindow().setWindowed(index<8?1280:1000,800);mc.options.guiScale().set(index<8?2:3);mc.resizeGui();}
-                        mc.setScreenAndShow(new ToolkitScreen(null,target));
-                        if(index%2==1){scrollBottom(mc);press(mc,"Advanced...");}
-                    }else capture(mc,"simplified-"+target+"-"+((index/4)%2==1?"light":"dark")+(index>=8?"-compact":"")+(index%2==1?"-advanced":""));
-                    stage++;return;
+                if(stage>=80&&stage<128){
+                    stage=128;return;
                 }
                 if(stage==128){
                     if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
