@@ -371,14 +371,15 @@ public final class ToolkitScreen extends Screen {
         toggleCell("Harvest / hour",64,1,()->cfg.cropHarvestHud,()->cfg.cropHarvestHud=!cfg.cropHarvestHud);
         toggleCell("Bone Leggings",88,0,()->cfg.boneLeggingsHud,()->cfg.boneLeggingsHud=!cfg.boneLeggingsHud);
         toggleCell("Rate test info",88,1,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
+        toggleCell("Potion icons",112,0,()->cfg.showStatusEffects,()->cfg.showStatusEffects=!cfg.showStatusEffects);
 
-        section("Layout & positioning",116);
-        button("Edit HUD positions",132,()->go(5));
-        label("Drag elements directly on-screen to reposition them.",156);
-        label("Click the eye icons on the canvas to toggle visibility.",168);
-        label("Restore defaults",188);
+        section("Layout & positioning",140);
+        button("Edit HUD positions",156,()->go(5));
+        label("Drag elements directly on-screen to reposition them.",180);
+        label("Click the eye icons on the canvas to toggle visibility.",192);
+        label("Restore defaults",212);
         int resetWidth=Math.min(144,layout.bodyWidth());
-        button(()->"Reset HUD positions",182,layout.bodyWidth()-resetWidth,resetWidth,()->{
+        button(()->"Reset HUD positions",206,layout.bodyWidth()-resetWidth,resetWidth,()->{
             var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);
             cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;
             cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;

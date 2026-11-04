@@ -30,6 +30,7 @@ public final class ToolkitConfig {
     public boolean boneLeggingsHud=true,boneLeggingsAlwaysVisible=false;
     public int boneLeggingsHudX=-1,boneLeggingsHudY=12;
     public boolean fullBright=false;
+    public boolean showStatusEffects=true;
     public static ToolkitConfig get(){return INSTANCE;}
     private final Path path=FabricLoader.getInstance().getConfigDir().resolve("skyblocktoolkit.json");
     private ToolkitConfig(){
@@ -79,6 +80,7 @@ public final class ToolkitConfig {
             if(j.has("boneLeggingsHudX"))boneLeggingsHudX=Math.clamp(j.get("boneLeggingsHudX").getAsInt(),-1,10000);
             if(j.has("boneLeggingsHudY"))boneLeggingsHudY=Math.clamp(j.get("boneLeggingsHudY").getAsInt(),0,10000);
             if(j.has("fullBright"))fullBright=j.get("fullBright").getAsBoolean();
+            if(j.has("showStatusEffects"))showStatusEffects=j.get("showStatusEffects").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be read: "+e.getMessage());}
     }
@@ -124,6 +126,7 @@ public final class ToolkitConfig {
             j.addProperty("boneLeggingsHudX",boneLeggingsHudX);
             j.addProperty("boneLeggingsHudY",boneLeggingsHudY);
             j.addProperty("fullBright",fullBright);
+            j.addProperty("showStatusEffects",showStatusEffects);
             Files.writeString(temp,new GsonBuilder().setPrettyPrinting().create().toJson(j)+"\n");
             try{Files.move(temp,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){Files.move(temp,path,StandardCopyOption.REPLACE_EXISTING);}
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be saved: "+e.getMessage());}

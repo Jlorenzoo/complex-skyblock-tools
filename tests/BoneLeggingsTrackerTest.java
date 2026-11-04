@@ -5,8 +5,16 @@ public final class BoneLeggingsTrackerTest {
         testPreviewLabel();
         testSeasonalRegistryLookup();
         testSearchDiscovery();
+        testPotionIconsSearch();
         testNullSafety();
         System.out.println("PASS: BoneLeggingsTracker preview label, null safety, seasonal registry lookup, and search discovery");
+    }
+
+    private static void testPotionIconsSearch() {
+        var results = ToolkitSearch.find("potion icons");
+        if (results.isEmpty() || !results.getFirst().setting().equals("Potion icons")) {
+            throw new AssertionError("Search for 'potion icons' failed");
+        }
     }
 
     private static void testPreviewLabel() {

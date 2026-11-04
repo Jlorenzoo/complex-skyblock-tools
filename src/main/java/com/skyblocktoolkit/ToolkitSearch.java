@@ -63,6 +63,7 @@ public final class ToolkitSearch {
         new Entry(4,"HUD & Overlays","Active HUD elements","Harvest / hour","crops harvested crop/h harvest per hour hud farm farming rate overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Bone Leggings","bone leggings pants speed 6 vi hud overlay active elements"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Rate test info","hourly average base rate test tracker statistics hud overlay"),
+        new Entry(4,"HUD & Overlays","Active HUD elements","Potion icons","potion icons status effect hud vanilla top right boxes effects buff debuff"),
         new Entry(4,"HUD & Overlays","Layout & positioning","Edit HUD positions","hud layout edit move positions drag canvas screen"),
         new Entry(4,"HUD & Overlays","Layout & positioning","Reset HUD positions","layout reset defaults restore hud positions defaults"),
         new Entry(6,"Utilities","Chat selection & copy","Chat selection","enabled drag copy clipboard ctrl text select chat copy"),

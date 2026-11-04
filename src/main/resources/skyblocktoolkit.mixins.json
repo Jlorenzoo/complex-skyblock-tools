@@ -12,7 +12,8 @@
     "BossHealthOverlayAccessor",
     "LevelRendererResizeMixin",
     "SectionOcclusionGraphAccessor",
-    "LightTextureMixin"
+    "LightTextureMixin",
+    "GuiEffectsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
