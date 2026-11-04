@@ -73,7 +73,11 @@ HUD elements remain clean, neutral, and easy on the eyes during active gameplay,
 - **Segment Dividers**: Quarter notches at 25%, 50%, and 75% (`0x80000000`).
 - **Label Typography**: `Money +39%: §f0m 42s` / `XP +150%: §f2m 10s`, with a type-colored prefix and white duration.
 
-### 3.2. Rate Test & Stat Overlays
+### 3.2. Booster Notifications
+
+Activation, coconut and ending banners use a compact 30px-high toast near the top edge, away from the crosshair. Use regular-size sentence-case text, a muted detail line, and a tiny sage/purple status mark. The neutral background is 40% opaque with soft corners; no colored frame, stripe, enlarged text or uppercase headline. Keep the same independent gameplay colors in either menu theme. Fit long source names to the viewport with an ellipsis and fade text together with the surface. Existing banner/flash preferences and timing remain independent.
+
+### 3.3. Rate Test & Stat Overlays
 - **Pill Container**:
   - Background: `0x90000000` (neutral dark translucent pill).
   - Border: `1px` outline `0x30FFFFFF` (subtle white border).

@@ -16,19 +16,19 @@ public final class VisualAlertTest {
         VisualAlertOverlay.triggerCoconut(75, 50);
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after coconut trigger");
         check(VisualAlertOverlay.getTitle().contains("+75%"), "title has percentage: " + VisualAlertOverlay.getTitle());
-        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER"), "title mentions money booster");
-        check(VisualAlertOverlay.getSubtitle().contains("RELEASE RIGHT-CLICK"), "subtitle has release instruction: " + VisualAlertOverlay.getSubtitle());
+        check(VisualAlertOverlay.getTitle().contains("Money booster"), "title mentions money booster");
+        check(VisualAlertOverlay.getSubtitle().contains("Release right-click"), "subtitle has release instruction: " + VisualAlertOverlay.getSubtitle());
         check(VisualAlertOverlay.getSubtitle().contains("50%"), "subtitle has threshold");
-        check(VisualAlertOverlay.getAccentColor() == 0x2ECC71, "emerald green accent color");
+        check(VisualAlertOverlay.getAccentColor() == (ToolkitTheme.MONEY_TIMER & 0xFFFFFF), "sage green accent color");
         check(!VisualAlertOverlay.isActive(System.currentTimeMillis() + VisualAlertOverlay.DURATION_MS + 100), "inactive after duration");
 
         // 2. Expiring trigger
         VisualAlertOverlay.reset();
         VisualAlertOverlay.triggerExpiring(BoosterTimers.Type.MONEY, 5);
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after expiring trigger");
-        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER ENDING"), "title mentions ending money booster");
+        check(VisualAlertOverlay.getTitle().contains("Money booster ending"), "title mentions ending money booster");
         check(VisualAlertOverlay.getSubtitle().contains("5s remaining"), "subtitle has countdown: " + VisualAlertOverlay.getSubtitle());
-        check(VisualAlertOverlay.getAccentColor() == 0xE5254A, "crimson red accent color");
+        check(VisualAlertOverlay.getAccentColor() == (ToolkitTheme.MONEY_TIMER & 0xFFFFFF), "ending keeps money identity");
 
         // 3. Tick and single-trigger logic for expiring timers
         VisualAlertOverlay.reset();
@@ -48,7 +48,7 @@ public final class VisualAlertTest {
         VisualAlertOverlay.tick(156000, true);
         check(VisualAlertOverlay.isAlertedMoney(), "alerted flag set when entering window");
         check(VisualAlertOverlay.isActive(156000), "overlay active at 4s remaining");
-        check(VisualAlertOverlay.getTitle().contains("MONEY BOOSTER ENDING"), "triggered money ending alert");
+        check(VisualAlertOverlay.getTitle().contains("Money booster ending"), "triggered money ending alert");
 
         // Tick again at t=157000 (3s remaining): should NOT re-trigger / restart overlay
         VisualAlertOverlay.tick(157000, true);
@@ -79,20 +79,20 @@ public final class VisualAlertTest {
         VisualAlertOverlay.tick(356000, true, true);
         check(VisualAlertOverlay.isAlertedXp(), "XP expiring alerted when xp alert enabled");
         check(VisualAlertOverlay.isActive(356000), "overlay active for XP ending");
-        check(VisualAlertOverlay.getTitle().contains("XP BOOSTER ENDING"), "title has XP BOOSTER ENDING");
+        check(VisualAlertOverlay.getTitle().contains("XP booster ending"), "title has XP booster ending");
 
         // 5. General Money and XP booster activations
         VisualAlertOverlay.reset();
         VisualAlertOverlay.triggerMoneyBooster(50, "Money booster item", 300);
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after money booster trigger");
-        check(VisualAlertOverlay.getTitle().contains("+50% MONEY BOOSTER"), "title has money percentage");
+        check(VisualAlertOverlay.getTitle().contains("Money booster +50%"), "title has money percentage");
         check(VisualAlertOverlay.getSubtitle().contains("Money booster item"), "subtitle mentions item source");
-        check(VisualAlertOverlay.getAccentColor() == 0x2ECC71, "emerald green accent");
+        check(VisualAlertOverlay.getAccentColor() == (ToolkitTheme.MONEY_TIMER & 0xFFFFFF), "sage green accent");
 
         VisualAlertOverlay.reset();
         VisualAlertOverlay.triggerXpBooster(150, "Experience booster item", 600);
         check(VisualAlertOverlay.isActive(System.currentTimeMillis()), "active after xp booster trigger");
-        check(VisualAlertOverlay.getTitle().contains("+150% XP BOOSTER"), "title has xp percentage");
+        check(VisualAlertOverlay.getTitle().contains("XP booster +150%"), "title has xp percentage");
         check(VisualAlertOverlay.getSubtitle().contains("Experience booster item"), "subtitle mentions xp item source");
         check(VisualAlertOverlay.getAccentColor() == 0x9D9AEB, "amethyst purple accent color");
 

@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
- * Prominent on-screen title banner and subtle border flash notifications for
+ * Compact translucent notifications and subtle border flash notifications for
  * qualifying coconut hits, general boosters, and expiring booster timers.
  */
 public final class VisualAlertOverlay {
@@ -29,27 +29,27 @@ public final class VisualAlertOverlay {
     public static void triggerCoconut(int percentage, int threshold) {
         currentKind = AlertKind.COCONUT;
         isPreview = false;
-        title = "§a§l+" + percentage + "% MONEY BOOSTER!";
-        subtitle = "§f§lRELEASE RIGHT-CLICK §7· Threshold met (≥" + threshold + "%)";
-        accentColor = 0x2ECC71; // Emerald green
+        title = "Money booster +" + percentage + "%";
+        subtitle = "Release right-click · ≥" + threshold + "% reached";
+        accentColor = ToolkitTheme.MONEY_TIMER & 0xFFFFFF;
         startTime = System.currentTimeMillis();
     }
 
     public static void triggerMoneyBooster(int percentage, String sourceName, long seconds) {
         currentKind = AlertKind.MONEY;
         isPreview = false;
-        title = "§a§l+" + percentage + "% MONEY BOOSTER!";
-        subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
-        accentColor = 0x2ECC71; // Emerald green
+        title = "Money booster +" + percentage + "%";
+        subtitle = sourceName + " · " + (seconds > 0 ? (seconds + "s duration") : "Active");
+        accentColor = ToolkitTheme.MONEY_TIMER & 0xFFFFFF;
         startTime = System.currentTimeMillis();
     }
 
     public static void triggerXpBooster(int percentage, String sourceName, long seconds) {
         currentKind = AlertKind.XP;
         isPreview = false;
-        title = "§b§l+" + percentage + "% XP BOOSTER!";
-        subtitle = "§f" + sourceName + " §7· " + (seconds > 0 ? (seconds + "s duration") : "Active");
-        accentColor = 0x9D9AEB; // Amethyst purple
+        title = "XP booster +" + percentage + "%";
+        subtitle = sourceName + " · " + (seconds > 0 ? (seconds + "s duration") : "Active");
+        accentColor = ToolkitTheme.XP_TIMER & 0xFFFFFF;
         startTime = System.currentTimeMillis();
     }
 
@@ -59,10 +59,10 @@ public final class VisualAlertOverlay {
         currentKind = AlertKind.EXPIRING;
         currentExpiringType = type;
         isPreview = false;
-        String name = type == BoosterTimers.Type.MONEY ? "MONEY" : "XP";
-        title = "§c§l" + name + " BOOSTER ENDING!";
-        subtitle = "§e" + secondsRemaining + "s remaining §7· Prepare another booster!";
-        accentColor = 0xE5254A; // Brand Crimson Red
+        String name = type == BoosterTimers.Type.MONEY ? "Money" : "XP";
+        title = name + " booster ending";
+        subtitle = secondsRemaining + "s remaining";
+        accentColor = (type == BoosterTimers.Type.MONEY ? ToolkitTheme.MONEY_TIMER : ToolkitTheme.XP_TIMER) & 0xFFFFFF;
         startTime = System.currentTimeMillis();
     }
 
@@ -204,42 +204,40 @@ public final class VisualAlertOverlay {
             drawVignette(g, width, height, color, alpha);
         }
 
-        // Center-top prominent banner card
-        if (showBanner) {
+        // A small top-center toast leaves the crosshair and the world unobstructed.
+        if (showBanner && alpha > 0.02f) {
             Minecraft mc = Minecraft.getInstance();
             if (mc == null || mc.font == null) return;
 
-            float titleScale = 1.3f;
-            float titleW = mc.font.width(title) * titleScale;
-            float subW = mc.font.width(subtitle);
-            int cardW = (int) Math.max(titleW, subW) + 24;
-            int cardH = 38;
+            int maxTextWidth = Math.max(0, Math.min(280, width - 48));
+            String heading = fit(mc, title, maxTextWidth);
+            String detail = fit(mc, subtitle, maxTextWidth);
+            int cardW = Math.max(mc.font.width(heading), mc.font.width(detail)) + 28;
+            int cardH = 30;
             int cardX = (width - cardW) / 2;
-            int cardY = Math.max(14, height / 4 - 18);
+            int cardY = Math.min(22, Math.max(4, height / 12));
 
-            int bgAlpha = (int) (alpha * 200);
-            int bgColor = (bgAlpha << 24) | 0x111317;
-            ToolkitTheme.rounded(g, cardX, cardY, cardW, cardH, 4, bgColor);
-
-            int borderAlpha = (int) (alpha * 170);
-            int borderCol = (borderAlpha << 24) | color;
-            g.outline(cardX, cardY, cardW, cardH, borderCol);
-            g.fill(cardX + 4, cardY + 1, cardX + cardW - 4, cardY + 2, borderCol);
-
-            // Title text
-            float tx = cardX + (cardW - titleW) / 2.0f;
-            float ty = cardY + 6;
-            g.pose().pushMatrix();
-            g.pose().translate(tx, ty);
-            g.pose().scale(titleScale, titleScale);
-            g.text(mc.font, title, 0, 0, 0xFFFFFFFF, true);
-            g.pose().popMatrix();
-
-            // Subtitle text
-            float sx = cardX + (cardW - subW) / 2.0f;
-            float sy = cardY + 23;
-            g.text(mc.font, subtitle, (int) sx, (int) sy, 0xFFFFFFFF, true);
+            ToolkitTheme.rounded(g, cardX, cardY, cardW, cardH, 5,
+                    faded(ToolkitTheme.ALERT_SURFACE, alpha));
+            // Color belongs to the tiny status mark, rather than a frame around the card.
+            ToolkitTheme.rounded(g, cardX + 8, cardY + 8, 3, 3, 1,
+                    faded(0xFF000000 | color, alpha));
+            g.text(mc.font, heading, cardX + 16, cardY + 5,
+                    faded(ToolkitTheme.ALERT_TEXT, alpha), true);
+            g.text(mc.font, detail, cardX + 16, cardY + 17,
+                    faded(ToolkitTheme.ALERT_MUTED, alpha), true);
         }
+    }
+
+    private static String fit(Minecraft mc, String text, int width) {
+        if (mc.font.width(text) <= width) return text;
+        String ellipsis = "…";
+        return mc.font.substrByWidth(net.minecraft.network.chat.Component.literal(text),
+                Math.max(0, width - mc.font.width(ellipsis))).getString() + ellipsis;
+    }
+
+    private static int faded(int color, float alpha) {
+        return ((int) ((color >>> 24) * alpha) << 24) | (color & 0xFFFFFF);
     }
 
     private static void drawVignette(GuiGraphicsExtractor g, int width, int height, int color, float alpha) {

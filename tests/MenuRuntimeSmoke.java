@@ -469,7 +469,41 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==128){
                     if(Boolean.getBoolean("toolkit.testStartupConnect"))check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup never reconnects during later menu use");
                     check(Files.exists(output.resolve("screenshots/coconut-settings-light-compact.png")),"Coconut settings compact screenshot written");
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
+                    stage=129;return;
+                }
+                if(stage>=129 && stage<=145){
+                    if(stage>129)capture(mc,"booster-toast-"+(stage-130));
+                    if(stage==145){VisualAlertOverlay.reset();stage=146;return;}
+                    ToolkitConfig.get().moneyVisualAlert=true;
+                    int sample=stage-129;
+                    boolean compact=sample>=8;
+                    ToolkitConfig.get().lightMode=(sample/4)%2==1;
+                    mc.getWindow().setWindowed(compact?1000:1280,800);
+                    mc.options.guiScale().set(compact?3:2);mc.resizeGui();
+                    mc.setScreenAndShow(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("Booster notification preview")){
+                        @Override public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor g,int mx,int my,float tick){
+                            var palette=ToolkitTheme.palette();
+                            // Contrasting backdrops expose opacity, clipping and readable text.
+                            g.fill(0,0,width,height,palette.panel());
+                            for(int x=0;x<width;x+=24)g.fill(x,0,x+12,height,palette.surface());
+                            switch(sample%4){
+                                case 0 -> VisualAlertOverlay.previewCoconutAlert();
+                                case 1 -> VisualAlertOverlay.triggerMoneyBooster(75,"Money booster item with a deliberately long source name to check compact clipping",300);
+                                case 2 -> VisualAlertOverlay.previewXpAlert();
+                                case 3 -> VisualAlertOverlay.previewExpiringAlert();
+                            }
+                            try{
+                                var start=VisualAlertOverlay.class.getDeclaredField("startTime");start.setAccessible(true);
+                                start.setLong(null,System.currentTimeMillis()-300);
+                            }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+                            VisualAlertOverlay.render(g,width,height);
+                        }
+                    });
+                    stage++;return;
+                }
+                if(stage==146){
+                    for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
