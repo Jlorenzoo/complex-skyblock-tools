@@ -15,7 +15,7 @@ import java.util.Locale;
 public final class BoneLeggingsTracker {
     public static final int STYLE_EFFECT_ICONS = 0;
     public static final int STYLE_ICON_STATUS = 1;
-    public static final int STYLE_ICON_SIMPLE = 2;
+    public static final int STYLE_BADGE_ONLY = 2;
     public static final int STYLE_STATUS_ONLY = 3;
 
     private static boolean lastSpeed6 = false;
@@ -23,10 +23,10 @@ public final class BoneLeggingsTracker {
 
     public static String styleName(int style) {
         return switch (style) {
-            case STYLE_ICON_STATUS -> "Icon & Effects";
-            case STYLE_ICON_SIMPLE -> "Icon & On/Off";
-            case STYLE_STATUS_ONLY -> "Effects only";
-            default -> "Effect icons";
+            case STYLE_ICON_STATUS -> "Icon & Mode";
+            case STYLE_BADGE_ONLY -> "Effect badge only";
+            case STYLE_STATUS_ONLY -> "Mode only";
+            default -> "Leggings & effect badge";
         };
     }
 
@@ -34,21 +34,13 @@ public final class BoneLeggingsTracker {
         return style != STYLE_STATUS_ONLY;
     }
 
-    public static String effectLabel(boolean speed, boolean regen) {
-        if (speed && regen) return "§bSpeed §dRegen";
-        if (speed) return "§bSpeed";
-        if (regen) return "§dRegen";
-        return "§7Idle";
+    public static String effectLabel(boolean speed) {
+        return speed ? "§bSpeed" : "§dRegen";
     }
 
-    public static String formatLabel(int style, boolean active) {
-        return labelForEffects(style, active, false);
-    }
-
-    public static String labelForEffects(int style, boolean speed, boolean regen) {
+    public static String formatLabel(int style, boolean speed) {
         return switch (style) {
-            case STYLE_ICON_STATUS, STYLE_STATUS_ONLY -> effectLabel(speed, regen);
-            case STYLE_ICON_SIMPLE -> speed || regen ? "§aOn" : "§7Off";
+            case STYLE_ICON_STATUS, STYLE_STATUS_ONLY -> effectLabel(speed);
             default -> "";
         };
     }
@@ -99,15 +91,6 @@ public final class BoneLeggingsTracker {
         return effect != null && effect.getAmplifier() >= 5;
     }
 
-    public static boolean hasRegen(Minecraft mc) {
-        if (mc == null || mc.player == null) return false;
-        return mc.player.hasEffect(MobEffects.REGENERATION);
-    }
-
-    public static boolean isActive(Minecraft mc) {
-        return hasSpeed6(mc) || hasRegen(mc);
-    }
-
     public static boolean shouldShow(Minecraft mc) {
         if (mc == null || mc.player == null) return false;
         var cfg = ToolkitConfig.get();
@@ -117,7 +100,7 @@ public final class BoneLeggingsTracker {
 
     public static String currentLabel(Minecraft mc) {
         var cfg = ToolkitConfig.get();
-        return labelForEffects(cfg.boneLeggingsHudStyle, hasSpeed6(mc), hasRegen(mc));
+        return formatLabel(cfg.boneLeggingsHudStyle, hasSpeed6(mc));
     }
 
     public static ItemStack getItemStack(Minecraft mc) {
@@ -160,16 +143,17 @@ public final class BoneLeggingsTracker {
     public static int getWidth(Minecraft mc) {
         var cfg = ToolkitConfig.get();
         int padding = cfg.boneLeggingsBackground ? 6 : 0;
-        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 52 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 30 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY) return 12 + padding;
         // Reserve the widest state so right alignment and HUD editor bounds never jump.
-        String label = cfg.boneLeggingsHudStyle == STYLE_ICON_SIMPLE ? "Off" : "Speed Regen";
+        String label = "Speed";
         int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
         return textW + (hasIcon(cfg.boneLeggingsHudStyle) ? 19 : 0) + padding;
     }
 
     public static int getHeight() {
         var cfg = ToolkitConfig.get();
-        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 20
+        int height = cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 12
                 : hasIcon(cfg.boneLeggingsHudStyle) ? 16 : 9;
         return height + (cfg.boneLeggingsBackground ? 4 : 0);
     }
@@ -202,53 +186,57 @@ public final class BoneLeggingsTracker {
         var cfg = ToolkitConfig.get();
         int style = cfg.boneLeggingsHudStyle;
         boolean speed = isPreview || hasSpeed6(mc);
-        boolean regen = !isPreview && hasRegen(mc);
         if (style == STYLE_EFFECT_ICONS) {
-            renderEffectIcons(extractor, getItemStack(mc), x, y, speed, regen, cfg.boneLeggingsBackground);
+            renderEffectIcon(extractor, getItemStack(mc), x, y, speed, cfg.boneLeggingsBackground);
             return;
         }
-        String label = labelForEffects(style, speed, regen);
+        if (style == STYLE_BADGE_ONLY) {
+            int padding = cfg.boneLeggingsBackground ? 3 : 0;
+            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 18, y + 16, 0x40000000);
+            renderModeBadge(extractor, x + padding + 1, y + (padding == 0 ? 1 : 3), speed);
+            return;
+        }
+        String label = formatLabel(style, speed);
         ItemStack icon = hasIcon(style) ? getItemStack(mc) : null;
         renderItemStatus(extractor, mc != null ? mc.font : null, icon, label, x, y, hasIcon(style), cfg.boneLeggingsBackground);
     }
 
-    /** Two sprite variants: speed trails and a regeneration heart. No title or status symbols. */
-    public static void renderEffectIcons(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
-                                         boolean speed, boolean regen, boolean background) {
+    /** One real leggings sprite with either the speed boot or regeneration heart. */
+    public static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
+                                        boolean speed, boolean background) {
         if (g == null || stack == null || stack.isEmpty()) return;
-        if (background) g.fill(x, y, x + 58, y + 24, 0x40000000);
+        if (background) g.fill(x, y, x + 36, y + 20, 0x40000000);
         int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
-        renderSpeedIcon(g, stack, dx, dy, speed);
-        renderRegenIcon(g, stack, dx + 30, dy, regen);
+        g.item(stack, dx, dy);
+        renderModeBadge(g, dx + 18, dy + 3, speed);
     }
 
-    private static void renderSpeedIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, boolean active) {
-        // Keep the real item unobscured. Three fine, separated trails sit beside it, never across it.
-        g.item(stack, x + 8, y);
-        int color = active ? 0xFF8CD5E7 : 0xFF858991;
-        speedTrail(g, x + 1, y + 4, 5, color);
-        speedTrail(g, x, y + 8, 6, color);
-        speedTrail(g, x + 2, y + 12, 4, color);
-        g.fill(x + 9, y + 18, x + 22, y + 19, active ? color : 0x667C818A);
-    }
+    private static final String[] SPEED_BOOT = {
+            "....####..", "...#hh#...", "...#hh#...", "..#hh#....", "..#hh##...",
+            "..#hhh###.", ".##hhhhh##", ".#########", "..sssssss.", ".........."
+    };
+    private static final String[] REGEN_HEART = {
+            "..........", "..........", "..##.##...", ".#######..", ".#######..",
+            "..#####...", "...###....", "....#.....", "..........", ".........."
+    };
 
-    private static void speedTrail(GuiGraphicsExtractor g, int x, int y, int width, int color) {
-        g.fill(x, y + 1, x + width, y + 2, 0xC0181A20);
-        g.fill(x, y, x + width, y + 1, color);
-    }
-
-    private static void renderRegenIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, boolean active) {
-        g.item(stack, x + 2, y);
-        int color = active ? 0xFFF29AAF : 0xFF858991;
-        String[] pixels = {".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."};
-        int bx = x + 13, by = y + 10;
+    private static void renderModeBadge(GuiGraphicsExtractor g, int x, int y, boolean speed) {
+        String[] pixels = speed ? SPEED_BOOT : REGEN_HEART;
+        // Each mode has one readable silhouette. Never cover or recolor the server's item sprite.
         for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
-            if (pixels[row].charAt(col) == '#') g.fill(bx + col - 1, by + row - 1, bx + col + 2, by + row + 2, 0xE0181A20);
+            if (pixels[row].charAt(col) != '.')
+                g.fill(x + col - 1, y + row - 1, x + col + 2, y + row + 2, 0xE0181A20);
         }
         for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
-            if (pixels[row].charAt(col) == '#') g.fill(bx + col, by + row, bx + col + 1, by + row + 1, color);
+            char pixel = pixels[row].charAt(col);
+            if (pixel == '.') continue;
+            int color = !speed ? 0xFFF29AAF : switch (pixel) {
+                case 'h' -> 0xFFB9E7F0;
+                case 's' -> 0xFF4E8FA1;
+                default -> 0xFF72BDCF;
+            };
+            g.fill(x + col, y + row, x + col + 1, y + row + 1, color);
         }
-        g.fill(x + 3, y + 18, x + 17, y + 19, active ? color : 0x667C818A);
     }
 
     /**

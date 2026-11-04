@@ -363,7 +363,7 @@ public final class ToolkitScreen extends Screen {
         top+=24;
         button("Reposition HUD overlay",top,()->go(5));
         top+=24;
-        label("Speed trails / regen heart. Gray means idle.",top);
+        label("Speed: running boot. Regen: heart.",top);
         top+=14;
         label("Shows while worn, held, or Speed VI is active.",top);
         top+=14;

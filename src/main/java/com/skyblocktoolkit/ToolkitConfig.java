@@ -29,7 +29,7 @@ public final class ToolkitConfig {
     public boolean boneLeggingsSpeedAlert=true;
     public boolean boneLeggingsHud=true,boneLeggingsAlwaysVisible=false;
     public int boneLeggingsHudX=-1,boneLeggingsHudY=12;
-    public int boneLeggingsHudStyle=0; // 0=Effect icons, 1=Icon & Effects, 2=Icon & On/Off, 3=Effects only
+    public int boneLeggingsHudStyle=0; // 0=Leggings & effect badge, 1=Icon & Mode, 2=Effect badge only, 3=Mode only
     public boolean boneLeggingsBackground=false;
     public boolean fullBright=false;
     public boolean showStatusEffects=true;

@@ -465,11 +465,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                                 for(int theme=0;theme<2;theme++) {
                                     int y=20+theme*90;
                                     g.fill(0,y-5,width,y+80,theme==0?0xFF1B1D21:0xFFF9F9FC);
-                                    for(int state=0;state<4;state++) {
-                                        int x=20+state*70;
-                                        g.text(font,new String[]{"Idle","Speed","Regen","Both"}[state],x,y,theme==0?0xFFE4E7EC:0xFF232632,false);
-                                        BoneLeggingsTracker.renderEffectIcons(g,BoneLeggingsTracker.getItemStack(mc),x,y+18,(state&1)!=0,(state&2)!=0,false);
-                                        BoneLeggingsTracker.renderEffectIcons(g,BoneLeggingsTracker.getItemStack(mc),x,y+48,(state&1)!=0,(state&2)!=0,true);
+                                    for(int state=0;state<2;state++) {
+                                        int x=20+state*100;
+                                        g.text(font,new String[]{"Speed","Regen"}[state],x,y,theme==0?0xFFE4E7EC:0xFF232632,false);
+                                        BoneLeggingsTracker.renderEffectIcon(g,BoneLeggingsTracker.getItemStack(mc),x,y+18,state==0,false);
+                                        BoneLeggingsTracker.renderEffectIcon(g,BoneLeggingsTracker.getItemStack(mc),x,y+48,state==0,true);
                                     }
                                 }
                             }

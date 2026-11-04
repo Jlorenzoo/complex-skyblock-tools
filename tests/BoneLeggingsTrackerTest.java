@@ -29,14 +29,16 @@ public final class BoneLeggingsTrackerTest {
     }
 
     private static void testStylesAndLabels() {
-        for (boolean speed : new boolean[]{false, true}) for (boolean regen : new boolean[]{false, true}) {
-            if (!BoneLeggingsTracker.labelForEffects(0, speed, regen).isEmpty())
-                throw new AssertionError("Icon mode must stay text-free for every effect state");
-            String effects = BoneLeggingsTracker.labelForEffects(1, speed, regen);
-            if (effects.contains("Speed") != speed || effects.contains("Regen") != regen)
-                throw new AssertionError("Effects must reflect speed and regen independently: " + effects);
-            if (BoneLeggingsTracker.labelForEffects(2, speed, regen).contains("On") != (speed || regen))
-                throw new AssertionError("On/Off must include regeneration");
+        for (boolean speed : new boolean[]{false, true}) {
+            for (int style : new int[]{0, 2}) {
+                if (!BoneLeggingsTracker.formatLabel(style, speed).isEmpty())
+                    throw new AssertionError("Badge styles must stay text-free");
+            }
+            for (int style : new int[]{1, 3}) {
+                String expected = speed ? "§bSpeed" : "§dRegen";
+                if (!expected.equals(BoneLeggingsTracker.formatLabel(style, speed)))
+                    throw new AssertionError("Only speed or regeneration may be shown");
+            }
         }
         if (!BoneLeggingsTracker.hasIcon(0) || !BoneLeggingsTracker.hasIcon(1) || !BoneLeggingsTracker.hasIcon(2) || BoneLeggingsTracker.hasIcon(3))
             throw new AssertionError("hasIcon mismatch for styles");
