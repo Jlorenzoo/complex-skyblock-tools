@@ -4,6 +4,8 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from local_paths import toolkit_jar
+from test_display import require_test_display, run_graphical
+require_test_display()
 BASE=Path(__file__).resolve().parents[1]
 PRISM = Path(os.environ.get('PRISM_DATA', Path.home() / '.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher'))
 JAVA=PRISM/'java/java-runtime-epsilon/bin'
@@ -38,6 +40,6 @@ with tempfile.TemporaryDirectory(prefix='toolkit-menu-smoke-') as tmp:
         for p in classes.rglob('*.class'):z.write(p,p.relative_to(classes))
     (root/'options.txt').write_text('onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n')
     with (output/'runtime.log').open('w') as log:
-        result=subprocess.run([str(JAVA/'java'),'-Xmx1G','-Dtoolkit.menuTickInterval=5','-Dtoolkit.preview='+str(output),'-Dfabric.gameVersion=26.2','-cp',classpath,'net.fabricmc.loader.impl.launch.knot.KnotClient','--gameDir',str(root),'--assetsDir',str(PRISM/'assets'),'--assetIndex','32','--version','26.2','--accessToken','0','--username','ToolkitPreview','--width','1280','--height','800'],cwd=root,env={**os.environ,'ALSOFT_DRIVERS':'null'},stdout=log,stderr=subprocess.STDOUT,timeout=300)
+        result=run_graphical([str(JAVA/'java'),'-Xmx1G','-Dtoolkit.menuTickInterval=5','-Dtoolkit.preview='+str(output),'-Dfabric.gameVersion=26.2','-cp',classpath,'net.fabricmc.loader.impl.launch.knot.KnotClient','--gameDir',str(root),'--assetsDir',str(PRISM/'assets'),'--assetIndex','32','--version','26.2','--accessToken','0','--username','ToolkitPreview','--width','1280','--height','800'],cwd=root,stdout=log,stderr=subprocess.STDOUT,timeout=300)
     if result.returncode: print((output/'runtime.log').read_text()[-7000:]);raise SystemExit(result.returncode)
     print((output/'PASS.txt').read_text())

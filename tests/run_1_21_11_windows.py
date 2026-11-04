@@ -17,6 +17,8 @@ import argparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from local_paths import settings, toolkit_jar
+from test_display import require_test_display, run_graphical
+require_test_display()
 from build_version import build_version
 
 VERSION = "1.21.11"
@@ -117,9 +119,9 @@ def main():
         argfile = game / "launch.args"
         argfile.write_text("\n".join('"' + arg.replace('\\', '/') + '"' for arg in args), encoding="utf-8")
         with (output / "runtime.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run([str(java), "@" + str(argfile)], cwd=game,
-                env={**os.environ, "ALSOFT_DRIVERS": "null"}, stdout=log, stderr=subprocess.STDOUT,
-                timeout=180, creationflags=subprocess.CREATE_NO_WINDOW)
+            result = run_graphical([str(java), "@" + str(argfile)], cwd=game,
+                stdout=log, stderr=subprocess.STDOUT,
+                timeout=180)
         if result.returncode:
             print((output / "runtime.log").read_text(encoding="utf-8",errors="replace")[-12000:])
             raise SystemExit(result.returncode)

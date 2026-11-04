@@ -10,6 +10,8 @@ parser.add_argument('--voicechat', action='store_true', help='Also load and rend
 parser.add_argument('--pack', action='store_true', help='Load every pinned 26.2 pack dependency')
 options = parser.parse_args()
 sys.path.insert(0, str(root / 'scripts'))
+from test_display import require_test_display, run_graphical
+require_test_display()
 toolkit = Path(build.OUTPUT_JAR)
 install = Path(build.MC_JAR).parents[2]
 output = root / 'artifacts/menu-preview'
@@ -66,8 +68,8 @@ with tempfile.TemporaryDirectory(prefix='toolkit-timer-menu-') as tmp:
     argfile = game / 'launch.args'
     argfile.write_text('\n'.join('"' + a.replace('\\', '/') + '"' for a in args), encoding='utf-8')
     with (output / 'runtime.log').open('w', encoding='utf-8') as log:
-        result = subprocess.run([java, '@' + str(argfile)], cwd=game, env={**os.environ, 'ALSOFT_DRIVERS': 'null'},
-                                stdout=log, stderr=subprocess.STDOUT, timeout=180, creationflags=subprocess.CREATE_NO_WINDOW)
+        result = run_graphical([java, '@' + str(argfile)], cwd=game,
+                                stdout=log, stderr=subprocess.STDOUT, timeout=180)
     if result.returncode:
         print((output / 'runtime.log').read_text(encoding='utf-8')[-9000:])
         raise SystemExit(result.returncode)
