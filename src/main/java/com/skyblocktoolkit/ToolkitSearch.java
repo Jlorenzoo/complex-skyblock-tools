@@ -52,7 +52,7 @@ public final class ToolkitSearch {
         new Entry(3,"Seasonals","Void Rod","+ 1 block","reel depth target increase void rod seasonal fishing"),
         new Entry(3,"Seasonals","Void Rod","Preview ready","reel ready sound preview test void rod seasonal fishing"),
         new Entry(3,"Seasonals","Void Rod","Preview snap","reel line snap sound preview test void rod seasonal fishing"),
-        new Entry(3,"Seasonals","Bone Leggings","Burning Rush Rune","bone leggings burning rush rune seasonal armor speed boost speed"),
+        new Entry(3,"Seasonals","Bone Pants","Burning Rush Rune","bone pants leggings burning rush rune seasonal armor speed boost speed"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Money timer","money booster visibility hud timer overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","XP timer","experience booster visibility hud timer xp overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Crop earnings","money average visibility farm farming crop earnings hud overlay"),

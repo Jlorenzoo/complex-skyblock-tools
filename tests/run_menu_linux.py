@@ -81,6 +81,7 @@ def main():
             shutil.copy2(mod, mods / ("menu-smoke.jar" if mod == smoke else mod.name))
         (game / "options.txt").write_text("onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n")
         args = ["-Xmx1G", "-Dtoolkit.preview=" + str(output), "-Dfabric.log.disableAnsi=true",
+                "-Dtoolkit.menuTickInterval=5",
                 "-cp", os.pathsep.join(map(str, [*libraries, client])), profile["mainClass"],
                 "--gameDir", str(game), "--assetsDir", str(install / "assets"),
                 "--assetIndex", v_info["assetIndex"]["id"], "--version", VERSION,
@@ -92,7 +93,7 @@ def main():
         with (output / "runtime.log").open("w", encoding="utf-8") as log:
             print("Launching isolated client to render screenshots...")
             result = subprocess.run([str(java), "@" + str(argfile)], cwd=game,
-                env={**os.environ, "ALSOFT_DRIVERS": "null"}, stdout=log, stderr=subprocess.STDOUT, timeout=120)
+                env={**os.environ, "ALSOFT_DRIVERS": "null"}, stdout=log, stderr=subprocess.STDOUT, timeout=180)
         if result.returncode:
             print((output / "runtime.log").read_text(encoding="utf-8", errors="replace")[-4000:])
             raise SystemExit(result.returncode)

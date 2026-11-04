@@ -423,6 +423,21 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage>=80&&stage<128){
+                    if(stage==80){
+                        mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
+                        ToolkitConfig.get().lightMode=false;
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));
+                        stage++;return;
+                    }
+                    if(stage==81){
+                        capture(mc,"seasonals-overview-dark");
+                        press(mc,"Bone Pants");
+                        stage++;return;
+                    }
+                    if(stage==82){
+                        capture(mc,"seasonals-bone-pants-expanded");
+                        stage=128;return;
+                    }
                     stage=128;return;
                 }
                 if(stage==128){

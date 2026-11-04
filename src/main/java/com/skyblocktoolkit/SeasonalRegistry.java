@@ -15,16 +15,19 @@ public final class SeasonalRegistry {
             (screen, top) -> screen.buildVoidRodSettings(top)
         ),
         new SeasonalItem(
-            "bone_leggings",
-            "Bone Leggings",
+            "bone_pants",
+            "Bone Pants",
             "Seasonal Armor Piece · Burning Rush Rune",
-            () -> new ItemStack(Items.BONE),
+            () -> new ItemStack(Items.CHAINMAIL_LEGGINGS),
             (screen, top) -> screen.buildBoneLeggingsSettings(top)
         )
     );
 
     public static SeasonalItem find(String id) {
-        for (var item : ITEMS) if (item.id().equals(id)) return item;
+        for (var item : ITEMS) {
+            if (item.id().equals(id) || (id.equals("bone_leggings") && item.id().equals("bone_pants")))
+                return item;
+        }
         return null;
     }
 

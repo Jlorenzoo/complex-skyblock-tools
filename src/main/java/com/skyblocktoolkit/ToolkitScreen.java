@@ -23,7 +23,7 @@ public final class ToolkitScreen extends Screen {
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
     private boolean fishEarnings;
     private final Set<Integer> expandedPages=new HashSet<>();
-    private final Set<String> expandedSeasonals=new HashSet<>(List.of("void_rod"));
+    private final Set<String> expandedSeasonals=new HashSet<>();
     private int advancedDivider=-1;
     private String query="",jumpSection="",jumpSetting="";
     private EditBox searchBox;
@@ -132,7 +132,8 @@ public final class ToolkitScreen extends Screen {
                     jumpSection=result.section();jumpSetting=result.setting();
                     if(result.page()==3){
                         for(var it:SeasonalRegistry.ITEMS){
-                            if(it.name().equalsIgnoreCase(result.section())||it.id().equalsIgnoreCase(result.section()))
+                            if(it.name().equalsIgnoreCase(result.section())||it.id().equalsIgnoreCase(result.section())
+                                ||(it.id().contains("bone")&&result.section().toLowerCase().contains("bone")))
                                 expandedSeasonals.add(it.id());
                         }
                     }
@@ -143,7 +144,8 @@ public final class ToolkitScreen extends Screen {
         }else{
             if(page==3&&!jumpSection.isEmpty()){
                 for(var it:SeasonalRegistry.ITEMS){
-                    if(it.name().equalsIgnoreCase(jumpSection)||it.id().equalsIgnoreCase(jumpSection))
+                    if(it.name().equalsIgnoreCase(jumpSection)||it.id().equalsIgnoreCase(jumpSection)
+                        ||(it.id().contains("bone")&&jumpSection.toLowerCase().contains("bone")))
                         expandedSeasonals.add(it.id());
                 }
             }
@@ -348,6 +350,8 @@ public final class ToolkitScreen extends Screen {
         toggle("Burning Rush Rune",top,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
         top+=24;
         label("Triggers a speed cue when Burning Rush activates.",top);
+        top+=14;
+        label("Grants Regeneration or a health-draining Speed boost.",top);
         top+=14;
         return top;
     }
