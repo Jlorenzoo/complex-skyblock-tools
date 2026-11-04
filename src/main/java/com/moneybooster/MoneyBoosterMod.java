@@ -37,6 +37,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             if (!overlay) {
                 BoosterManager.onChatMessage(message.getString());
+                com.skyblocktoolkit.GoldShardTracker.chat(message.getString());
             }
         });
 
@@ -45,6 +46,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             if (client.level != previousLevel) {
                 BoosterManager.reset(); BoosterStatsManager.resetConnection(); RateTracker.disconnect();
                 com.skyblocktoolkit.CropHarvestTracker.reset();
+                com.skyblocktoolkit.GoldShardTracker.reset();
                 com.skyblocktoolkit.VisualAlertOverlay.reset();
                 previousLevel = client.level;
             }
@@ -52,6 +54,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             BoosterStatsManager.tick();
             XpTracker.tick(client);
             com.skyblocktoolkit.CropHarvestTracker.tick();
+            com.skyblocktoolkit.GoldShardTracker.tick(client);
             RateTracker.onClientTick();
             com.skyblocktoolkit.VisualAlertOverlay.tick(System.currentTimeMillis());
 

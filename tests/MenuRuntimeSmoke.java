@@ -66,6 +66,44 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         Files.writeString(outputPath().resolve("blackout-scroll.txt"), "PASS: remapped mouse mixin, menu exclusion, hotbar consumption, 5% adjustment, limits, persistence, tap and gesture release\n");
     }
 
+    private void checkShardSettings(net.minecraft.client.Minecraft mc) throws Exception {
+        var cfg=ToolkitConfig.get();boolean enabled=cfg.includeGoldShards;double price=cfg.goldShardPrice;
+        mc.setScreenAndShow(new ToolkitScreen(null,2));
+        search(mc,"gold shards income");press(mc,"Skills / Include gold shards in income");
+        press(mc,"Include gold shards in income");
+        check(cfg.includeGoldShards!=enabled,"Shard inclusion widget works");
+        search(mc,"gold shard value");press(mc,"Skills / Gold shard value ($ each)");
+        var field=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Gold shard value ($ each)"))
+            .map(c->(net.minecraft.client.gui.components.EditBox)c).findFirst().orElseThrow();
+        field.setValue("125k");check(cfg.goldShardPrice==125000,"Shard price accepts suffix");
+        field.setValue("-2");check(cfg.goldShardPrice==125000,"Invalid shard price preserves value");
+        cfg.save();var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);
+        var reload=ctor.newInstance();check(reload.includeGoldShards==cfg.includeGoldShards&&reload.goldShardPrice==125000,"Shard preferences persist");
+        cfg.includeGoldShards=true;check(GoldShardTracker.value(4)==500000,"Shard valuation");
+        cfg.includeGoldShards=false;check(GoldShardTracker.value(4)==0,"Disabled excludes item value");
+        // Exercise the real rate calculation without starting or joining a world.
+        var fields=new java.util.HashMap<String,Object>();
+        for(String name:new String[]{"running","completed","startTimeMs","stopTimeMs","baseEarned","totalEarned","shardsEarned","testId"}){
+            var f=RateTracker.class.getDeclaredField(name);f.setAccessible(true);fields.put(name,f.get(null));
+        }
+        try{
+            long start=System.currentTimeMillis()-60000;
+            for(var entry:java.util.Map.<String,Object>of("running",false,"completed",true,"startTimeMs",start,"stopTimeMs",start+60000,"baseEarned",1000.0,"totalEarned",1200.0,"shardsEarned",0L,"testId",77).entrySet()){
+                var f=RateTracker.class.getDeclaredField(entry.getKey());f.setAccessible(true);f.set(null,entry.getValue());
+            }
+            RateTracker.onShardGain(4,start+5000,77);RateTracker.onShardGain(9,start+70000,77);RateTracker.onShardGain(9,start+5000,76);
+            check(RateTracker.getShardsEarned()==4,"Rate sample rejects wrong id and out-of-window drops");
+            cfg.includeGoldShards=true;
+            check(RateTracker.getBaseEarned()==501000&&RateTracker.getTotalEarned()==501200&&RateTracker.getCurrentRatePerHour()==30060000,"Shard value joins base and actual income without booster multiplication");
+            cfg.includeGoldShards=false;check(Math.abs(RateTracker.getCurrentRatePerHour()-60000)<.001,"Toggle removes shards from measured rate");
+        }finally{
+            for(var entry:fields.entrySet()){var f=RateTracker.class.getDeclaredField(entry.getKey());f.setAccessible(true);f.set(null,entry.getValue());}
+            cfg.includeGoldShards=enabled;cfg.goldShardPrice=price;cfg.save();
+        }
+        mc.setScreenAndShow(new ToolkitScreen(null,1));
+        Files.writeString(outputPath().resolve("gold-shards.txt"),"PASS: real shard settings, price validation/persistence, rate sample boundaries and optional valuation\n");
+    }
+
     private static Path outputPath() { return Path.of(System.getProperty("toolkit.preview")); }
     @Override public void onInitializeClient(){
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
@@ -88,6 +126,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
+                    checkShardSettings(mc);
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
@@ -513,7 +552,18 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     });
                     stage++;return;
                 }
-                if(stage==146){
+                if(stage>=146&&stage<=150){
+                    if(stage>146){capture(mc,"gold-shards-"+(stage-147));assertControls(mc);}
+                    if(stage==150){stage=151;return;}
+                    int sample=stage-146;
+                    ToolkitConfig.get().lightMode=sample%2==1;
+                    mc.getWindow().setWindowed(sample>=2?1000:1280,800);
+                    mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                    mc.setScreenAndShow(new ToolkitScreen(null,2));
+                    search(mc,"gold shards income");press(mc,"Skills / Include gold shards in income");
+                    stage++;return;
+                }
+                if(stage==151){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);

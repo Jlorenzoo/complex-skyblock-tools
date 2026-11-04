@@ -40,10 +40,10 @@ public class RateTracker {
     private static boolean completed = false;
     private static long startTimeMs = 0;
     private static long stopTimeMs = 0;
+    private static long shardsEarned = 0;
     private static double baseEarned = 0;
     private static double totalEarned = 0;
     private static final XpRateMeasurement xpMeasurement = new XpRateMeasurement();
-    private static double finalRatePerHour = 0;
     private static long showFinishedUntilMs = 0;
 
     public static Duration getSelectedDuration() {
@@ -89,10 +89,10 @@ public class RateTracker {
         prepStartTimeMs = System.currentTimeMillis();
         startTimeMs = 0;
         stopTimeMs = 0;
+        shardsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
         xpMeasurement.reset();
-        finalRatePerHour = 0;
         showFinishedUntilMs = 0;
     }
 
@@ -103,10 +103,10 @@ public class RateTracker {
         startTimeMs = System.currentTimeMillis();
         BoosterStatsManager.markContext();
         stopTimeMs = 0;
+        shardsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
         xpMeasurement.start(startTimeMs, selectedDuration.seconds);
-        finalRatePerHour = 0;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
@@ -125,14 +125,6 @@ public class RateTracker {
         stopTimeMs = System.currentTimeMillis();
         xpMeasurement.stop(stopTimeMs);
         showFinishedUntilMs = System.currentTimeMillis() + 6000L;
-
-        long elapsedSec = getElapsedSeconds();
-        double elapsed = (stopTimeMs - startTimeMs) / 1000.0;
-        if (elapsed > 0) {
-            finalRatePerHour = (baseEarned / elapsed) * 3600.0;
-        } else {
-            finalRatePerHour = 0;
-        }
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
@@ -155,27 +147,28 @@ public class RateTracker {
     }
 
     public static double getBaseEarned() {
-        return baseEarned;
+        return baseEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned);
     }
 
     public static double getTotalEarned() {
-        return totalEarned;
+        return totalEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned);
     }
 
     public static double getFinalRatePerHour() {
-        return finalRatePerHour;
+        return moneyRate();
     }
 
-    public static double getCurrentRatePerHour() {
-        if (completed) {
-            return finalRatePerHour;
-        }
-        if (!running) {
-            return 0;
-        }
-        long sec = getElapsedSeconds();
-        if (sec < 2) return 0;
-        return baseEarned / ((System.currentTimeMillis() - startTimeMs) / 1000.0) * 3600.0;
+    public static double getCurrentRatePerHour() { return moneyRate(); }
+    private static double moneyRate() {
+        if(!running&&!completed)return 0;
+        long end=running?System.currentTimeMillis():stopTimeMs;
+        double seconds=(end-startTimeMs)/1000.0;
+        return seconds>0&&(completed||seconds>=2)?getBaseEarned()/seconds*3600:0;
+    }
+    public static long getShardsEarned(){return shardsEarned;}
+    public static void onShardGain(long count,long at,int id){
+        long deadline=selectedDuration.seconds>0?startTimeMs+selectedDuration.seconds*1000L:Long.MAX_VALUE;
+        if(count>0&&id==testId&&(running||completed)&&at>=startTimeMs&&at<=deadline&&(running||at<=stopTimeMs))shardsEarned+=count;
     }
 
     public static boolean isXpSelected() { return com.skyblocktoolkit.ToolkitConfig.get().rateTestXp; }
@@ -195,10 +188,6 @@ public class RateTracker {
         if (id != testId || (!running && !completed) || !Double.isFinite(diff) || diff <= 0) return;
         baseEarned += diff / (1.0 + Math.max(0, percentage) / 100.0);
         totalEarned += diff;
-        if (completed) {
-            double seconds = (stopTimeMs - startTimeMs) / 1000.0;
-            finalRatePerHour = seconds > 0 ? baseEarned / seconds * 3600.0 : 0;
-        }
     }
 
     public static void onClientTick() {

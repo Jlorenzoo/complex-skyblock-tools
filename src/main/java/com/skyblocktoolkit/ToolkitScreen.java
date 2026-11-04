@@ -278,28 +278,35 @@ public final class ToolkitScreen extends Screen {
         label(()->CropHarvestTracker.averageLabel(),94,ToolkitTheme.palette().accent(),1);
         toggle("Include boosters in crop average",110,money::includesBoostersInAverage,money::toggleAverageBoosters);
 
-        section("Fishing",138);
-        toggle("Depleted area",154,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
-        slider("Fishing volume",178,fishCfg.volume,3,v->fishCfg.volume=(float)v);
-        button("Preview depleted warning",202,fishing::previewWarning);
-        button("Void Rod settings (Seasonal)",226,()->go(3));
+        toggle("Include gold shards in income",138,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
+        priceField("Gold shard value ($ each)",162,()->toolkit.goldShardPrice,v->{if(v<=1e12)toolkit.goldShardPrice=v;});
+        label("Accepts 1.5k / 2m. Estimated item value.",186);
+        label(GoldShardTracker::label,200,ToolkitTheme.palette().accent(),1);
+        label("Tracks farming rewards; silent drops need a held hoe.",214);
+        label("Use Rate tests to compare farming locations.",228);
 
-        section("Fish sell prices",254);
-        label("Sell price per fish ($ each; accepts 1.5k / 2m)",270);
-        priceField("Cod · 60%",284,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
-        priceField("Salmon · 25%",306,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
-        priceField("Puffer · 13%",328,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
-        priceField("Tropical · 2%",350,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
-        setting("Earnings window",376,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
-        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),402,ToolkitTheme.palette().accent(),1);
-        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),fishCfg.earningsWindow);return n+" fish in last "+(fishCfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*fishCfg.averageFishPrice());},416,ToolkitTheme.palette().text(),1);
-        label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",430,ToolkitTheme.palette().text(),1);
+        section("Fishing",250);
+        toggle("Depleted area",266,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
+        slider("Fishing volume",290,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+        button("Preview depleted warning",314,fishing::previewWarning);
+        button("Void Rod settings (Seasonal)",338,()->go(3));
 
-        section("Mining & XP",450);
-        toggle("XP per hour HUD",466,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
-        label("Appears while you collect XP.",490);
-        label(()->XpTracker.averageLabel(),504,ToolkitTheme.palette().xpText(),1);
-        toggle("Include XP boosters",520,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
+        section("Fish sell prices",366);
+        label("Sell price per fish ($ each; accepts 1.5k / 2m)",382);
+        priceField("Cod · 60%",396,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
+        priceField("Salmon · 25%",418,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
+        priceField("Puffer · 13%",440,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
+        priceField("Tropical · 2%",462,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
+        setting("Earnings window",488,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
+        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),514,ToolkitTheme.palette().accent(),1);
+        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),fishCfg.earningsWindow);return n+" fish in last "+(fishCfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*fishCfg.averageFishPrice());},528,ToolkitTheme.palette().text(),1);
+        label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",542,ToolkitTheme.palette().text(),1);
+
+        section("Mining & XP",562);
+        toggle("XP per hour HUD",578,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
+        label("Appears while you collect XP.",602);
+        label(()->XpTracker.averageLabel(),616,ToolkitTheme.palette().xpText(),1);
+        toggle("Include XP boosters",632,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
     }
     private void seasonals(){
         section("Seasonal Items",0);
@@ -473,7 +480,7 @@ public final class ToolkitScreen extends Screen {
     }
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
         labels.add(new Label(()->name,top+5,ToolkitTheme.palette().text(),1,6));
-        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name+" price per fish")));
+        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name)));
         field.setBordered(false);field.setTextShadow(false);field.setMaxLength(24);field.setValue(String.format(java.util.Locale.ROOT,"%.2f",read.getAsDouble()));
         field.setTextColor(ToolkitTheme.palette().text());
         field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().error());if(Double.isFinite(value))write.accept(value);});

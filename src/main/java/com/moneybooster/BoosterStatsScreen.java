@@ -128,10 +128,10 @@ public class BoosterStatsScreen extends Screen {
                 : RateTracker.isCompleted() ? "Completed / " + RateTracker.getElapsedSeconds() + "s" : "Ready to start";
             boolean xp=RateTracker.isXpSelected(),boosted=com.skyblocktoolkit.ToolkitConfig.get().xpIncludesBoosters;
             g.text(font, status, x + 12, y + 154, com.skyblocktoolkit.ToolkitTheme.palette().text(), false);
-            row(g, y + 174, xp?(boosted?"XP rate / hour":"Base XP / hour"):"Base rate / hour", RateTracker.formatDisplayedRate(), com.skyblocktoolkit.ToolkitTheme.palette().accent());
-            row(g, y + 194, xp?(boosted?"XP gained":"Base XP gained"):"Base earned", xp?XpTracker.format(RateTracker.getXpEarned(boosted)):BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), com.skyblocktoolkit.ToolkitTheme.palette().text());
+            row(g, y + 174, xp?(boosted?"XP rate / hour":"Base XP / hour"):(com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards?"Base + shards / hour":"Base rate / hour"), RateTracker.formatDisplayedRate(), com.skyblocktoolkit.ToolkitTheme.palette().accent());
+            row(g, y + 194, xp?(boosted?"XP gained":"Base XP gained"):(com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards?"Base + shard value":"Base earned"), xp?XpTracker.format(RateTracker.getXpEarned(boosted)):BoosterStatsManager.formatMoney(RateTracker.getBaseEarned()), com.skyblocktoolkit.ToolkitTheme.palette().text());
             row(g, y + 212, xp?"XP booster bonus":"Shop trades excluded", xp?XpTracker.format(RateTracker.getXpEarned(true)-RateTracker.getXpEarned(false)):String.valueOf(RateTracker.getExcludedTransactions()), com.skyblocktoolkit.ToolkitTheme.palette().accent());
-            g.text(font, xp?"XP bar points; losses are ignored.":"Booster bonus removed from the base rate.", x + 12, y + 234, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
+            g.text(font, xp?"XP bar points; losses are ignored.":"Base rate; "+RateTracker.getShardsEarned()+" shards ("+(com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards?"included":"excluded")+").", x + 12, y + 234, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
         }
         g.pose().popMatrix();g.disableScissor();
         int maxScroll=Math.max(0,cardY+(showTest?246:224)-(footerY-8));

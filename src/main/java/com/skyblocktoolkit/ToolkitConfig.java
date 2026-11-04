@@ -14,6 +14,8 @@ public final class ToolkitConfig {
     public int xpHudX=12,xpHudY=74;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean cropHarvestHud=true;
+    public boolean includeGoldShards=false;
+    public double goldShardPrice=0;
     public int cropHarvestHudX=12,cropHarvestHudY=90;
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
     public boolean clearHarvest=true;
@@ -65,6 +67,8 @@ public final class ToolkitConfig {
             if(j.has("xpHudX"))xpHudX=Math.clamp(j.get("xpHudX").getAsInt(),0,10000);
             if(j.has("xpHudY"))xpHudY=Math.clamp(j.get("xpHudY").getAsInt(),0,10000);
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
+            if(j.has("includeGoldShards"))includeGoldShards=j.get("includeGoldShards").getAsBoolean();
+            if(j.has("goldShardPrice")){double v=j.get("goldShardPrice").getAsDouble();if(Double.isFinite(v)&&v>=0&&v<=1e12)goldShardPrice=v;}
             if(j.has("cropHarvestHud"))cropHarvestHud=j.get("cropHarvestHud").getAsBoolean();
             if(j.has("cropHarvestHudX"))cropHarvestHudX=Math.clamp(j.get("cropHarvestHudX").getAsInt(),0,10000);
             if(j.has("cropHarvestHudY"))cropHarvestHudY=Math.clamp(j.get("cropHarvestHudY").getAsInt(),0,10000);
@@ -123,6 +127,7 @@ public final class ToolkitConfig {
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);
             j.addProperty("cropHarvestHud",cropHarvestHud);
+            j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("goldShardPrice",goldShardPrice);
             j.addProperty("cropHarvestHudX",cropHarvestHudX);
             j.addProperty("cropHarvestHudY",cropHarvestHudY);
             j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
