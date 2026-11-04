@@ -68,9 +68,9 @@ and uploads downloadable artifacts. Successful main builds also publish the comp
 The full 26.2 dependency set is pinned in `modpack/fabric-26.2.json`. Pack exports
 use fresh defaults and the built-in crop pack, without reading any live player
 profile. Run `python tests/test_pack_26_2.py` for pack isolation/integrity checks.
-On the configured Windows workstation, `python tests/run_menu_windows.py --pack`
-loads all seven mods in an isolated offline client and exercises the full/compact
-light/dark menus and voice controls. `python tests/run_smoke_windows.py` verifies
+The historical `python tests/run_menu_windows.py --pack` graphical check is
+disabled on Windows until a private display backend is available. Linux graphical
+checks exercise the full/compact light/dark menus on Xvfb. `python tests/run_smoke_windows.py` verifies
 26.2 Fabric mixins and native audio without opening a game window (also used on
 Linux CI). The active 1.21.11 profile is unchanged by these 26.2 checks.
 
@@ -87,19 +87,34 @@ live profile, and `minecraft_version` defaults to `1.21.11`. Legacy build paths
 `library_jars`) can remain configured independently of the live install target.
 Never commit launcher tokens, personal settings or private history.
 
-For the maintained runtime, build the offline smoke mod and run:
+For the maintained Linux runtime, build the offline smoke mod and run:
 
-```powershell
-cd versions/1.21.11
-.\gradlew.bat build remapMenuSmoke
-cd ../..
-python tests/run_1_21_11_windows.py
+```bash
+(cd versions/1.21.11 && bash gradlew build remapMenuSmoke)
+python3 tests/run_menu_linux.py
 ```
 
-`--profile PATH` copies a complete pack's mods, configs, crop packs and options
-into a disposable offline client. It verifies loaded keybindings before exercising
-the full/compact light/dark menus and writes the loaded options for comparison.
-It never joins a server or modifies the source profile.
+All graphical runners use `scripts/test_display.py` to create a fresh private
+Xvfb display. Minecraft renders with software OpenGL there, and captures the
+same light/dark, full/compact menu screenshots without opening a window on the
+player's desktop or taking keyboard/pointer focus. Sound uses the null backend.
+Inspect the PNG files under `artifacts/menu-preview-linux/screenshots` directly;
+do not automate the player's window. `DISPLAY` is replaced and inherited Wayland
+handles are removed only for the test subprocess. The virtual server is cleaned
+up on success, failure and timeout. Each run gets its own display.
+
+Install the Linux `xvfb` package before running, or extract its package under
+`.local/xvfb` so `.local/xvfb/usr/bin/Xvfb` exists. If isolation is missing or fails,
+the test stops; it never falls back to the active desktop. Windows graphical
+entry points now fail closed too; use a Linux test host instead. Windows
+`CREATE_NO_WINDOW` hides a console, but does not isolate an OpenGL game window.
+Non-graphical Java/Fabric smoke checks remain available on Windows.
+Run `python3 tests/test_display_isolation.py` to check display separation,
+Wayland exclusion, missing-backend rejection and timeout cleanup.
+
+`--profile PATH` copies a complete pack's mods, configs and crop packs into a
+disposable offline Linux client. The test never joins a server or modifies the
+source profile. Screenshots and assertions still come from the real Fabric runtime.
 
 An optional `startupServer` address in `config/skyblocktoolkit.json` makes a
 profile join that server once after the title screen finishes loading. It defaults
@@ -115,7 +130,7 @@ Run `python tests/test_profile_migration.py`, `python tests/test_installer.py`,
 `python tests/test_voicechat.py` and `python tests/test_updater.py`. The Gradle build
 runs the Java suites; `python tests/run_java.py` remains a legacy 26.2 check. The Java runner excludes the private transaction replay dataset. It covers timer isolation, reminder boundaries, sidebar formats, ledger/history behavior and readable palette contrast.
 
-On a configured Windows workstation, `python tests/run_smoke_windows.py` checks real Fabric mixins and settings migration in a disposable profile. `python tests/run_menu_windows.py` launches an isolated offline client, exercises widgets and captures light/dark menus under `artifacts/menu-preview/`. It never signs in or joins a server. These checks require the installed launcher dependencies; the menu check also requires a graphical desktop. The existing Prism/Linux smoke scripts remain available.
+On a configured Windows workstation, `python tests/run_smoke_windows.py` checks real Fabric mixins and settings migration in a disposable profile. `python3 tests/run_menu_linux.py` exercises widgets and captures menus on a private Xvfb display. It never signs in or joins a server. These checks require the installed launcher dependencies. Graphical Windows runners are disabled to protect the active desktop.
 
 ## Install
 
@@ -145,9 +160,10 @@ The toolkit updater does not update this third-party dependency. `scripts/packag
 as a separate jar, with attribution and without personal microphone settings.
 
 Run `python tests/test_voicechat.py` for checksum, preservation and rollback tests.
-On Windows, `python tests/run_menu_windows.py --voicechat` additionally checks real
-Fabric initialization, voice key registration and onboarding rendering in a disposable
-offline profile. It does not test server UDP connectivity or your microphone.
+The historical Windows `--voicechat` graphical runner is disabled. On Linux,
+use `tests/run_menu_linux.py --profile PATH` with the configured pack to include
+voice chat initialization on the private display. These offline checks do not
+test server UDP connectivity or your microphone.
 
 ## Preserving player data during a version migration
 

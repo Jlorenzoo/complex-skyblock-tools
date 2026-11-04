@@ -26,6 +26,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Verify graphical test desktop isolation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb
+          python tests/test_display_isolation.py
       - name: Verify installers and settings preservation
         run: |
           python tests/test_installer.py
