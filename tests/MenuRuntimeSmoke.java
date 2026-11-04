@@ -431,20 +431,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     if(stage==81){
                         capture(mc,"seasonals-overview-dark");
-                        press(mc,"Bone Leggings");
+                        scrollBottom(mc);press(mc,"Bone Leggings");
                         stage++;return;
                     }
                     if(stage==82){
                         capture(mc,"seasonals-bone-pants-expanded");
                         ToolkitConfig.get().lightMode=true;
-                        mc.setScreenAndShow(new ToolkitScreen(null,3));press(mc,"Bone Leggings");scrollBottom(mc);
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));scrollBottom(mc);press(mc,"Bone Leggings");scrollBottom(mc);
                         stage++;return;
                     }
                     if(stage==83 || stage==84 || stage==85){
                         capture(mc,"bone-settings-"+stage);
                         if(stage==83){mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();}
                         ToolkitConfig.get().lightMode=stage==83;
-                        mc.setScreenAndShow(new ToolkitScreen(null,3));press(mc,"Bone Leggings");scrollBottom(mc);
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));scrollBottom(mc);press(mc,"Bone Leggings");scrollBottom(mc);
                         stage++;return;
                     }
                     if(stage==86){
