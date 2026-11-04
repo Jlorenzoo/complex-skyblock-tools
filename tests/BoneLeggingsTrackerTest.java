@@ -2,6 +2,10 @@ package com.skyblocktoolkit;
 
 public final class BoneLeggingsTrackerTest {
     public static void main(String[] args) {
+        if (!BoneLeggingsTracker.matchesItemText("§dBone §lLeggings") ||
+                !BoneLeggingsTracker.matchesItemText("Burning Rush Rune") ||
+                BoneLeggingsTracker.matchesItemText("Diamond Leggings"))
+            throw new AssertionError("Server item matching must ignore legacy formatting and reject ordinary leggings");
         testPreviewLabel();
         testStylesAndLabels();
         testSeasonalRegistryLookup();

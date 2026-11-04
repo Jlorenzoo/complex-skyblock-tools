@@ -448,8 +448,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         stage++;return;
                     }
                     if(stage==86){
+                        var sample = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_LEGGINGS);
+                        sample.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("§dBone §lLeggings"));
+                        sample.set(net.minecraft.core.component.DataComponents.DYED_COLOR,new net.minecraft.world.item.component.DyedItemColor(0xB143C9));
+                        sample.set(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE,true);
+                        sample.set(net.minecraft.core.component.DataComponents.ITEM_MODEL,net.minecraft.resources.Identifier.withDefaultNamespace("leather_leggings"));
+                        var expected = sample.copyWithCount(1);
+                        BoneLeggingsTracker.rememberServerStack(sample);
+                        sample.set(net.minecraft.core.component.DataComponents.DYED_COLOR,new net.minecraft.world.item.component.DyedItemColor(0xFFFFFF));
+                        check(net.minecraft.world.item.ItemStack.isSameItemSameComponents(expected,BoneLeggingsTracker.getItemStack(null)),"Captured sprite retains model, original dye and glint independently of the source stack");
+                        check(net.minecraft.world.item.ItemStack.isSameItemSameComponents(expected,SeasonalRegistry.find("bone_pants").icon()),"Seasonal card shares the complete captured item");
+                        Files.writeString(output.resolve("bone-sprite-components.txt"),"PASS: complete model, dye, name and glint components retained; Seasonal card uses captured stack; synthetic offline fixture, not a live server capture\n");
                         mc.setScreenAndShow(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("Bone icon states")) {
                             @Override public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor g,int mx,int my,float tick) {
+                                g.text(font,"Sample dye + glint (offline)",20,3,0xFFFFFFFF,true);
                                 for(int theme=0;theme<2;theme++) {
                                     int y=20+theme*90;
                                     g.fill(0,y-5,width,y+80,theme==0?0xFF1B1D21:0xFFF9F9FC);

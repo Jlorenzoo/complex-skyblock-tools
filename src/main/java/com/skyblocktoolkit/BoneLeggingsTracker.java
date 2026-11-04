@@ -1,6 +1,7 @@
 package com.skyblocktoolkit;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.sounds.SoundEvents;
@@ -58,13 +59,26 @@ public final class BoneLeggingsTracker {
 
     public static boolean isBoneLeggings(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
-        if (name.contains("bone") && (name.contains("legging") || name.contains("pant") || name.contains("rush") || name.contains("armor"))) return true;
-        if (name.contains("burning rush")) return true;
-        String full = stack.toString().toLowerCase(Locale.ROOT);
-        if (full.contains("burning rush")) return true;
-        if (full.contains("bone") && (full.contains("legging") || full.contains("pant"))) return true;
+        if (matchesItemText(stack.getHoverName().getString())) return true;
+        var lore = stack.get(DataComponents.LORE);
+        if (lore != null) for (var line : lore.lines()) {
+            if (matchesItemText(line.getString())) return true;
+        }
         return false;
+    }
+
+    static boolean matchesItemText(String text) {
+        String name = text.replaceAll("§.", "").toLowerCase(Locale.ROOT);
+        return name.contains("burning rush") || (name.contains("bone") &&
+                (name.contains("legging") || name.contains("pant") || name.contains("armor")));
+    }
+
+    static void rememberServerStack(ItemStack stack) {
+        if (isBoneLeggings(stack) && (lastServerStack == null ||
+                !ItemStack.isSameItemSameComponents(stack, lastServerStack))) {
+            // Copy the complete component set, including model, dye and glint; never rebuild a generic item.
+            lastServerStack = stack.copyWithCount(1);
+        }
     }
 
     public static boolean isWearingBoneLeggings(Minecraft mc) {
@@ -111,23 +125,23 @@ public final class BoneLeggingsTracker {
             try {
                 ItemStack legs = mc.player.getItemBySlot(EquipmentSlot.LEGS);
                 if (isBoneLeggings(legs)) {
-                    lastServerStack = legs.copy();
+                    rememberServerStack(legs);
                     return legs;
                 }
                 ItemStack main = mc.player.getMainHandItem();
                 if (isBoneLeggings(main)) {
-                    lastServerStack = main.copy();
+                    rememberServerStack(main);
                     return main;
                 }
                 ItemStack off = mc.player.getOffhandItem();
                 if (isBoneLeggings(off)) {
-                    lastServerStack = off.copy();
+                    rememberServerStack(off);
                     return off;
                 }
                 for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
                     ItemStack stack = mc.player.getInventory().getItem(i);
                     if (isBoneLeggings(stack)) {
-                        lastServerStack = stack.copy();
+                        rememberServerStack(stack);
                         return stack;
                     }
                 }
@@ -137,8 +151,6 @@ public final class BoneLeggingsTracker {
             return lastServerStack;
         }
         try {
-            var seasonal = SeasonalRegistry.find("bone_pants");
-            if (seasonal != null) return seasonal.icon();
             return new ItemStack(Items.CHAINMAIL_LEGGINGS);
         } catch (Throwable ignored) {
             return null;
@@ -148,7 +160,7 @@ public final class BoneLeggingsTracker {
     public static int getWidth(Minecraft mc) {
         var cfg = ToolkitConfig.get();
         int padding = cfg.boneLeggingsBackground ? 6 : 0;
-        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 46 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 52 + padding;
         // Reserve the widest state so right alignment and HUD editor bounds never jump.
         String label = cfg.boneLeggingsHudStyle == STYLE_ICON_SIMPLE ? "Off" : "Speed Regen";
         int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
@@ -164,6 +176,7 @@ public final class BoneLeggingsTracker {
 
     public static void tick(Minecraft mc) {
         if (mc == null || mc.player == null) return;
+        getItemStack(mc); // Capture the server appearance even while the HUD is hidden.
         boolean speed6 = hasSpeed6(mc);
         if (speed6 && !lastSpeed6) {
             var cfg = ToolkitConfig.get();
@@ -203,21 +216,32 @@ public final class BoneLeggingsTracker {
     public static void renderEffectIcons(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
                                          boolean speed, boolean regen, boolean background) {
         if (g == null || stack == null || stack.isEmpty()) return;
-        if (background) g.fill(x, y, x + 52, y + 24, 0x40000000);
+        if (background) g.fill(x, y, x + 58, y + 24, 0x40000000);
         int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
-        renderEffectIcon(g, stack, dx, dy, speed, false);
-        renderEffectIcon(g, stack, dx + 24, dy, regen, true);
+        renderSpeedIcon(g, stack, dx, dy, speed);
+        renderRegenIcon(g, stack, dx + 30, dy, regen);
     }
 
-    private static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
-                                         boolean active, boolean heart) {
+    private static void renderSpeedIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, boolean active) {
+        // Keep the real item unobscured. Three fine, separated trails sit beside it, never across it.
+        g.item(stack, x + 8, y);
+        int color = active ? 0xFF8CD5E7 : 0xFF858991;
+        speedTrail(g, x + 1, y + 4, 5, color);
+        speedTrail(g, x, y + 8, 6, color);
+        speedTrail(g, x + 2, y + 12, 4, color);
+        g.fill(x + 9, y + 18, x + 22, y + 19, active ? color : 0x667C818A);
+    }
+
+    private static void speedTrail(GuiGraphicsExtractor g, int x, int y, int width, int color) {
+        g.fill(x, y + 1, x + width, y + 2, 0xC0181A20);
+        g.fill(x, y, x + width, y + 1, color);
+    }
+
+    private static void renderRegenIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, boolean active) {
         g.item(stack, x + 2, y);
-        int color = active ? (heart ? 0xFFF29AAF : 0xFF8CD5E7) : 0xFF858991;
-        String[] pixels = heart
-                ? new String[]{".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."}
-                : new String[]{"...####", "...####", ".####..", ".####..", "####...", "####..."};
+        int color = active ? 0xFFF29AAF : 0xFF858991;
+        String[] pixels = {".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."};
         int bx = x + 13, by = y + 10;
-        // One-pixel dark silhouette keeps the small badge readable over any server sprite.
         for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
             if (pixels[row].charAt(col) == '#') g.fill(bx + col - 1, by + row - 1, bx + col + 2, by + row + 2, 0xE0181A20);
         }
