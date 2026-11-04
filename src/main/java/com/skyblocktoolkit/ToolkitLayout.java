@@ -3,10 +3,10 @@ package com.skyblocktoolkit;
 public record ToolkitLayout(int x,int y,int width,int height,int bodyX,int bodyY,int bodyWidth,int footerY,boolean compact){
     /** The hub reserves separate rows for its heading, search and compact navigation. */
     public static ToolkitLayout hub(int sw,int sh){
-        int w=Math.min(600,Math.max(100,sw-24)),h=Math.min(400,Math.max(100,sh-24));
+        int w=Math.min(600,Math.max(100,sw-24)),h=Math.min(400,Math.max(100,sh-16));
         int x=(sw-w)/2,y=(sh-h)/2;boolean compact=w<480||h<300;
         int bx=compact?x+16:x+152;
-        return new ToolkitLayout(x,y,w,h,bx,y+(compact?90:68),x+w-20-bx,y+h-32,compact);
+        return new ToolkitLayout(x,y,w,h,bx,y+(compact?96:68),x+w-20-bx,y+h-32,compact);
     }
     /** Expand the established setting coordinates into a relaxed 30px row rhythm. */
     public static int settingY(int top){return Math.round(top*1.25f);}

@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** Offline disposable client: exercise real widgets, input and rendering without a server. */
 public final class MenuRuntimeSmoke implements ClientModInitializer {
-    int ticks,stage=Boolean.getBoolean("toolkit.testVoicechat")?-2:0;
+    int ticks,stage=Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     private static void checkBlackoutScroll(net.minecraft.client.Minecraft mc) throws Exception {
         var previous = mc.gui.screen();
@@ -531,7 +531,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         Screenshot.grab(output.toFile(),name+".png",mc.gameRenderer.mainRenderTarget(),1,msg->{});
     }
     void scrollBottom(net.minecraft.client.Minecraft mc){
-        var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,-20);
+        var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,-100);
     }
     void switchTheme(net.minecraft.client.Minecraft mc){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&(b.getMessage().getString().equals("Dark mode")||b.getMessage().getString().equals("Light mode"))){b.onPress(null);return;}
