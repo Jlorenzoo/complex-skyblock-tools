@@ -20,6 +20,10 @@ public final class BoneLeggingsTracker {
     public static final int STYLE_BADGE_ONLY = 2;
     public static final int STYLE_STATUS_ONLY = 3;
 
+    private static final int MODE_BADGE_SIZE = 18;
+    private static final int MODE_BADGE_X = 10, MODE_BADGE_Y = 8;
+    private static final int EFFECT_ICON_SIZE = 16;
+
     private static boolean lastSpeed6 = false;
     private static ItemStack lastServerStack = null;
 
@@ -145,8 +149,8 @@ public final class BoneLeggingsTracker {
     public static int getWidth(Minecraft mc) {
         var cfg = ToolkitConfig.get();
         int padding = cfg.boneLeggingsBackground ? 6 : 0;
-        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 24 + padding;
-        if (cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY) return 14 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return MODE_BADGE_X + MODE_BADGE_SIZE + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY) return MODE_BADGE_SIZE + padding;
         // Reserve the widest state so right alignment and HUD editor bounds never jump.
         String label = "Speed";
         int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
@@ -155,8 +159,8 @@ public final class BoneLeggingsTracker {
 
     public static int getHeight() {
         var cfg = ToolkitConfig.get();
-        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 22
-                : cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 14
+        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? MODE_BADGE_Y + MODE_BADGE_SIZE
+                : cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? MODE_BADGE_SIZE
                 : hasIcon(cfg.boneLeggingsHudStyle) ? 16 : 9;
         return height + (cfg.boneLeggingsBackground ? 4 : 0);
     }
@@ -195,8 +199,8 @@ public final class BoneLeggingsTracker {
         }
         if (style == STYLE_BADGE_ONLY) {
             int padding = cfg.boneLeggingsBackground ? 3 : 0;
-            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 20, y + 18, 0x40000000);
-            renderModeBadge(extractor, x + padding + 1, y + (padding == 0 ? 1 : 3), speed);
+            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + MODE_BADGE_SIZE + 6, y + MODE_BADGE_SIZE + 4, 0x40000000);
+            renderModeBadge(extractor, x + padding, y + (padding == 0 ? 0 : 2), speed);
             return;
         }
         String label = formatLabel(style, speed);
@@ -208,19 +212,30 @@ public final class BoneLeggingsTracker {
     public static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
                                         boolean speed, boolean background) {
         if (g == null || stack == null || stack.isEmpty()) return;
-        if (background) g.fill(x, y, x + 30, y + 26, 0x40000000);
+        if (background) g.fill(x, y, x + MODE_BADGE_X + MODE_BADGE_SIZE + 6, y + MODE_BADGE_Y + MODE_BADGE_SIZE + 4, 0x40000000);
         int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
         g.item(stack, dx, dy);
-        renderModeBadge(g, dx + 10, dy + 9, speed);
+        renderModeBadge(g, dx + MODE_BADGE_X, dy + MODE_BADGE_Y, speed);
     }
 
     private static final Identifier SPEED_EFFECT_ICON = Identifier.withDefaultNamespace("textures/mob_effect/speed.png");
     private static final Identifier REGEN_EFFECT_ICON = Identifier.withDefaultNamespace("textures/mob_effect/regeneration.png");
 
     private static void renderModeBadge(GuiGraphicsExtractor g, int x, int y, boolean speed) {
-        // Use the actual effect texture, including resource-pack overrides, with its original colors.
+        // Only the corner badge gets a contrast backing. The native sprite keeps its original colors.
+        roundedBadge(g, x, y, MODE_BADGE_SIZE, speed ? 0xC385BDCD : 0xC3DEA3B4);
+        roundedBadge(g, x + 1, y + 1, MODE_BADGE_SIZE - 2, 0xC529343F);
         g.blit(RenderPipelines.GUI_TEXTURED, speed ? SPEED_EFFECT_ICON : REGEN_EFFECT_ICON,
-                x, y, 0f, 0f, 12, 12, 18, 18, 18, 18);
+                x + 1, y + 1, 0f, 0f, EFFECT_ICON_SIZE, EFFECT_ICON_SIZE, 18, 18, 18, 18);
+    }
+
+    private static void roundedBadge(GuiGraphicsExtractor g, int x, int y, int size, int color) {
+        // Non-overlapping rows preserve the intended translucency.
+        g.fill(x + 3, y, x + size - 3, y + 1, color);
+        g.fill(x + 1, y + 1, x + size - 1, y + 2, color);
+        g.fill(x, y + 2, x + size, y + size - 2, color);
+        g.fill(x + 1, y + size - 2, x + size - 1, y + size - 1, color);
+        g.fill(x + 3, y + size - 1, x + size - 3, y + size, color);
     }
 
     /**
