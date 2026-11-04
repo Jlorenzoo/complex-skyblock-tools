@@ -1,6 +1,8 @@
 package com.skyblocktoolkit;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -153,8 +155,8 @@ public final class BoneLeggingsTracker {
 
     public static int getHeight() {
         var cfg = ToolkitConfig.get();
-        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 20
-                : cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 12
+        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 22
+                : cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 14
                 : hasIcon(cfg.boneLeggingsHudStyle) ? 16 : 9;
         return height + (cfg.boneLeggingsBackground ? 4 : 0);
     }
@@ -193,7 +195,7 @@ public final class BoneLeggingsTracker {
         }
         if (style == STYLE_BADGE_ONLY) {
             int padding = cfg.boneLeggingsBackground ? 3 : 0;
-            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 20, y + 16, 0x40000000);
+            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 20, y + 18, 0x40000000);
             renderModeBadge(extractor, x + padding + 1, y + (padding == 0 ? 1 : 3), speed);
             return;
         }
@@ -206,41 +208,19 @@ public final class BoneLeggingsTracker {
     public static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
                                         boolean speed, boolean background) {
         if (g == null || stack == null || stack.isEmpty()) return;
-        if (background) g.fill(x, y, x + 30, y + 24, 0x40000000);
+        if (background) g.fill(x, y, x + 30, y + 26, 0x40000000);
         int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
         g.item(stack, dx, dy);
         renderModeBadge(g, dx + 10, dy + 9, speed);
     }
 
-    // Low running-shoe profile: short ankle, laces, tapered toe and a separate light sole.
-    private static final String[] SPEED_BOOT = {
-            "............", "..####......", ".#..h#......", ".#hhh#......", ".#hlh##.....",
-            ".#hhhl###...", ".#hhhhhhh##.", ".#sssssssss#", "..wwwwwwww#.", "............"
-    };
-    private static final String[] REGEN_HEART = {
-            "..........", "..........", "..##.##...", ".#######..", ".#######..",
-            "..#####...", "...###....", "....#.....", "..........", ".........."
-    };
+    private static final Identifier SPEED_EFFECT_ICON = Identifier.withDefaultNamespace("textures/mob_effect/speed.png");
+    private static final Identifier REGEN_EFFECT_ICON = Identifier.withDefaultNamespace("textures/mob_effect/regeneration.png");
 
     private static void renderModeBadge(GuiGraphicsExtractor g, int x, int y, boolean speed) {
-        String[] pixels = speed ? SPEED_BOOT : REGEN_HEART;
-        // Outline only the badge silhouette so it stays legible over the item and world.
-        for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
-            if (pixels[row].charAt(col) != '.')
-                g.fill(x + col - 1, y + row - 1, x + col + 2, y + row + 2, 0xE0181A20);
-        }
-        for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
-            char pixel = pixels[row].charAt(col);
-            if (pixel == '.') continue;
-            int color = !speed ? 0xFFF29AAF : switch (pixel) {
-                case 'h' -> 0xFFE1EBEF;
-                case 'l' -> 0xFF83CBD9;
-                case 's' -> 0xFF487585;
-                case 'w' -> 0xFFBECFD7;
-                default -> 0xFF62B8CC;
-            };
-            g.fill(x + col, y + row, x + col + 1, y + row + 1, color);
-        }
+        // Use the actual effect texture, including resource-pack overrides, with its original colors.
+        g.blit(RenderPipelines.GUI_TEXTURED, speed ? SPEED_EFFECT_ICON : REGEN_EFFECT_ICON,
+                x, y, 0f, 0f, 12, 12, 18, 18, 18, 18);
     }
 
     /**

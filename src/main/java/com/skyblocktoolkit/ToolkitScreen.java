@@ -370,7 +370,7 @@ public final class ToolkitScreen extends Screen {
         top+=24;
         button("Reposition HUD overlay",top,()->go(5));
         top+=24;
-        label("Speed: running boot. Regen: heart.",top);
+        label("Uses Minecraft's Speed / Regen effect icons.",top);
         top+=14;
         label("Shows while worn, held, or Speed VI is active.",top);
         top+=14;
