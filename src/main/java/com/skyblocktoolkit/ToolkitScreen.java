@@ -23,6 +23,7 @@ public final class ToolkitScreen extends Screen {
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall
     private boolean fishEarnings;
     private final Set<Integer> expandedPages=new HashSet<>();
+    private final Set<String> expandedSeasonals=new HashSet<>(List.of("void_rod"));
     private int advancedDivider=-1;
     private String query="",jumpSection="",jumpSetting="";
     private EditBox searchBox;
@@ -37,24 +38,26 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Skills","HUD & Overlays","Utilities","HUD layout"};
+    private static final String[] PAGES={"Boosters","Boosters","Skills","Seasonals","HUD & Overlays","HUD layout","Utilities"};
     private static final String[] DESCRIPTIONS={
         "",
         "Timers, coconut alerts & session statistics",
-        "Farming, fishing, seasonal & mining helpers",
+        "Farming, fishing & mining helpers",
+        "Seasonal items, custom tools & unique gear",
         "On-screen displays & layout configuration",
-        "Chat selection, auction sales & blackout mode",
-        "Interactive HUD placement canvas"
+        "Interactive HUD placement canvas",
+        "Chat selection, auction sales & blackout mode"
     };
     public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=routePage(page);}
     private static int routePage(int p){
         return switch(p){
             case 0,1->1;
-            case 2,9,11,12->2;
-            case 3,8->3;
-            case 4,7,10->4;
+            case 2,9,11->2;
+            case 3,12->3;
+            case 4,8->4;
             case 5->5;
-            default->Math.clamp(p,1,5);
+            case 6,7,10->6;
+            default->Math.clamp(p,1,6);
         };
     }
     @Override protected void init(){
@@ -62,8 +65,8 @@ public final class ToolkitScreen extends Screen {
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
-        int[] targets={1,2,3,4};String[] names={"Boosters","Skills","HUD & Overlays","Utilities"};
-        String[] compactNames={"Boosters","Skills","HUD","Utilities"};
+        int[] targets={1,2,3,4,6};String[] names={"Boosters","Skills","Seasonals","HUD & Overlays","Utilities"};
+        String[] compactNames={"Boost","Skills","Season","HUD","Utils"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
             int by=layout.compact()?y+36:y+66+i*24,bw=layout.compact()?(w-12)/targets.length-2:104;
@@ -127,16 +130,31 @@ public final class ToolkitScreen extends Screen {
                     persist();page=result.page();
                     query="";scroll=0;
                     jumpSection=result.section();jumpSetting=result.setting();
+                    if(result.page()==3){
+                        for(var it:SeasonalRegistry.ITEMS){
+                            if(it.name().equalsIgnoreCase(result.section())||it.id().equalsIgnoreCase(result.section()))
+                                expandedSeasonals.add(it.id());
+                        }
+                    }
                     rebuildWidgets();
                 });
                 top+=24;
             }
-        }else switch(page){
-            case 1->boosters();
-            case 2->skills();
-            case 3->hudOverlays();
-            case 4->utilities();
-            default->boosters();
+        }else{
+            if(page==3&&!jumpSection.isEmpty()){
+                for(var it:SeasonalRegistry.ITEMS){
+                    if(it.name().equalsIgnoreCase(jumpSection)||it.id().equalsIgnoreCase(jumpSection))
+                        expandedSeasonals.add(it.id());
+                }
+            }
+            switch(page){
+                case 1->boosters();
+                case 2->skills();
+                case 3->seasonals();
+                case 4->hudOverlays();
+                case 6->utilities();
+                default->boosters();
+            }
         }
         if(!jumpSetting.isEmpty()){
             for(var control:controls){
@@ -254,33 +272,84 @@ public final class ToolkitScreen extends Screen {
         label(()->CropHarvestTracker.averageLabel(),94,ToolkitTheme.palette().accent(),1);
         toggle("Include boosters in crop average",110,money::includesBoostersInAverage,money::toggleAverageBoosters);
 
-        section("Fishing & Void Rod",138);
-        toggleCell("Depleted area",154,0,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
-        toggleCell("Ready to reel",154,1,()->fishCfg.depthEnabled,()->fishCfg.depthEnabled=!fishCfg.depthEnabled);
-        toggle("Snapped line (Void Rod)",178,()->fishCfg.snapEnabled,()->fishCfg.snapEnabled=!fishCfg.snapEnabled);
-        slider("Fishing volume",202,fishCfg.volume,3,v->fishCfg.volume=(float)v);
-        label("Target depth for the Void Rod reel alert.",228);
-        label(()->"Reel depth: "+(int)fishCfg.target+" blocks",242,ToolkitTheme.palette().text(),1);
-        pair(()->"- 1 block",()->fishCfg.target=Math.max(1,fishCfg.target-1),()->"+ 1 block",()->fishCfg.target=Math.min(1000,fishCfg.target+1),256);
-        pair(()->"Preview ready",fishing::previewDepth,()->"Preview snap",fishing::previewSnap,280);
-        button("Preview depleted warning",304,fishing::previewWarning);
+        section("Fishing",138);
+        toggle("Depleted area",154,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
+        slider("Fishing volume",178,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+        button("Preview depleted warning",202,fishing::previewWarning);
+        button("Void Rod settings (Seasonal)",226,()->go(3));
 
-        section("Fish sell prices",332);
-        label("Sell price per fish ($ each; accepts 1.5k / 2m)",348);
-        priceField("Cod · 60%",362,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
-        priceField("Salmon · 25%",384,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
-        priceField("Puffer · 13%",406,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
-        priceField("Tropical · 2%",428,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
-        setting("Earnings window",454,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
-        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),480,ToolkitTheme.palette().accent(),1);
-        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),fishCfg.earningsWindow);return n+" fish in last "+(fishCfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*fishCfg.averageFishPrice());},494,ToolkitTheme.palette().text(),1);
-        label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",508,ToolkitTheme.palette().text(),1);
+        section("Fish sell prices",254);
+        label("Sell price per fish ($ each; accepts 1.5k / 2m)",270);
+        priceField("Cod · 60%",284,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
+        priceField("Salmon · 25%",306,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
+        priceField("Puffer · 13%",328,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
+        priceField("Tropical · 2%",350,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
+        setting("Earnings window",376,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
+        label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),402,ToolkitTheme.palette().accent(),1);
+        label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),fishCfg.earningsWindow);return n+" fish in last "+(fishCfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*fishCfg.averageFishPrice());},416,ToolkitTheme.palette().text(),1);
+        label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",430,ToolkitTheme.palette().text(),1);
 
-        section("Mining & XP",528);
-        toggle("XP per hour HUD",544,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
-        label("Appears while you collect XP.",568);
-        label(()->XpTracker.averageLabel(),582,ToolkitTheme.palette().xpText(),1);
-        toggle("Include XP boosters",598,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
+        section("Mining & XP",450);
+        toggle("XP per hour HUD",466,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
+        label("Appears while you collect XP.",490);
+        label(()->XpTracker.averageLabel(),504,ToolkitTheme.palette().xpText(),1);
+        toggle("Include XP boosters",520,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
+    }
+    private void seasonals(){
+        section("Seasonal Items",0);
+        pair(()->"Expand all",()->{for(var it:SeasonalRegistry.ITEMS)expandedSeasonals.add(it.id());clearBody();buildBody();},
+             ()->"Collapse all",()->{expandedSeasonals.clear();clearBody();buildBody();},16);
+        label("Manage item-specific triggers, alerts and settings.",40);
+        int top=54;
+        for(var item:SeasonalRegistry.ITEMS){
+            boolean expanded=expandedSeasonals.contains(item.id());
+            var card=addRenderableWidget(ToolkitButton.seasonalCard(
+                item.name(),
+                item.subtitle(),
+                item.icon(),
+                expanded,
+                b->{
+                    if(expandedSeasonals.contains(item.id()))expandedSeasonals.remove(item.id());
+                    else expandedSeasonals.add(item.id());
+                    clearBody();buildBody();
+                },
+                layout.bodyX(),
+                layout.bodyY()+top-scroll,
+                layout.bodyWidth()
+            ));
+            controls.add(new Control(card,top,32));
+            contentHeight=Math.max(contentHeight,top+32);
+            top+=36;
+            if(expanded){
+                top=item.buildSettings(this,top);
+                top+=8;
+            }
+        }
+    }
+    public int buildVoidRodSettings(int top){
+        var fishing=ToolkitMod.FISHING;var fishCfg=fishing.settings();
+        toggleCell("Ready to reel",top,0,()->fishCfg.depthEnabled,()->fishCfg.depthEnabled=!fishCfg.depthEnabled);
+        toggleCell("Snapped line (Void Rod)",top,1,()->fishCfg.snapEnabled,()->fishCfg.snapEnabled=!fishCfg.snapEnabled);
+        top+=24;
+        slider("Fishing volume",top,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+        top+=24;
+        label("Target depth for the Void Rod reel alert.",top);
+        top+=14;
+        label(()->"Reel depth: "+(int)fishCfg.target+" blocks",top,ToolkitTheme.palette().text(),1);
+        top+=14;
+        pair(()->"- 1 block",()->fishCfg.target=Math.max(1,fishCfg.target-1),()->"+ 1 block",()->fishCfg.target=Math.min(1000,fishCfg.target+1),top);
+        top+=24;
+        pair(()->"Preview ready",fishing::previewDepth,()->"Preview snap",fishing::previewSnap,top);
+        top+=24;
+        return top;
+    }
+    public int buildBoneLeggingsSettings(int top){
+        var cfg=ToolkitConfig.get();
+        toggle("Burning Rush Rune",top,()->cfg.boneLeggingsSpeedAlert,()->cfg.boneLeggingsSpeedAlert=!cfg.boneLeggingsSpeedAlert);
+        top+=24;
+        label("Triggers a speed cue when Burning Rush activates.",top);
+        top+=14;
+        return top;
     }
     private void hudOverlays(){
         var cfg=ToolkitConfig.get();

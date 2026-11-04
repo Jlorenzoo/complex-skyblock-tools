@@ -21,6 +21,9 @@ public final class ToolkitButton extends Button {
     public static ToolkitButton toggle(String label,OnPress press,int x,int y,int w,int h,BooleanSupplier state){return new ToolkitButton(x,y,w,h,label,press,2,false,state,null,null);}
     public static ToolkitButton tile(String label,String description,ItemStack icon,OnPress press,int x,int y,int w,int h){return new ToolkitButton(x,y,w,h,label,press,3,false,null,icon,description);}
     public static ToolkitButton themeSwitch(OnPress press,int x,int y,boolean lightMode){return new ToolkitButton(x,y,60,22,lightMode?"Light mode":"Dark mode",press,4,lightMode,null,null,null);}
+    public static ToolkitButton seasonalCard(String name,String subtitle,ItemStack icon,boolean expanded,OnPress press,int x,int y,int w){
+        return new ToolkitButton(x,y,w,32,name,press,6,expanded,null,icon,subtitle);
+    }
     public static ToolkitButton setting(String label,Supplier<String> value,OnPress press,int x,int y,int w){
         var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
         button.value=value;return button;
@@ -72,6 +75,19 @@ public final class ToolkitButton extends Button {
             g.text(font,font.substrByWidth(Component.literal(label),w-(hasIcon?52:32)).getString(),x+(hasIcon?34:12),y+16,ToolkitTheme.palette().text(),false);
             g.text(font,">",x+w-16,y+16,ToolkitTheme.palette().muted(),false);
             g.text(font,font.substrByWidth(Component.literal(description),w-24).getString(),x+12,y+43,ToolkitTheme.palette().muted(),false);return;
+        }
+        if(kind==6){
+            var palette=ToolkitTheme.palette();
+            ToolkitTheme.rounded(g,x,y,w,h,4,hover?palette.hover():palette.surface());
+            if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,palette.accent());
+            boolean hasIcon=icon!=null&&!icon.isEmpty();
+            if(hasIcon)g.item(icon,x+8,y+(h-16)/2);
+            int textX=x+(hasIcon?30:8);
+            int maxTextW=w-(hasIcon?48:26);
+            g.text(font,font.substrByWidth(Component.literal(label),maxTextW).getString(),textX,y+6,selected?palette.accent():palette.text(),false);
+            g.text(font,font.substrByWidth(Component.literal(description),maxTextW).getString(),textX,y+18,palette.muted(),false);
+            String chevron=selected?"▾":"▸";
+            g.text(font,chevron,x+w-14,y+(h-8)/2,palette.muted(),false);return;
         }
         String text=font.substrByWidth(getMessage(),w-12).getString();
         g.text(font,text,x+(w-font.width(text))/2,y+(h-8)/2,active?ToolkitTheme.palette().text():ToolkitTheme.palette().muted(),false);

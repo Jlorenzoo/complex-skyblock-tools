@@ -99,8 +99,8 @@ public final class ToolkitMod implements ClientModInitializer {
                 var command=ClientCommands.literal(rootName).executes(ctx->{requestedPage=0;requested=true;return 1;});
                 command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
                 command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
-                String[] modules={"boosters","skills","farming","farm","fishing","mining","seasonal","hud","overlays","layout","utilities","chat","auction","blackout"};
-                int[] pages={1,2,2,2,2,2,2,3,3,5,4,4,4,4};
+                String[] modules={"boosters","skills","farming","farm","fishing","mining","seasonal","seasonals","voidrod","hud","overlays","layout","utilities","chat","auction","blackout"};
+                int[] pages={1,2,2,2,2,2,3,3,3,4,4,5,6,6,6,6};
                 for(int i=0;i<modules.length;i++){
                     final int target=pages[i];
                     command.then(ClientCommands.literal(modules[i]).executes(ctx->{requestedPage=target;requested=true;return 1;}));

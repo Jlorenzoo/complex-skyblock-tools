@@ -26,6 +26,7 @@ public final class ToolkitConfig {
     public boolean blackoutHint=true;
     public int highlight=0;
     public double highlightOpacity=.39;
+    public boolean boneLeggingsSpeedAlert=true;
     public static ToolkitConfig get(){return INSTANCE;}
     private final Path path=FabricLoader.getInstance().getConfigDir().resolve("skyblocktoolkit.json");
     private ToolkitConfig(){
@@ -69,6 +70,7 @@ public final class ToolkitConfig {
             if(j.has("blackoutHint"))blackoutHint=j.get("blackoutHint").getAsBoolean();
             if(j.has("highlight"))highlight=Math.clamp(j.get("highlight").getAsInt(),0,2);
             if(j.has("highlightOpacity")){double v=j.get("highlightOpacity").getAsDouble();if(Double.isFinite(v))highlightOpacity=Math.clamp(v,.1,.8);}
+            if(j.has("boneLeggingsSpeedAlert"))boneLeggingsSpeedAlert=j.get("boneLeggingsSpeedAlert").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be read: "+e.getMessage());}
     }
@@ -108,6 +110,7 @@ public final class ToolkitConfig {
             j.addProperty("blackoutOpacity",blackoutOpacity);
             j.addProperty("blackoutHint",blackoutHint);
             j.addProperty("highlight",highlight);j.addProperty("highlightOpacity",highlightOpacity);
+            j.addProperty("boneLeggingsSpeedAlert",boneLeggingsSpeedAlert);
             Files.writeString(temp,new GsonBuilder().setPrettyPrinting().create().toJson(j)+"\n");
             try{Files.move(temp,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){Files.move(temp,path,StandardCopyOption.REPLACE_EXISTING);}
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be saved: "+e.getMessage());}

@@ -46,7 +46,7 @@ public final class GcCodeTest {
         // 5. Settings search discovery
         var results = ToolkitSearch.find("Quick /gc code click");
         check(results.size() == 1, "finds Quick /gc code click setting");
-        check(results.getFirst().page() == 4, "setting located on Utilities page 4");
+        check(results.getFirst().page() == 6, "setting located on Utilities page 6");
         check(results.getFirst().category().equals("Utilities"), "category is Utilities");
         check(results.getFirst().section().equals("Chat selection & copy"), "section is Chat selection & copy");
 

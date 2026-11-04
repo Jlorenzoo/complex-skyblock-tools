@@ -366,9 +366,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==45){capture(mc,"search-dark");switchTheme(mc);stage++;return;}
                 if(stage==46){
                     capture(mc,"search-light");
-                    for(int category:new int[]{1,2,3,4}){
+                    for(int category:new int[]{1,2,3,4,6}){
                         mc.setScreenAndShow(new ToolkitScreen(null,category));
-                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==4?1:0),"Single sell-all selector in Utilities");
+                        check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==6?1:0),"Single sell-all selector in Utilities");
                         search(mc,"sell all");
                         check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().contains(" / ")).count()==1,"Sell all returns one global setting from every category");
                         press(mc,"Utilities / Sell all key");
@@ -386,7 +386,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==48){
                     capture(mc,"general-dark");
                     mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();
-                    for(int page:new int[]{1,2,3,4,7,9,10,11,12}){
+                    for(int page:new int[]{1,2,3,4,6,7,9,10,11,12}){
                         mc.setScreenAndShow(new ToolkitScreen(null,page));assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }
                     mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);stage++;return;
@@ -395,7 +395,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==50){capture(mc,"general-light-compact");stage++;return;}
                 if(stage==51){
                     mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
-                    mc.setScreenAndShow(new ToolkitScreen(null,4));
+                    mc.setScreenAndShow(new ToolkitScreen(null,6));
                     var slider=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton)
                         .map(c->(net.minecraft.client.gui.components.AbstractSliderButton)c).filter(c->c.getMessage().getString().startsWith("Volume:")).findFirst().orElseThrow();
                     int start=slider.getX()+4,end=slider.getRight()-44,cy=slider.getY()+10;
