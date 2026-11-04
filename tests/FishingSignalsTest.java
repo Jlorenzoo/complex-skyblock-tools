@@ -9,6 +9,7 @@ public final class FishingSignalsTest {
         check(Double.isNaN(FishingSignals.depth("Money booster 30/30")),"Unrelated numbers");
         check(Double.isNaN(FishingSignals.depth("Depth NaN blocks")),"Invalid numeric value");
         check(FishingSignals.voidRod("§5Void Rod"),"Formatted Void Rod accepted");
+        check(FishingSignals.voidRod("✦ Void Rod ✦"),"Starred Void Rod accepted");
         for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]"})
             check(!FishingSignals.voidRod(name),"Other item names rejected");
         var s=new FishingSignals();UUID first=UUID.randomUUID(),second=UUID.randomUUID();

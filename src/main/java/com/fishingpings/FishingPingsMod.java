@@ -62,8 +62,7 @@ public final class FishingPingsMod implements ClientModInitializer {
     }
     private static boolean overlaps(int x,int y,int w,int h,net.minecraft.client.gui.components.AbstractWidget widget){return widget.visible&&x<widget.getRight()&&x+w>widget.getX()&&y<widget.getBottom()&&y+h>widget.getY();}
     private void checkDepth(Minecraft mc,String text,long now){
-        if(mc.player==null||mc.player.fishing==null)return;
-        if(!mc.player.getMainHandItem().is(Items.FISHING_ROD)&&!mc.player.getOffhandItem().is(Items.FISHING_ROD))return;
+        if(mc.player==null||mc.player.fishing==null||!holdingVoidRod(mc))return;
         double depth=FishingSignals.depth(text);
         if(signals.ready(mc.player.fishing.getUUID(),depth,config.target,now)&&config.depthEnabled)readySound(mc);
     }

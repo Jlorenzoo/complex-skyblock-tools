@@ -366,7 +366,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==45){capture(mc,"search-dark");switchTheme(mc);stage++;return;}
                 if(stage==46){
                     capture(mc,"search-light");
-                    for(int category:new int[]{1,9,11,2,3,4,7,10}){
+                    for(int category:new int[]{1,9,11,2,12,3,4,7,10}){
                         mc.setScreenAndShow(new ToolkitScreen(null,category));
                         check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==10?1:0),"Single sell-all selector in General");
                         search(mc,"sell all");
@@ -386,7 +386,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==48){
                     capture(mc,"general-dark");
                     mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();
-                    for(int page:new int[]{1,2,3,4,7,9,10,11}){
+                    for(int page:new int[]{1,2,3,4,7,9,10,11,12}){
                         mc.setScreenAndShow(new ToolkitScreen(null,page));assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }
                     mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);stage++;return;

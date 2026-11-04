@@ -37,16 +37,16 @@ public final class ToolkitScreen extends Screen {
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General","Mining"};
-    public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,11);}
+    private static final String[] PAGES={"Boosters","Boosters","Fishing","Chat Copy","Auction alerts","HUD layout","Sound details","Blackout","HUD elements","Farming","General","Mining","Seasonal"};
+    public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=page==0?1:Math.clamp(page,1,12);}
     @Override protected void init(){
         layout=page==8?ToolkitLayout.popup(width,height):ToolkitLayout.hub(width,height);controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;advancedDivider=-1;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
         if(page==8){hudElements();updateControls();return;}
-        int[] targets={1,9,11,2,3,4,7,10};String[] names={"Boosters","Farming","Mining","Fishing","Chat Copy","Auction","Blackout","General"};
-        String[] compactNames={"Boost","Farm","Mine","Fish","Chat","Sales","Dim","Keys"};
+        int[] targets={1,9,11,2,12,3,4,7,10};String[] names={"Boosters","Farming","Mining","Fishing","Seasonal","Chat Copy","Auction","Blackout","General"};
+        String[] compactNames={"Boost","Farm","Mine","Fish","Season","Chat","Sales","Dim","Keys"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
             int by=layout.compact()?y+36:y+66+i*23,bw=layout.compact()?(w-12)/targets.length-2:104;
@@ -59,18 +59,11 @@ public final class ToolkitScreen extends Screen {
             String updateText=UpdateManager.getState()==UpdateManager.State.DOWNLOADING?"Downloading...":
                               UpdateManager.getState()==UpdateManager.State.READY_RESTART?"Restart Game":
                               "Update v"+UpdateManager.getLatestVersion();
-            if(!layout.compact()){
-                addRenderableWidget(ToolkitButton.action(updateText,b->{
-                    UpdateManager.triggerUpdateFromCommand();
-                    if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },x+4,y+250,104,20));
-            }else{
-                int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
-                addRenderableWidget(ToolkitButton.action(updateText,b->{
-                    UpdateManager.triggerUpdateFromCommand();
-                    if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
-                },ux,layout.footerY(),uw,20));
-            }
+            int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
+            addRenderableWidget(ToolkitButton.action(updateText,b->{
+                UpdateManager.triggerUpdateFromCommand();
+                if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
+            },ux,layout.footerY(),Math.min(uw,104),20));
         }
 
         initSearch();
@@ -117,14 +110,14 @@ public final class ToolkitScreen extends Screen {
                     persist();page=result.page();
                     boolean inFishPrices=result.page()==2&&("Fish prices".equals(result.section())||"Estimate".equals(result.section())||result.setting().endsWith("%"));
                     fishEarnings=inFishPrices;
-                    if(result.page()==6)soundReturnPage=result.category().equals("Auction")?4:2;
+                    if(result.page()==6)soundReturnPage=result.category().equals("Auction")?4:result.category().equals("Seasonal")?12:2;
                     if(result.page()==8)hudReturnPage=result.page();
                     query="";scroll=0;
                     jumpSection=result.section();jumpSetting=result.setting();expandedPages.add(page);rebuildWidgets();
                 });
                 top+=24;
             }
-        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();case 11->mining();}
+        }else switch(page){case 1->money();case 2->fishing();case 3->chat();case 4->utilities();case 6->advancedSounds();case 7->blackout();case 9->farming();case 10->general();case 11->mining();case 12->seasonal();}
         if(!jumpSetting.isEmpty()){
             for(var control:controls){
                 if(searchTarget(control.widget(),jumpSetting)){scroll=control.top();break;}
@@ -305,18 +298,28 @@ public final class ToolkitScreen extends Screen {
         if(fishEarnings){fishPrices();return;}
         var mod=ToolkitMod.FISHING;var cfg=mod.settings();
         section("Catch alerts",0);
-        toggle("Ready to reel",16,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
-        toggle("Depleted area",40,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
-        toggle("Snapped line (Void Rod)",62,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
-        slider("Volume",86,cfg.volume,3,v->cfg.volume=(float)v);
-        section("Earnings & prices",116);
-        toggle("Fishing earnings HUD",132,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
-        button("Fish prices",156,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
-        if(advanced(188)){
-            label(()->"Reel depth: "+(int)cfg.target+" blocks",242,ToolkitTheme.palette().text(),1);
-            pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),258);
-            pair(()->"Preview",mod::previewDepth,()->"Alert sounds",()->{soundReturnPage=2;go(6);},284);
+        toggle("Depleted area",16,()->cfg.warningEnabled,()->{cfg.warningEnabled=!cfg.warningEnabled;mod.warningChanged();});
+        slider("Volume",40,cfg.volume,3,v->cfg.volume=(float)v);
+        button("Void Rod settings (Seasonal)",64,()->go(12));
+        section("Earnings & prices",94);
+        toggle("Fishing earnings HUD",110,()->ToolkitConfig.get().fishEarningsHud,()->ToolkitConfig.get().fishEarningsHud=!ToolkitConfig.get().fishEarningsHud);
+        button("Fish prices",134,()->{fishEarnings=true;scroll=0;rebuildWidgets();});
+        if(advanced(166)){
+            pair(()->"Preview warning",mod::previewWarning,()->"Alert sounds",()->{soundReturnPage=2;go(6);},220);
         }
+    }
+    private void seasonal(){
+        var mod=ToolkitMod.FISHING;var cfg=mod.settings();
+        section("Void Rod",0);
+        toggle("Ready to reel",16,()->cfg.depthEnabled,()->cfg.depthEnabled=!cfg.depthEnabled);
+        toggle("Snapped line (Void Rod)",40,()->cfg.snapEnabled,()->cfg.snapEnabled=!cfg.snapEnabled);
+        label("Alerts for the Void Rod depth bar and broken line.",66);
+        label(()->"Reel depth: "+(int)cfg.target+" blocks",80,ToolkitTheme.palette().text(),1);
+        pair(()->"- 1 block",()->cfg.target=Math.max(1,cfg.target-1),()->"+ 1 block",()->cfg.target=Math.min(1000,cfg.target+1),96);
+        pair(()->"Preview ready",mod::previewDepth,()->"Preview snap",mod::previewSnap,122);
+        section("Bone Leggings",152);
+        label("Seasonal armor piece with the Burning Rush rune.",168);
+        label("Grants Regeneration or a health-draining Speed boost.",182);
     }
 
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
