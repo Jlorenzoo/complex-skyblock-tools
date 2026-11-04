@@ -4,6 +4,11 @@ public final class ToolkitLayoutTest {
   for(int w:new int[]{240,320,426,640,960})for(int h:new int[]{180,240,360,540}){
    check(ToolkitLayout.of(w,h),w,h);check(ToolkitLayout.hub(w,h),w,h);check(ToolkitLayout.popup(w,h),w,h);
   }
+  var roomy=ToolkitLayout.hub(960,540);
+  if(roomy.width()!=600||roomy.height()!=400||roomy.bodyWidth()<420||roomy.compact())
+   throw new AssertionError("Desktop hub reserves a generous content area");
+  if(!ToolkitLayout.hub(426,240).compact()||ToolkitLayout.settingY(48)-ToolkitLayout.settingY(24)!=30)
+   throw new AssertionError("Compact navigation and relaxed setting spacing");
   for(String query:new String[]{"sell all","SELL ALL","sellall","  sell   all  ","farming sell all"}){
    var results=com.skyblocktoolkit.ToolkitSearch.find(query);
    if(results.size()!=1||!results.getFirst().setting().equals("Sell all key")||results.getFirst().page()!=6)

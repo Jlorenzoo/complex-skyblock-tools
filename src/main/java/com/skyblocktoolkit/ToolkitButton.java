@@ -34,11 +34,11 @@ public final class ToolkitButton extends Button {
         if(kind==5){
             var palette=ToolkitTheme.palette();String current=value.get();
             setMessage(Component.literal(description+": "+current));
-            int valueWidth=Math.min(w/2,Math.max(62,font.width(current)+16));
-            g.text(font,description,x+6,y+6,palette.text(),false);
+            int valueWidth=Math.min(w/2,Math.max(62,ToolkitTheme.textWidth(font,current)+16));
+            ToolkitTheme.text(g,font,description,x+6,y+6,palette.text());
             ToolkitTheme.rounded(g,x+w-valueWidth,y+1,valueWidth,18,3,hover?palette.hover():palette.surface());
-            String clipped=font.substrByWidth(Component.literal(current),valueWidth-12).getString();
-            g.text(font,clipped,x+w-(valueWidth+font.width(clipped))/2,y+6,palette.accent(),false);
+            String clipped=ToolkitTheme.clipText(font,Component.literal(current),valueWidth-12);
+            ToolkitTheme.text(g,font,clipped,x+w-(valueWidth+ToolkitTheme.textWidth(font,clipped))/2,y+6,palette.accent());
             return;
         }
         if(kind==4){
@@ -56,8 +56,8 @@ public final class ToolkitButton extends Button {
                 ToolkitTheme.rounded(g,x,y,w,h,3,ToolkitTheme.palette().accentSurface());
             }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().surface());
             int pad=w<70?4:8;
-            String clipped=font.substrByWidth(getMessage(),w-pad*2).getString();
-            g.text(font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted(),false);return;
+            String clipped=ToolkitTheme.clipText(font,getMessage(),w-pad*2);
+            ToolkitTheme.text(g,font,clipped,x+pad,y+(h-8)/2,selected?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());return;
         }
         if(kind!=2||hover){
             ToolkitTheme.rounded(g,x,y,w,h,3,hover?ToolkitTheme.palette().hover():ToolkitTheme.palette().surface());
@@ -65,16 +65,16 @@ public final class ToolkitButton extends Button {
         }
         if(kind==2){
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
-            g.text(font,font.substrByWidth(Component.literal(label),w-39).getString(),x+6,y+(h-8)/2,ToolkitTheme.palette().text(),false);
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),w-39),x+6,y+(h-8)/2,ToolkitTheme.palette().text());
             ToolkitTheme.rounded(g,x+w-26,y+(h-10)/2,20,10,5,enabled?ToolkitTheme.palette().accentTrack():com.skyblocktoolkit.ToolkitTheme.palette().track());
             ToolkitTheme.rounded(g,x+w-(enabled?14:24),y+(h-6)/2,6,6,3,ToolkitTheme.palette().onAccent());return;
         }
         if(kind==3){
             boolean hasIcon=!icon.isEmpty();
             if(hasIcon)g.item(icon,x+10,y+12);
-            g.text(font,font.substrByWidth(Component.literal(label),w-(hasIcon?52:32)).getString(),x+(hasIcon?34:12),y+16,ToolkitTheme.palette().text(),false);
-            g.text(font,">",x+w-16,y+16,ToolkitTheme.palette().muted(),false);
-            g.text(font,font.substrByWidth(Component.literal(description),w-24).getString(),x+12,y+43,ToolkitTheme.palette().muted(),false);return;
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),w-(hasIcon?52:32)),x+(hasIcon?34:12),y+16,ToolkitTheme.palette().text());
+            ToolkitTheme.text(g,font,">",x+w-16,y+16,ToolkitTheme.palette().muted());
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),w-24),x+12,y+43,ToolkitTheme.palette().muted());return;
         }
         if(kind==6){
             var palette=ToolkitTheme.palette();
@@ -84,13 +84,13 @@ public final class ToolkitButton extends Button {
             if(hasIcon)g.item(icon,x+8,y+(h-16)/2);
             int textX=x+(hasIcon?30:8);
             int maxTextW=w-(hasIcon?48:26);
-            g.text(font,font.substrByWidth(Component.literal(label),maxTextW).getString(),textX,y+6,selected?palette.accent():palette.text(),false);
-            g.text(font,font.substrByWidth(Component.literal(description),maxTextW).getString(),textX,y+18,palette.muted(),false);
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),maxTextW),textX,y+6,selected?palette.accent():palette.text());
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),maxTextW),textX,y+18,palette.muted());
             String chevron=selected?"▾":"▸";
-            g.text(font,chevron,x+w-14,y+(h-8)/2,palette.muted(),false);return;
+            ToolkitTheme.text(g,font,chevron,x+w-14,y+(h-8)/2,palette.muted());return;
         }
-        String text=font.substrByWidth(getMessage(),w-12).getString();
-        g.text(font,text,x+(w-font.width(text))/2,y+(h-8)/2,active?ToolkitTheme.palette().text():ToolkitTheme.palette().muted(),false);
+        String text=ToolkitTheme.clipText(font,getMessage(),w-12);
+        ToolkitTheme.text(g,font,text,x+(w-ToolkitTheme.textWidth(font,text))/2,y+(h-8)/2,active?ToolkitTheme.palette().text():ToolkitTheme.palette().muted());
     }
     private static void sun(GuiGraphicsExtractor g,int cx,int cy,int color){
         ToolkitTheme.rounded(g,cx-3,cy-3,6,6,3,color);

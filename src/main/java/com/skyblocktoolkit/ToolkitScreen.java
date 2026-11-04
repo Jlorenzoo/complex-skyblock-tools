@@ -34,8 +34,11 @@ public final class ToolkitScreen extends Screen {
     private ToolkitLayout layout;
     private final List<Control> controls=new ArrayList<>();
     private final List<Label> labels=new ArrayList<>();
-    private record Control(AbstractWidget widget,int top,int rowHeight){}
+    private record Control(AbstractWidget widget,int top,int rowHeight){
+        Control {top=ToolkitLayout.settingY(top);}
+    }
     private record Label(Supplier<String> text,int top,int color,float scale,int offset){
+        Label {top=ToolkitLayout.settingY(top);scale*=ToolkitTheme.MENU_TEXT_SCALE;}
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
     private static final String[] PAGES={"Boosters","Boosters","Skills","Seasonals","HUD & Overlays","HUD layout","Utilities"};
@@ -68,18 +71,18 @@ public final class ToolkitScreen extends Screen {
         int[] targets={1,2,3,4,6};String[] names={"Boosters","Skills","Seasonals","HUD & Overlays","Utilities"};
         String[] compactNames={"Boost","Skills","Season","HUD","Utils"};
         for(int i=0;i<targets.length;i++){
-            final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+4;
-            int by=layout.compact()?y+36:y+66+i*24,bw=layout.compact()?(w-12)/targets.length-2:104;
+            final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+12;
+            int by=layout.compact()?y+40:y+82+i*30,bw=layout.compact()?(w-12)/targets.length-2:112;
             var nav=addRenderableWidget(ToolkitButton.nav(layout.compact()?compactNames[i]:names[i],button->go(target),bx,by,bw,20,page==target&&query.isBlank()));
             nav.setTooltip(Tooltip.create(Component.literal(names[i])));
         }
-        addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+4,layout.footerY(),96,20));
+        addRenderableWidget(ToolkitButton.action("Edit HUD",b->go(5),x+12,layout.footerY(),96,20));
         addRenderableWidget(ToolkitButton.action("Close",b->onClose(),x+w-76,layout.footerY(),64,20));
         if(UpdateManager.isUpdateAvailable()){
             String updateText=UpdateManager.getState()==UpdateManager.State.DOWNLOADING?"Downloading...":
                               UpdateManager.getState()==UpdateManager.State.READY_RESTART?"Restart Game":
                               "Update v"+UpdateManager.getLatestVersion();
-            int ux=x+104,uw=Math.max(70,(x+w-80)-ux);
+            int ux=x+112,uw=Math.max(70,(x+w-80)-ux);
             addRenderableWidget(ToolkitButton.action(updateText,b->{
                 UpdateManager.triggerUpdateFromCommand();
                 if(UpdateManager.getState()==UpdateManager.State.READY_RESTART)onClose();
@@ -93,11 +96,11 @@ public final class ToolkitScreen extends Screen {
     private void initSearch(){
         int sx,sy,sw,editW,clearX,clearY,clearW,clearH;
         if(!layout.compact()){
-            sx=layout.x()+4;sy=layout.y()+42;sw=104;
+            sx=layout.x()+12;sy=layout.y()+52;sw=112;
             editW=sw-22;clearW=14;clearH=16;
             clearX=sx+sw-16;clearY=sy+2;
         }else{
-            sx=layout.bodyX();sy=layout.y()+60;sw=layout.bodyWidth();
+            sx=layout.bodyX();sy=layout.y()+68;sw=layout.bodyWidth();
             editW=sw-30;clearW=22;clearH=20;
             clearX=sx+sw-24;clearY=sy;
         }
@@ -158,6 +161,7 @@ public final class ToolkitScreen extends Screen {
                 default->boosters();
             }
         }
+        contentHeight=ToolkitLayout.settingY(contentHeight);
         if(!jumpSetting.isEmpty()){
             for(var control:controls){
                 if(searchTarget(control.widget(),jumpSetting)){scroll=control.top();break;}
@@ -171,8 +175,8 @@ public final class ToolkitScreen extends Screen {
             (setting.equals("Minimum boost (%)")&&message.equals("Minimum coconut money booster percentage"));
     }
     private void section(String title,int top){
-        label(()->title,top,ToolkitTheme.palette().accent(),1);
-        if(title.equals(jumpSection))scroll=top;
+        label(()->title,top,ToolkitTheme.palette().text(),1);
+        if(title.equals(jumpSection))scroll=ToolkitLayout.settingY(top);
     }
     private void addThemeButton(int x,int y,int w){
         var cfg=ToolkitConfig.get();
@@ -216,7 +220,7 @@ public final class ToolkitScreen extends Screen {
                 var palette=ToolkitTheme.palette();
                 if(isHoveredOrFocused())ToolkitTheme.rounded(g,getX(),getY(),getWidth(),getHeight(),3,palette.surface());
                 String percent=Math.round(value*maximum*100)+"%";
-                g.text(font,percent,getRight()-6-font.width(percent),getY()+6,palette.muted(),false);
+                ToolkitTheme.text(g,font,percent,getRight()-6-ToolkitTheme.textWidth(font,percent),getY()+6,palette.muted());
                 int end=getRight()-44,start=getX()+4,knob=start+(int)((end-start)*value),cy=getY()+10;
                 g.fill(start,cy-1,end,cy+1,palette.track());g.fill(start,cy-1,knob,cy+1,palette.accentTrack());
                 ToolkitTheme.rounded(g,knob-2,cy-3,4,6,2,palette.accent());
@@ -462,7 +466,7 @@ public final class ToolkitScreen extends Screen {
         button(open?"Hide advanced":"Advanced...",top,()->{
             if(open)expandedPages.remove(page);else expandedPages.add(page);
             clearBody();buildBody();
-            scroll=open?0:top+24;updateControls();
+            scroll=open?0:ToolkitLayout.settingY(top+24);updateControls();
         });
         if(open){advancedDivider=top+28;section("Advanced settings",top+36);}
         return open;
@@ -497,27 +501,27 @@ public final class ToolkitScreen extends Screen {
         ToolkitTheme.rounded(g,x-1,y-1,w+2,h+2,7,ToolkitTheme.palette().border());
         ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
         if(!layout.compact()){
-            ToolkitTheme.rounded(g,x,y,112,h,6,ToolkitTheme.palette().sidebar());g.fill(x+104,y,x+112,y+h,ToolkitTheme.palette().sidebar());
-            g.blit(LOGO,x+8,y+8,x+38,y+38,0f,1f,0f,1f);
-            g.text(font,"COMPLEXIFY",x+42,y+13,ToolkitTheme.palette().accent(),false);
-            g.text(font,"v"+UpdateManager.getCurrentVersion(),x+42,y+25,ToolkitTheme.palette().muted(),false);
-            g.text(font,query.isBlank()?(page<PAGES.length?PAGES[page]:""):"Search settings",layout.bodyX(),y+18,ToolkitTheme.palette().text(),false);
-            g.text(font,query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories",layout.bodyX(),y+34,ToolkitTheme.palette().muted(),false);
-            g.fill(layout.bodyX(),y+43,layout.bodyX()+20,y+44,ToolkitTheme.palette().accent());
-            int sx=x+4,sy=y+42,sw=104;
+            ToolkitTheme.rounded(g,x,y,132,h,6,ToolkitTheme.palette().sidebar());g.fill(x+124,y,x+132,y+h,ToolkitTheme.palette().sidebar());
+            g.blit(LOGO,x+12,y+12,x+38,y+38,0f,1f,0f,1f);
+            ToolkitTheme.text(g,font,"COMPLEXIFY",x+44,y+15,ToolkitTheme.palette().text());
+            ToolkitTheme.text(g,font,"v"+UpdateManager.getCurrentVersion(),x+44,y+28,ToolkitTheme.palette().muted());
+            g.text(font,query.isBlank()?(page<PAGES.length?PAGES[page]:""):"Search settings",layout.bodyX(),y+20,ToolkitTheme.palette().text(),false);
+            ToolkitTheme.text(g,font,query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories",layout.bodyX(),y+39,ToolkitTheme.palette().muted());
+            g.fill(layout.bodyX(),y+55,layout.bodyX()+layout.bodyWidth(),y+56,ToolkitTheme.palette().border());
+            int sx=x+12,sy=y+52,sw=112;
             ToolkitTheme.rounded(g,sx,sy,sw,20,3,ToolkitTheme.palette().surface());
             if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-4,sy+20,ToolkitTheme.palette().accent());
             if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
         }else{
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
             g.text(font,"Complexify",x+30,y+15,ToolkitTheme.palette().text(),false);
-            int sx=layout.bodyX(),sy=y+60,sw=layout.bodyWidth();
+            int sx=layout.bodyX(),sy=y+68,sw=layout.bodyWidth();
             ToolkitTheme.rounded(g,sx,sy,sw-(clearSearch!=null&&clearSearch.visible?26:0),20,3,ToolkitTheme.palette().surface());
             if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-(clearSearch!=null&&clearSearch.visible?30:4),sy+20,ToolkitTheme.palette().accent());
             if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search settings...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
         }
         g.enableScissor(layout.bodyX(),layout.bodyY(),layout.bodyX()+layout.bodyWidth(),layout.bodyY()+layout.viewport());
-        if(advancedDivider>=0){int lineY=layout.bodyY()+advancedDivider-scroll;
+        if(advancedDivider>=0){int lineY=layout.bodyY()+ToolkitLayout.settingY(advancedDivider)-scroll;
             g.fill(layout.bodyX(),lineY,layout.bodyX()+layout.bodyWidth(),lineY+1,ToolkitTheme.palette().border());}
         for(var label:labels){String text=label.text().get();if(text.isEmpty()||!layout.fits(label.top(),(int)Math.ceil(10*label.scale()),scroll))continue;
             g.pose().pushMatrix();g.pose().translate(layout.bodyX()+label.offset(),layout.bodyY()+label.top()-scroll);g.pose().scale(label.scale(),label.scale());

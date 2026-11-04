@@ -1,5 +1,6 @@
 from pathlib import Path
-import hashlib, json, os, shutil, subprocess, sys, tempfile, urllib.request
+import argparse, hashlib, json, os, shutil, subprocess, sys, tempfile, urllib.request
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -23,11 +24,16 @@ def fetch(url, path, sha1=None):
     return path
 
 def main():
+    parser = argparse.ArgumentParser(description="Render and exercise the 1.21.11 menus in an isolated Linux client")
+    parser.add_argument('--profile', type=Path, help='Copy the configured pack into the disposable offline client')
+    parser.add_argument('--output', type=Path, default=ROOT / 'artifacts/menu-preview-linux', help='Separate output directory for screenshots and runtime evidence')
+    cli = parser.parse_args()
     PRISM = Path.home() / ".var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher"
     install = PRISM
     version = json.loads((install / f"meta/net.minecraft/{VERSION}.json").read_text()) if (install / f"meta/net.minecraft/{VERSION}.json").exists() else json.loads(urllib.request.urlopen(f"https://meta.fabricmc.net/v2/versions/loader/{VERSION}/{LOADER}/profile/json").read())
-    output = ROOT / "artifacts/seasonals-preview"
+    output = cli.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
+    (output / "PASS.txt").unlink(missing_ok=True)
     for screenshot in (output / "screenshots").glob("*.png"):
         screenshot.unlink()
     cache = output / "dependencies"
@@ -77,11 +83,27 @@ def main():
         game = Path(temp)
         mods = game / "mods"
         mods.mkdir()
+        if cli.profile:
+            for folder in ('config', 'resourcepacks'):
+                if (cli.profile / folder).exists():
+                    shutil.copytree(cli.profile / folder, game / folder)
+            for mod in (cli.profile / 'mods').glob('*.jar'):
+                with zipfile.ZipFile(mod) as jar:
+                    mod_id = json.loads(jar.read('fabric.mod.json'))['id']
+                if mod_id != 'skyblocktoolkit':
+                    shutil.copy2(mod, mods / mod.name)
         for mod in (toolkit, smoke, api):
             shutil.copy2(mod, mods / ("menu-smoke.jar" if mod == smoke else mod.name))
+        config = game / 'config/skyblocktoolkit.json'
+        values = json.loads(config.read_text(encoding='utf-8')) if config.exists() else {}
+        # The smoke-only connection mixin intercepts this before any network access.
+        values['startupServer'] = 'startup-test.invalid:25566'
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text(json.dumps(values), encoding='utf-8')
         (game / "options.txt").write_text("onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n")
         args = ["-Xmx1G", "-Dtoolkit.preview=" + str(output), "-Dfabric.log.disableAnsi=true",
-                "-Dtoolkit.menuTickInterval=5",
+                "-Dtoolkit.menuTickInterval=10",
+                "-Dtoolkit.testStartupConnect=true",
                 "-cp", os.pathsep.join(map(str, [*libraries, client])), profile["mainClass"],
                 "--gameDir", str(game), "--assetsDir", str(install / "assets"),
                 "--assetIndex", v_info["assetIndex"]["id"], "--version", VERSION,
@@ -97,6 +119,8 @@ def main():
         if result.returncode:
             print((output / "runtime.log").read_text(encoding="utf-8", errors="replace")[-4000:])
             raise SystemExit(result.returncode)
+        if not (output / "PASS.txt").exists():
+            raise RuntimeError("Client exited without completing the menu assertions; inspect runtime.log")
         print("Success! Screenshots generated at:", output / "screenshots")
 
 if __name__ == "__main__":
