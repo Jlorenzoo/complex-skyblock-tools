@@ -143,8 +143,8 @@ public final class BoneLeggingsTracker {
     public static int getWidth(Minecraft mc) {
         var cfg = ToolkitConfig.get();
         int padding = cfg.boneLeggingsBackground ? 6 : 0;
-        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 30 + padding;
-        if (cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY) return 12 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS) return 24 + padding;
+        if (cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY) return 14 + padding;
         // Reserve the widest state so right alignment and HUD editor bounds never jump.
         String label = "Speed";
         int textW = mc != null && mc.font != null ? mc.font.width(label) : label.length() * 6;
@@ -153,7 +153,8 @@ public final class BoneLeggingsTracker {
 
     public static int getHeight() {
         var cfg = ToolkitConfig.get();
-        int height = cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 12
+        int height = cfg.boneLeggingsHudStyle == STYLE_EFFECT_ICONS ? 20
+                : cfg.boneLeggingsHudStyle == STYLE_BADGE_ONLY ? 12
                 : hasIcon(cfg.boneLeggingsHudStyle) ? 16 : 9;
         return height + (cfg.boneLeggingsBackground ? 4 : 0);
     }
@@ -192,7 +193,7 @@ public final class BoneLeggingsTracker {
         }
         if (style == STYLE_BADGE_ONLY) {
             int padding = cfg.boneLeggingsBackground ? 3 : 0;
-            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 18, y + 16, 0x40000000);
+            if (cfg.boneLeggingsBackground) extractor.fill(x, y, x + 20, y + 16, 0x40000000);
             renderModeBadge(extractor, x + padding + 1, y + (padding == 0 ? 1 : 3), speed);
             return;
         }
@@ -205,15 +206,16 @@ public final class BoneLeggingsTracker {
     public static void renderEffectIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y,
                                         boolean speed, boolean background) {
         if (g == null || stack == null || stack.isEmpty()) return;
-        if (background) g.fill(x, y, x + 36, y + 20, 0x40000000);
+        if (background) g.fill(x, y, x + 30, y + 24, 0x40000000);
         int dx = x + (background ? 3 : 0), dy = y + (background ? 2 : 0);
         g.item(stack, dx, dy);
-        renderModeBadge(g, dx + 18, dy + 3, speed);
+        renderModeBadge(g, dx + 10, dy + 9, speed);
     }
 
+    // Low running-shoe profile: short ankle, laces, tapered toe and a separate light sole.
     private static final String[] SPEED_BOOT = {
-            "....####..", "...#hh#...", "...#hh#...", "..#hh#....", "..#hh##...",
-            "..#hhh###.", ".##hhhhh##", ".#########", "..sssssss.", ".........."
+            "............", "..####......", ".#..h#......", ".#hhh#......", ".#hlh##.....",
+            ".#hhhl###...", ".#hhhhhhh##.", ".#sssssssss#", "..wwwwwwww#.", "............"
     };
     private static final String[] REGEN_HEART = {
             "..........", "..........", "..##.##...", ".#######..", ".#######..",
@@ -222,7 +224,7 @@ public final class BoneLeggingsTracker {
 
     private static void renderModeBadge(GuiGraphicsExtractor g, int x, int y, boolean speed) {
         String[] pixels = speed ? SPEED_BOOT : REGEN_HEART;
-        // Each mode has one readable silhouette. Never cover or recolor the server's item sprite.
+        // Outline only the badge silhouette so it stays legible over the item and world.
         for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
             if (pixels[row].charAt(col) != '.')
                 g.fill(x + col - 1, y + row - 1, x + col + 2, y + row + 2, 0xE0181A20);
@@ -231,9 +233,11 @@ public final class BoneLeggingsTracker {
             char pixel = pixels[row].charAt(col);
             if (pixel == '.') continue;
             int color = !speed ? 0xFFF29AAF : switch (pixel) {
-                case 'h' -> 0xFFB9E7F0;
-                case 's' -> 0xFF4E8FA1;
-                default -> 0xFF72BDCF;
+                case 'h' -> 0xFFE1EBEF;
+                case 'l' -> 0xFF83CBD9;
+                case 's' -> 0xFF487585;
+                case 'w' -> 0xFFBECFD7;
+                default -> 0xFF62B8CC;
             };
             g.fill(x + col, y + row, x + col + 1, y + row + 1, color);
         }
