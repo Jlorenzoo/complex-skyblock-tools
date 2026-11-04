@@ -19,7 +19,7 @@ public final class ToolkitMod implements ClientModInitializer {
     public static KeyMapping sellAllKey;
     public static String fishingLabel(){
         var cfg=FISHING.settings();long now=System.currentTimeMillis();String window=cfg.earningsWindow==300?"5m":"60s";
-        if(cfg.averageFishPrice()<=0)return "Fishing: set fish prices";
+        if(!cfg.hasPrices())return "";
         return "Fishing est. ("+window+"): "+com.moneybooster.BoosterStatsManager.formatMoney(FISHING_EARNINGS.hourly(now,cfg.earningsWindow,cfg.averageFishPrice()))+"/h"+(FISHING_EARNINGS.warming(now,cfg.earningsWindow)?" *":"");
     }
     private static boolean requested;

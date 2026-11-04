@@ -18,6 +18,8 @@ public class EarningsActivityTest {
         expect(activity.select(2000, true, true, false, true, true), FISHING);
         expect(activity.select(2000, true, true, false, true, false), FISHING);
         expect(activity.select(2000, true, false, true, true, false), NONE);
+        expect(activity.select(2000, true, false, false, true, false), NONE);
+        expect(activity.select(2000, true, false, false, true, true), NONE);
         expect(activity.select(2000, false, true, false, false, false), NONE);
         expect(activity.select(2000, false, false, true, true, true), NONE);
         // Delayed older receipts cannot replace newer activity, and reset hides it.

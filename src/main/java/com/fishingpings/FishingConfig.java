@@ -9,6 +9,7 @@ public final class FishingConfig {
     public double codPrice,salmonPrice,pufferPrice,tropicalPrice;
     public int earningsWindow=60;
     public double averageFishPrice(){return FishingEarnings.weightedPrice(codPrice,salmonPrice,pufferPrice,tropicalPrice);}
+    public boolean hasPrices(){return averageFishPrice()>0;}
     private final Path path=FabricLoader.getInstance().getConfigDir().resolve("fishingpings.json");
     public FishingConfig(){
         if(Files.exists(path))try{

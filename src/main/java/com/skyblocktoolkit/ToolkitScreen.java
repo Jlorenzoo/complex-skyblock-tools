@@ -343,7 +343,7 @@ public final class ToolkitScreen extends Screen {
         section("Estimate",164);
         label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(cfg.averageFishPrice()),180,ToolkitTheme.palette().accent(),1);
         label(()->{long n=ToolkitMod.FISHING_EARNINGS.count(System.currentTimeMillis(),cfg.earningsWindow);return n+" fish in last "+(cfg.earningsWindow==60?"60s":"5m")+" · "+BoosterStatsManager.formatMoney(n*cfg.averageFishPrice());},194,ToolkitTheme.palette().text(),1);
-        label(()->ToolkitMod.fishingLabel(),208,ToolkitTheme.palette().text(),1);
+        label(()->cfg.hasPrices()?ToolkitMod.fishingLabel():"Fishing: set fish prices",208,ToolkitTheme.palette().text(),1);
         label(()->priceFields.stream().anyMatch(f->!Double.isFinite(com.fishingpings.FishingEarnings.price(f.getValue())))?"Invalid price: enter a positive dollar amount.":"* Warming up. Based on fish mix; no booster added.",224,ToolkitTheme.palette().muted(),1);
         label("For stack prices, divide by 64 before entering.",238);
 
@@ -492,6 +492,7 @@ public final class ToolkitScreen extends Screen {
     private List<HudPart> hudParts(){
         var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
         String crops=BoosterStatsManager.averageLabel(),fish=ToolkitMod.fishingLabel();
+        if(fish.isEmpty())fish="Fishing est. ("+(ToolkitMod.FISHING.settings().earningsWindow==300?"5m":"60s")+"): $0/h";
         String harvest=CropHarvestTracker.averageLabel();
         return List.of(new HudPart(2,crops,BoosterHudOverlay.averageX(mc,crops),BoosterHudOverlay.averageY(mc),cfg.cropEarningsHud),
             new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud),
@@ -573,7 +574,7 @@ public final class ToolkitScreen extends Screen {
         var cfg=ModConfig.getInstance();
         if(dragging==5){var c=ToolkitConfig.get();c.cropHarvestHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(CropHarvestTracker.averageLabel())-2));c.cropHarvestHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==4){var c=ToolkitConfig.get();c.xpHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(XpTracker.averageLabel())-2));c.xpHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
-        if(dragging==3){var c=ToolkitConfig.get();c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(ToolkitMod.fishingLabel())-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
+        if(dragging==3){var c=ToolkitConfig.get();String fish=ToolkitMod.fishingLabel();if(fish.isEmpty())fish="Fishing est. ("+(ToolkitMod.FISHING.settings().earningsWindow==300?"5m":"60s")+"): $0/h";c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(fish)-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
         if(dragging==1){cfg.setOffset(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.BAR_WIDTH-2))-10,Math.clamp((int)(event.y()-grabY),14,Math.max(14,height-24-BoosterHudOverlay.TIMER_SPACING))-16);return true;}
         return super.mouseDragged(event,dx,dy);

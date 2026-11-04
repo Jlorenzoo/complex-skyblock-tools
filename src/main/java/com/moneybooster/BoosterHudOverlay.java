@@ -169,7 +169,8 @@ public class BoosterHudOverlay implements HudElement {
         var timerRows = BoosterManager.timers.visible(now, toolkit.boosterHud, toolkit.xpBoosterHud);
         boolean rateActive = toolkit.rateTestHud && RateTracker.shouldShowHud();
 
-        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !toolkit.fishEarningsHud && !toolkit.xpEarningsHud && !toolkit.cropHarvestHud) {
+        boolean fishActive = toolkit.fishEarningsHud && com.skyblocktoolkit.ToolkitMod.FISHING.settings().hasPrices();
+        if (timerRows.isEmpty() && !rateActive && !toolkit.cropEarningsHud && !fishActive && !toolkit.xpEarningsHud && !toolkit.cropHarvestHud) {
             return;
         }
 
@@ -184,11 +185,11 @@ public class BoosterHudOverlay implements HudElement {
         boolean holdingRod = mc.player.getMainHandItem().is(Items.FISHING_ROD)
                 || mc.player.getOffhandItem().is(Items.FISHING_ROD);
         var earnings = BoosterStatsManager.earningsActivity.select(now,
-                toolkit.cropEarningsHud, toolkit.fishEarningsHud,
+                toolkit.cropEarningsHud, fishActive,
                 mc.player.fishing != null, holdingRod,
                 com.skyblocktoolkit.ToolkitMod.FISHING_EARNINGS.recent(now, 5));
         if(earnings == EarningsActivity.Tracker.CROPS)renderAverage(extractor,mc);
-        if(earnings == EarningsActivity.Tracker.FISHING){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
+        if(earnings == EarningsActivity.Tracker.FISHING && fishActive){String label=com.skyblocktoolkit.ToolkitMod.fishingLabel();if(!label.isEmpty())extractor.text(mc.font,label,fishX(mc,label),fishY(mc),0xFFFFFFFF,true);}
         int barX = getBarX(extractor.guiWidth());
         int barY = getBarY(mc, timerRows.size());
 

@@ -10,6 +10,7 @@ public final class FishingEarningsTest {
   check(FishingEarnings.caught("Caught 13 items!")==0,"Unrelated catch");
   check(FishingEarnings.caught("֎ What Lurks Below IX ┃ ✘ The fishing line snapped.")==0,"Snap counts as catch");
   check(FishingEarnings.caught("֎ What Lurks Below IX ┃ ✔ Caught 0 items!")==0,"Zero catch");
+  near(FishingEarnings.weightedPrice(0,0,0,0),0,"Unset prices evaluate to zero");
   near(FishingEarnings.weightedPrice(100,200,300,400),157,"Vanilla weight mapping");
   near(FishingEarnings.price("$1,250.50"),1250.5,"Grouped price");
   near(FishingEarnings.price("1.8m"),1800000,"Million price");
