@@ -58,12 +58,16 @@ class PatchDeliveryTest(unittest.TestCase):
             self.assertIn('--draft=false', calls[-1])
             self.assertIn('--latest=false', calls[-1])
             self.assertIn('v1.1.44-mc1.21.11', calls[-1])
-            uploaded = Path(calls[2][4])
-            self.assertEqual(uploaded.name, jar.name)
-            self.assertEqual(uploaded.read_bytes(), jar.read_bytes())
-            checksum = Path(calls[2][5]).read_text()
+            uploaded_complexify = Path(calls[2][4])
+            uploaded_legacy = Path(calls[2][5])
+            self.assertEqual(uploaded_complexify.name, 'complexify-1.1.44+mc1.21.11.jar')
+            self.assertEqual(uploaded_legacy.name, jar.name)
+            self.assertEqual(uploaded_complexify.read_bytes(), jar.read_bytes())
+            self.assertEqual(uploaded_legacy.read_bytes(), jar.read_bytes())
+            checksum = Path(calls[2][6]).read_text()
             import hashlib
-            self.assertEqual(checksum, hashlib.sha256(jar.read_bytes()).hexdigest() + '  ' + jar.name + '\n')
+            h = hashlib.sha256(jar.read_bytes()).hexdigest()
+            self.assertEqual(checksum, f"{h}  {uploaded_complexify.name}\n{h}  {uploaded_legacy.name}\n")
 
 
 if __name__ == '__main__':
