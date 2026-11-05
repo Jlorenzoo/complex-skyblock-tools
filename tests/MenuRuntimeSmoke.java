@@ -183,6 +183,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     mc.setScreenAndShow(new ToolkitScreen(null,0));stage++;return;
                 }
                 if(stage==1){
+                    press(mc,"Booster timers");
                     capture(mc,"menu-0");
                     var timerConfig=ToolkitConfig.get();
                     boolean oldMoney=timerConfig.boosterHud,oldXp=timerConfig.xpBoosterHud,oldReminder=timerConfig.boosterReminder;
@@ -257,6 +258,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     mc.setScreenAndShow(new ToolkitScreen(null,8));stage++;return;
                 }
                 if(stage==10){
+                    press(mc,"Active HUD elements");
                     capture(mc,"hud-elements");
                     var cfg=ToolkitConfig.get();cfg.cropEarningsHud=false;cfg.fishEarningsHud=false;
                     var screen=mc.gui.screen();
@@ -280,6 +282,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     mc.setScreenAndShow(new ToolkitScreen(null,9));stage++;return;
                 }
                 if(stage==12){
+                    press(mc,"Farming");
                     capture(mc,"farming");
                     var screen=mc.gui.screen();
                     var cfg=ToolkitConfig.get();
@@ -374,7 +377,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     BoosterManager.timers.observe(BoosterTimers.Type.MONEY,new BoosterSidebar.State(true,61,-1,false),System.currentTimeMillis());
                     BoosterStatsManager.tick();
                     check(!BoosterManager.isActive()&&BoosterStatsManager.history().activeId()<0,"Expired coconut stops money accounting and history despite lingering sidebar");
-                    mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);
+                    mc.setScreenAndShow(new ToolkitScreen(null,10));press(mc,"Keyboard shortcuts");scrollBottom(mc);
                     if(System.getProperty("toolkit.migrationOptions")==null)
                         check(ToolkitMod.sellAllKey.isUnbound(),"Sell all starts unbound on a fresh profile");
                     press(mc,"Sell all key:");mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_G,0,0));
@@ -437,6 +440,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     capture(mc,"search-light");
                     for(int category:new int[]{1,2,3,4,6}){
                         mc.setScreenAndShow(new ToolkitScreen(null,category));
+                        if(category==6)press(mc,"Keyboard shortcuts");
                         check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("Sell all key:")).count()==(category==6?1:0),"Single sell-all selector in Utilities");
                         search(mc,"sell all");
                         check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().contains(" / ")).count()==1,"Sell all returns one global setting from every category");
@@ -458,13 +462,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     for(int page:new int[]{1,2,3,4,6,7,9,10,11,12}){
                         mc.setScreenAndShow(new ToolkitScreen(null,page));assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }
-                    mc.setScreenAndShow(new ToolkitScreen(null,10));scrollBottom(mc);stage++;return;
+                    mc.setScreenAndShow(new ToolkitScreen(null,10));press(mc,"Keyboard shortcuts");scrollBottom(mc);stage++;return;
                 }
                 if(stage==49){capture(mc,"general-dark-compact");switchTheme(mc);stage++;return;}
                 if(stage==50){capture(mc,"general-light-compact");stage++;return;}
                 if(stage==51){
                     mc.getWindow().setWindowed(1280,800);mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,6));
+                    press(mc,"Auction notifications");
                     mc.gui.screen().mouseScrolled(mc.gui.screen().width/2,mc.gui.screen().height/2,0,-10);
                     var slider=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton)
                         .map(c->(net.minecraft.client.gui.components.AbstractSliderButton)c).filter(c->c.getMessage().getString().startsWith("Volume:")).findFirst().orElseThrow();
@@ -614,9 +619,36 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         }
                     });stage++;return;
                 }
-                if(stage==161){
+                if(stage>=161&&stage<230){
+                    String[][] destinations={{"1","Booster timers"},{"1","Coconut alerts"},{"1","Earnings & statistics"},{"2","Farming"},{"2","Fishing"},{"2","Fish sell prices"},{"2","Mining & XP"},{"4","Active HUD elements"},{"4","Layout & positioning"},{"4","Treasure chests"},{"6","Keyboard shortcuts"},{"6","Chat selection & copy"},{"6","Auction notifications"},{"6","Display & visuals"},{"6","Blackout (AFK)"}};
+                    int index=stage-161;
+                    if(index>0){capture(mc,"topic-"+(index-1));assertControls(mc);scrollBottom(mc);assertControls(mc);}
+                    if(index==60){stage=230;return;}
+                    int sample=index/15;String[] destination=destinations[index%15];
+                    ToolkitConfig.get().lightMode=sample%2==1;
+                    mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                    int page=Integer.parseInt(destination[0]);mc.setScreenAndShow(new ToolkitScreen(null,page));
+                    var screen=mc.gui.screen();
+                    check(screen.children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton),"Overview hides unrelated controls");
+                    pressTopic(mc,destination[1]);assertControls(mc);
+                    screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                    check(mc.gui.screen()==screen,"Escape returns to overview without closing");
+                    pressTopic(mc,destination[1]);
+                    // Switching categories and back remembers the topic; clicking the active category returns to overview.
+                    if(page==2&&destination[1].equals("Mining & XP")){
+                        press(mc,"Boost");press(mc,"Skills");
+                        check(screen.children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"XP per hour HUD")),"Category remembers selected topic");
+                    }
+                    // Re-selecting the active category gives the overview even after switching tabs.
+                    String category=page==1?"Boost":page==2?"Skills":page==4?"HUD":"Util";
+                    press(mc,category);
+                    check(screen.children().stream().noneMatch(c->c instanceof AbstractWidget w&&w.getMessage().getString().startsWith("< All ")),"Active category returns to overview");
+                    pressTopic(mc,destination[1]);
+                    stage++;return;
+                }
+                if(stage==230){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
@@ -649,6 +681,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     void switchTheme(net.minecraft.client.Minecraft mc){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&(b.getMessage().getString().equals("Dark mode")||b.getMessage().getString().equals("Light mode"))){b.onPress(null);return;}
         throw new AssertionError("theme switch missing");
+    }
+    void pressTopic(net.minecraft.client.Minecraft mc,String title){
+        var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,100);
+        for(int i=0;i<12;i++){
+            for(var child:screen.children())if(child instanceof Button b&&b.visible&&b.getMessage().getString().equals(title)){b.onPress(null);return;}
+            screen.mouseScrolled(screen.width/2,screen.height/2,0,-1);
+        }
+        throw new AssertionError("topic missing: "+title);
     }
     void press(net.minecraft.client.Minecraft mc,String text){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&b.visible&&b.active&&b.getMessage().getString().startsWith(text)){b.onPress(null);return;}

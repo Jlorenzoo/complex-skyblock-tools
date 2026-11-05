@@ -24,6 +24,9 @@ public final class ToolkitButton extends Button {
     public static ToolkitButton seasonalCard(String name,String subtitle,ItemStack icon,boolean expanded,OnPress press,int x,int y,int w){
         return new ToolkitButton(x,y,w,32,name,press,6,expanded,null,icon,subtitle);
     }
+    public static ToolkitButton topic(String title,String summary,OnPress press,int x,int y,int w){
+        return new ToolkitButton(x,y,w,32,title,press,7,false,null,null,summary);
+    }
     public static ToolkitButton setting(String label,Supplier<String> value,OnPress press,int x,int y,int w){
         var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
         button.value=value;return button;
@@ -77,7 +80,7 @@ public final class ToolkitButton extends Button {
             ToolkitTheme.text(g,font,">",x+w-16,y+16,ToolkitTheme.palette().muted());
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),w-24),x+12,y+43,ToolkitTheme.palette().muted());return;
         }
-        if(kind==6){
+        if(kind==6||kind==7){
             var palette=ToolkitTheme.palette();
             ToolkitTheme.rounded(g,x,y,w,h,4,hover?palette.hover():palette.surface());
             if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,palette.accent());
@@ -87,7 +90,7 @@ public final class ToolkitButton extends Button {
             int maxTextW=w-(hasIcon?48:26);
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),maxTextW),textX,y+6,selected?palette.accent():palette.text());
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),maxTextW),textX,y+18,palette.muted());
-            String chevron=selected?"▾":"▸";
+            String chevron=kind==7?">":selected?"▾":"▸";
             ToolkitTheme.text(g,font,chevron,x+w-14,y+(h-8)/2,palette.muted());return;
         }
         String text=ToolkitTheme.clipText(font,getMessage(),w-12);
