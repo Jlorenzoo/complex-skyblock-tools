@@ -10,12 +10,18 @@ public final class ToolkitTheme {
     public static final int XP_TIMER=0xFF9D9AEB,XP_TRACK=0xFF201D35,XP_HIGHLIGHT=0xFFBBB8FA,XP_SHADOW=0xFF6C68A8;
     // Gameplay notifications stay neutral and translucent in either menu theme.
     public static final int ALERT_SURFACE=0x6613171C,ALERT_TEXT=0xFFE4E7EC,ALERT_MUTED=0xFFC1C7D0;
-    public static final float MENU_TEXT_SCALE=.85f;
+    public static final float MENU_TEXT_SCALE=.85f,MENU_HELP_SCALE=.75f;
     public static int textWidth(Font font,String text){return (int)Math.ceil(font.width(text)*MENU_TEXT_SCALE);}
     public static String clipText(Font font,Component text,int width){return font.substrByWidth(text,(int)(width/MENU_TEXT_SCALE)).getString();}
     public static void text(GuiGraphicsExtractor g,Font font,String text,int x,int y,int color){
         g.pose().pushMatrix();g.pose().translate(x,y);g.pose().scale(MENU_TEXT_SCALE,MENU_TEXT_SCALE);
         g.text(font,text,0,0,color,false);g.pose().popMatrix();
+    }
+    /** Quiet helper text, aligned with its owning control rather than the section edge. */
+    public static void hint(GuiGraphicsExtractor g,Font font,String text,int x,int y,int width){
+        g.pose().pushMatrix();g.pose().translate(x,y);g.pose().scale(MENU_HELP_SCALE,MENU_HELP_SCALE);
+        g.text(font,font.substrByWidth(Component.literal(text),(int)(width/MENU_HELP_SCALE)).getString(),0,0,palette().muted(),false);
+        g.pose().popMatrix();
     }
     private static final Identifier CRYSTAL_DARK=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/crystal-dark.png");
     private static final Identifier CRYSTAL_LIGHT=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/crystal-light.png");

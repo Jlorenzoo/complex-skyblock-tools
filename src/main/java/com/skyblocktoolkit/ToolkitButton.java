@@ -20,6 +20,9 @@ public final class ToolkitButton extends Button {
     public static ToolkitButton action(String label,OnPress press,int x,int y,int w,int h){return new ToolkitButton(x,y,w,h,label,press,0,false,null,null,null);}
     public static ToolkitButton nav(String label,OnPress press,int x,int y,int w,int h,boolean selected){return new ToolkitButton(x,y,w,h,label,press,1,selected,null,null,null);}
     public static ToolkitButton toggle(String label,OnPress press,int x,int y,int w,int h,BooleanSupplier state){return new ToolkitButton(x,y,w,h,label,press,2,false,state,null,null);}
+    public static ToolkitButton toggle(String label,String description,OnPress press,int x,int y,int w,BooleanSupplier state){
+        return new ToolkitButton(x,y,w,28,label,press,2,false,state,null,description);
+    }
     public static ToolkitButton tile(String label,String description,ItemStack icon,OnPress press,int x,int y,int w,int h){return new ToolkitButton(x,y,w,h,label,press,3,false,null,icon,description);}
     public static ToolkitButton themeSwitch(OnPress press,int x,int y,boolean lightMode){return new ToolkitButton(x,y,60,22,lightMode?"Light mode":"Dark mode",press,4,lightMode,null,null,null);}
     public static ToolkitButton seasonalCard(String name,String subtitle,ItemStack icon,boolean expanded,OnPress press,int x,int y,int w){
@@ -113,9 +116,11 @@ public final class ToolkitButton extends Button {
         }
         if(kind==2){
             boolean enabled=state.getAsBoolean();setMessage(Component.literal(label+": "+(enabled?"on":"off")));
-            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),w-39),x+6,y+(h-8)/2,ToolkitTheme.palette().text());
-            ToolkitTheme.rounded(g,x+w-26,y+(h-10)/2,20,10,5,enabled?ToolkitTheme.palette().accentTrack():com.skyblocktoolkit.ToolkitTheme.palette().track());
-            ToolkitTheme.rounded(g,x+w-(enabled?14:24),y+(h-6)/2,6,6,3,ToolkitTheme.palette().onAccent());return;
+            int cy=description==null?y+h/2:y+9;
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),w-39),x+6,description==null?y+(h-8)/2:y+5,ToolkitTheme.palette().text());
+            if(description!=null)ToolkitTheme.hint(g,font,description,x+6,y+15,w-12);
+            ToolkitTheme.rounded(g,x+w-26,cy-5,20,10,5,enabled?ToolkitTheme.palette().accentTrack():ToolkitTheme.palette().track());
+            ToolkitTheme.rounded(g,x+w-(enabled?14:24),cy-3,6,6,3,ToolkitTheme.palette().onAccent());return;
         }
         if(kind==3){
             boolean hasIcon=!icon.isEmpty();

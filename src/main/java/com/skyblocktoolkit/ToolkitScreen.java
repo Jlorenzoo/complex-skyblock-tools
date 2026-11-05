@@ -283,6 +283,16 @@ public final class ToolkitScreen extends Screen {
         });slider.setMessage(Component.literal(name+": "+Math.round(setting*100)+"%"));controls.add(new Control(slider,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
     private void toggle(String text,int top,BooleanSupplier state,Runnable action){toggleAt(text,top,0,layout.bodyWidth(),state,action);}
+    private void toggle(String text,String description,int top,BooleanSupplier state,Runnable action){
+        top-=topicOffset;
+        var b=addRenderableWidget(ToolkitButton.toggle(text,description,unused->{action.run();persist();updateControls();},layout.bodyX(),layout.bodyY(),layout.bodyWidth(),state));
+        controls.add(new Control(b,top,28));contentHeight=Math.max(contentHeight,top+23);
+    }
+    private void hint(String text,int top){
+        top-=topicOffset;
+        labels.add(new Label(()->text,top,ToolkitTheme.palette().muted(),ToolkitTheme.MENU_HELP_SCALE/ToolkitTheme.MENU_TEXT_SCALE,6));
+        contentHeight=Math.max(contentHeight,top+8);
+    }
     private void toggleCell(String text,int top,int column,BooleanSupplier state,Runnable action){
         int half=(layout.bodyWidth()-10)/2;toggleAt(text,top,column*(half+10),half,state,action);
     }
@@ -296,16 +306,15 @@ public final class ToolkitScreen extends Screen {
         if(topic("Booster timers",0)){
             toggleCell("Money timer",16,0,()->toolkit.boosterHud,()->toolkit.boosterHud=!toolkit.boosterHud);
             toggleCell("XP timer",16,1,()->toolkit.xpBoosterHud,()->toolkit.xpBoosterHud=!toolkit.xpBoosterHud);
-            toggle("5-second reminder",40,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
-            label("Soft highlight when a visible timer is ending.",64);
-            label(()->timerStatus(BoosterTimers.Type.MONEY),80,ToolkitTheme.palette().moneyText(),1);
-            label(()->timerStatus(BoosterTimers.Type.XP),94,ToolkitTheme.palette().xpText(),1);
-            if(details("Alert appearance & previews",120,"Ending banner","Ending screen flash","Money alert","XP alert","Preview XP alert","Preview ending")){
-                toggle("Ending banner",148,()->toolkit.boosterExpiringAlert,()->toolkit.boosterExpiringAlert=!toolkit.boosterExpiringAlert);
-                toggle("Ending screen flash",172,()->toolkit.expiringFlash,()->toolkit.expiringFlash=!toolkit.expiringFlash);
-                toggle("Money alert",196,()->toolkit.moneyVisualAlert,()->toolkit.moneyVisualAlert=!toolkit.moneyVisualAlert);
-                toggle("XP alert",220,()->toolkit.xpVisualAlert,()->toolkit.xpVisualAlert=!toolkit.xpVisualAlert);
-                pair(()->"Preview XP alert",VisualAlertOverlay::previewXpAlert,()->"Preview ending",VisualAlertOverlay::previewExpiringAlert,244);
+            toggle("5-second reminder","Soft highlight when a visible timer is ending.",40,()->toolkit.boosterReminder,()->toolkit.boosterReminder=!toolkit.boosterReminder);
+            label(()->timerStatus(BoosterTimers.Type.MONEY),72,ToolkitTheme.palette().moneyText(),1);
+            label(()->timerStatus(BoosterTimers.Type.XP),86,ToolkitTheme.palette().xpText(),1);
+            if(details("Alert appearance & previews",112,"Ending banner","Ending screen flash","Money alert","XP alert","Preview XP alert","Preview ending")){
+                toggle("Ending banner",140,()->toolkit.boosterExpiringAlert,()->toolkit.boosterExpiringAlert=!toolkit.boosterExpiringAlert);
+                toggle("Ending screen flash",164,()->toolkit.expiringFlash,()->toolkit.expiringFlash=!toolkit.expiringFlash);
+                toggle("Money alert",188,()->toolkit.moneyVisualAlert,()->toolkit.moneyVisualAlert=!toolkit.moneyVisualAlert);
+                toggle("XP alert",212,()->toolkit.xpVisualAlert,()->toolkit.xpVisualAlert=!toolkit.xpVisualAlert);
+                pair(()->"Preview XP alert",VisualAlertOverlay::previewXpAlert,()->"Preview ending",VisualAlertOverlay::previewExpiringAlert,236);
             }
         }
         if(topic("Coconut alerts",0)){
@@ -313,8 +322,8 @@ public final class ToolkitScreen extends Screen {
             toggleCell("Coconut banner",16,1,()->toolkit.coconutVisualAlert,()->toolkit.coconutVisualAlert=!toolkit.coconutVisualAlert);
             toggle("Coconut screen flash",40,()->toolkit.coconutFlash,()->toolkit.coconutFlash=!toolkit.coconutFlash);
             thresholdField(64);
-            label("Alert at or above this %. 0 = every money boost.",92);
-            pair(()->"Preview sound",CoconutNotifier::preview,()->"Preview coconut",VisualAlertOverlay::previewCoconutAlert,108);
+            hint("Alert at or above this %. 0 = every money boost.",84);
+            pair(()->"Preview sound",CoconutNotifier::preview,()->"Preview coconut",VisualAlertOverlay::previewCoconutAlert,100);
         }
         if(topic("Earnings & statistics",0)){
             pair(()->"History",()->Minecraft.getInstance().setScreenAndShow(new BoosterHistoryScreen(this)),()->"Rate tests",()->Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true)),16);
@@ -327,21 +336,18 @@ public final class ToolkitScreen extends Screen {
         var toolkit=ToolkitConfig.get();var money=ModConfig.getInstance();
         var fishing=ToolkitMod.FISHING;var fishCfg=fishing.settings();
         if(topic("Farming",0)){
-            toggle("Clear Harvest textures",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
-            controls.getLast().widget().setTooltip(Tooltip.create(Component.literal("Dim immature crops to spot ready plants.")));
-            if(!layout.compact())label("Dim immature crops to spot ready plants.",40);
-            int row=layout.compact()?40:56;
+            toggle("Clear Harvest textures","Dim immature crops to spot ready plants.",16,ClearHarvest::isEnabled,()->ClearHarvest.toggle(Minecraft.getInstance()));
+            int row=48;
             toggle("Crop earnings HUD",row,()->toolkit.cropEarningsHud,()->toolkit.cropEarningsHud=!toolkit.cropEarningsHud);
             toggle("Harvest per hour HUD",row+24,()->toolkit.cropHarvestHud,()->toolkit.cropHarvestHud=!toolkit.cropHarvestHud);
             toggle("Include boosters in crop average",row+48,money::includesBoostersInAverage,money::toggleAverageBoosters);
             label(CropHarvestTracker::averageLabel,row+72,ToolkitTheme.palette().accent(),1);
             int next=row+124;
             if(details("Gold shards & income",row+96,"Include gold shards in income","Gold shard value ($ each)")){
-                toggle("Include gold shards in income",row+124,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
-                priceField("Gold shard value ($ each)",row+148,()->toolkit.goldShardPrice,v->{if(v<=1e12)toolkit.goldShardPrice=v;});
-                label("Accepts 1.5k / 2m. Estimated item value.",row+174);
-                label(GoldShardTracker::label,row+190,ToolkitTheme.palette().accent(),1);
-                label("Silent farming drops need a held hoe.",row+206);
+                toggle("Include gold shards in income","Silent farming drops need a held hoe.",row+124,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
+                priceField("Gold shard value ($ each)",row+156,()->toolkit.goldShardPrice,v->{if(v<=1e12)toolkit.goldShardPrice=v;});
+                hint("Accepts 1.5k / 2m. Estimated item value.",row+180);
+                label(GoldShardTracker::label,row+196,ToolkitTheme.palette().accent(),1);
                 next=row+230;
             }
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
@@ -364,10 +370,9 @@ public final class ToolkitScreen extends Screen {
             label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Set fish prices to estimate earnings.",180,ToolkitTheme.palette().text(),1);
         }
         if(topic("Mining & XP",0)){
-            toggle("XP per hour HUD",16,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
-            toggle("Include XP boosters",40,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
-            label(XpTracker::averageLabel,68,ToolkitTheme.palette().xpText(),1);
-            label("The HUD appears while you collect XP.",84);
+            toggle("XP per hour HUD","Appears while you collect XP.",16,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
+            toggle("Include XP boosters",48,()->toolkit.xpIncludesBoosters,()->toolkit.xpIncludesBoosters=!toolkit.xpIncludesBoosters);
+            label(XpTracker::averageLabel,76,ToolkitTheme.palette().xpText(),1);
             button("Measure XP: Rate tests",108,()->{toolkit.rateTestXp=true;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
     }
@@ -402,7 +407,7 @@ public final class ToolkitScreen extends Screen {
             toggle("Always visible",top+108,()->cfg.boneLeggingsAlwaysVisible,()->cfg.boneLeggingsAlwaysVisible=!cfg.boneLeggingsAlwaysVisible);
             button(()->"Display style: "+BoneLeggingsTracker.styleName(cfg.boneLeggingsHudStyle),top+132,0,layout.bodyWidth(),()->cfg.boneLeggingsHudStyle=(cfg.boneLeggingsHudStyle+1)%4);
             toggle("Subtle background",top+156,()->cfg.boneLeggingsBackground,()->cfg.boneLeggingsBackground=!cfg.boneLeggingsBackground);
-            label("Uses Minecraft's Speed / Regen effect icons.",top+184);
+            hint("Uses Minecraft's Speed / Regen effect icons.",top+180);
             return top+200;
         }
         return top+104;
@@ -433,16 +438,15 @@ public final class ToolkitScreen extends Screen {
             });
         }
         if(topic("Treasure chests",0)){
-            toggle("Treasurechest timer",16,()->cfg.treasureChestHud,()->cfg.treasureChestHud=!cfg.treasureChestHud);
-            toggle("Show discovered chests",40,()->cfg.treasureShowChests,()->cfg.treasureShowChests=!cfg.treasureShowChests);
-            toggle("Reward pool estimates",64,()->cfg.treasureInferOpens,()->cfg.treasureInferOpens=!cfg.treasureInferOpens);
-            label("Open the treasure menu to sync the countdown.",92);
-            int next=144;
-            if(details("Appearance & timing",116,"Treasure background","Chest details duration","Treasure HUD scale")){
-                toggle("Treasure background",144,()->cfg.treasureBackground,()->cfg.treasureBackground=!cfg.treasureBackground);
-                setting("Chest details duration",168,()->cfg.treasureDetailsSeconds+"s",()->cfg.treasureDetailsSeconds=cfg.treasureDetailsSeconds>=300?30:cfg.treasureDetailsSeconds+30);
-                setting("Treasure HUD scale",192,()->Math.round(cfg.treasureScale*100)+"%",()->cfg.treasureScale=cfg.treasureScale>=1.5?.6:Math.min(1.5,Math.round((cfg.treasureScale+.1)*10)/10.0));
-                next=220;
+            toggle("Treasurechest timer","Open the treasure menu to sync the countdown.",16,()->cfg.treasureChestHud,()->cfg.treasureChestHud=!cfg.treasureChestHud);
+            toggle("Show discovered chests",48,()->cfg.treasureShowChests,()->cfg.treasureShowChests=!cfg.treasureShowChests);
+            toggle("Reward pool estimates",72,()->cfg.treasureInferOpens,()->cfg.treasureInferOpens=!cfg.treasureInferOpens);
+            int next=132;
+            if(details("Appearance & timing",104,"Treasure background","Chest details duration","Treasure HUD scale")){
+                toggle("Treasure background",132,()->cfg.treasureBackground,()->cfg.treasureBackground=!cfg.treasureBackground);
+                setting("Chest details duration",156,()->cfg.treasureDetailsSeconds+"s",()->cfg.treasureDetailsSeconds=cfg.treasureDetailsSeconds>=300?30:cfg.treasureDetailsSeconds+30);
+                setting("Treasure HUD scale",180,()->Math.round(cfg.treasureScale*100)+"%",()->cfg.treasureScale=cfg.treasureScale>=1.5?.6:Math.min(1.5,Math.round((cfg.treasureScale+.1)*10)/10.0));
+                next=208;
             }
             if(details("How tracking works",next)){
                 label("Later two-hour cycles are marked as estimates.",next+28);
@@ -455,17 +459,15 @@ public final class ToolkitScreen extends Screen {
     private void utilities(){
         var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
         if(topic("Chat selection & copy",0)){
-            toggle("Chat selection",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
-            toggle("Select word",40,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
-            toggle("Quick /gc code click",64,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
-            label("Drag to select · Ctrl+C / Cmd+C to copy",92);
-            label("Click a 16-digit gift code to copy & open /gc",108);
-            if(details("Chat appearance",136,"Highlight color","Highlight strength","Chat size","Chat width","Chat opacity")){
-                setting("Highlight color",164,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
-                slider("Highlight strength",188,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
-                slider("Chat size",212,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
-                slider("Chat width",236,options.chatWidth().get(),1,v->options.chatWidth().set(v));
-                slider("Chat opacity",260,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
+            toggle("Chat selection","Drag to select · Ctrl+C / Cmd+C to copy",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
+            toggle("Select word",48,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
+            toggle("Quick /gc code click","Click a 16-digit gift code to copy & open /gc",72,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
+            if(details("Chat appearance",112,"Highlight color","Highlight strength","Chat size","Chat width","Chat opacity")){
+                setting("Highlight color",140,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
+                slider("Highlight strength",164,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
+                slider("Chat size",188,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
+                slider("Chat width",212,options.chatWidth().get(),1,v->options.chatWidth().set(v));
+                slider("Chat opacity",236,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
             }
         }
         if(topic("Auction notifications",0)){
@@ -478,9 +480,8 @@ public final class ToolkitScreen extends Screen {
             }
         }
         if(topic("Display & visuals",0)){
-            toggle("Fullbright",16,()->cfg.fullBright,()->cfg.fullBright=!cfg.fullBright);
-            label("Full brightness across caves and dimensions.",44);
-            link("Keyboard shortcuts",72,6,"Keyboard shortcuts");
+            toggle("Fullbright","Full brightness across caves and dimensions.",16,()->cfg.fullBright,()->cfg.fullBright=!cfg.fullBright);
+            link("Keyboard shortcuts",52,6,"Keyboard shortcuts");
         }
         if(topic("Blackout (AFK)",0)){
             button("Turn blackout on",16,()->{persist();BlackoutManager.setActive(true);onClose();});
