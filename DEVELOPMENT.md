@@ -87,6 +87,17 @@ short tests and booster-boundary estimates remain limited by the printed balance
 resolution. Longer samples covering several balance changes are more useful.
 Tracking reads received data only and sends no balance queries or gameplay actions.
 
+Money tracking also preserves received sidebar components and checks their text
+hover for an unabridged balance within the visible balance's rounding bucket.
+This can improve precision only when the server actually includes that value.
+During farming/rate tests, a bounded local capture records money-related sidebar,
+system-chat, action-bar and held-item lore text in
+`config/skyblocktoolkit-income-observations.json`. It retains at most 16 distinct
+strings per source (64 total), counts repeats, excludes unrelated text and clears
+in-memory observations on connection changes. The local file is diagnostic
+evidence, never an additional earnings source. It sends no requests, opens no
+menus and automates no commands. Automated `/bal` polling is explicitly unwanted.
+
 **Minecraft 1.21.11 / Java 21 is the maintained pack target.** Run
 `python build.py` to compile/remap the shared features and run all Java regression
 suites through the Gradle wrapper in [`versions/1.21.11`](versions/1.21.11/README.md).

@@ -132,6 +132,10 @@ public class BoosterStatsManager {
         var reading = BalanceReading.parse(line);
         if (reading != null) onBalanceUpdated(reading.amount(), reading.resolution());
     }
+    public static void checkScoreboardComponent(net.minecraft.network.chat.Component component) {
+        var reading = BalanceComponents.read(component);
+        if (reading != null) onBalanceUpdated(reading.amount(), reading.resolution());
+    }
 
     public static int getExcludedTransactions() { return excludedTransactions; }
     public static double getExcludedVolume() { return excludedVolume; }

@@ -17,6 +17,24 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     int ticks,stage=Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     String statsFixtureId;
+    private void checkPassiveIncome(net.minecraft.client.Minecraft mc) throws Exception {
+        check(java.util.Arrays.stream(net.minecraft.client.multiplayer.ClientPacketListener.class.getDeclaredMethods())
+                .anyMatch(m->m.getName().contains("toolkit$incomeActionBar")),"Production action-bar packet observer is remapped");
+        var hover=net.minecraft.network.chat.Component.literal("Balance: $1.55B")
+                .withStyle(s->s.withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(net.minecraft.network.chat.Component.literal("$1,545,063,209"))));
+        BoosterStatsManager.resetConnection();
+        BoosterStatsManager.checkScoreboardComponent(hover);
+        check(BoosterStatsManager.getLastKnownBalance()==1_545_063_209d&&!BoosterStatsManager.isBalanceRounded(),
+                "Production sidebar handler reads already-received full hover balance");
+        PassiveIncomeCapture.reset();PassiveIncomeCapture.tick(mc,true);
+        PassiveIncomeCapture.observe("action-bar",net.minecraft.network.chat.Component.literal("Sold crops for $1,234"));
+        var saved=PassiveIncomeCapture.class.getDeclaredField("saved");saved.setAccessible(true);saved.setLong(null,0);
+        PassiveIncomeCapture.tick(mc,true);
+        String capture=Files.readString(mc.gameDirectory.toPath().resolve("config/skyblocktoolkit-income-observations.json"));
+        check(capture.contains("Sold crops for $1,234")&&capture.contains("no commands"),"Money evidence written locally without requests");
+        PassiveIncomeCapture.reset();BoosterStatsManager.resetConnection();
+        Files.writeString(output.resolve("passive-income.txt"),"PASS: received component hover precision and bounded local cash observations; no network commands\n");
+    }
 
     private void checkRoundedIncome() throws Exception {
         BoosterStatsManager.resetConnection();
@@ -206,7 +224,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
-                    checkShardSettings(mc);checkTreasureSettings(mc);checkRoundedIncome();
+                    checkShardSettings(mc);checkTreasureSettings(mc);checkPassiveIncome(mc);checkRoundedIncome();
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");

@@ -102,6 +102,7 @@ def regressionClasses = [
     'com.moneybooster.RollingEarningsTest', 'com.moneybooster.XpEarningsTest',
     'com.moneybooster.EarningsActivityTest', 'ToolkitLayoutTest',
     'com.moneybooster.BalanceReadingTest',
+    'com.moneybooster.PassiveIncomeTest',
     'ToolkitPaletteTest', 'com.skyblocktoolkit.AhSaleNotifierTest',
     'com.skyblocktoolkit.UpdateChannelTest', 'com.skyblocktoolkit.StartupJoinTest',
     'LevelRendererResizeTest', 'com.skyblocktoolkit.CropHarvestTrackerTest',

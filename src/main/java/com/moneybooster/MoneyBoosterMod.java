@@ -35,6 +35,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
 
         // 2. Register Game Chat Message listeners (server/system messages)
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+            PassiveIncomeCapture.observe(overlay ? "action-bar" : "system-chat", message);
             if (!overlay) {
                 BoosterManager.onChatMessage(message.getString());
                 com.skyblocktoolkit.GoldShardTracker.chat(message.getString());
@@ -46,6 +47,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             com.skyblocktoolkit.ItemStatsTracker.tick(client);
             if (client.level != previousLevel) {
                 BoosterManager.reset(); BoosterStatsManager.resetConnection(); RateTracker.disconnect();
+                PassiveIncomeCapture.reset();
                 com.skyblocktoolkit.CropHarvestTracker.reset();
                 com.skyblocktoolkit.GoldShardTracker.reset();
                 com.skyblocktoolkit.VisualAlertOverlay.reset();
@@ -56,14 +58,16 @@ public class MoneyBoosterMod implements ClientModInitializer {
             XpTracker.tick(client);
             com.skyblocktoolkit.CropHarvestTracker.tick();
             long now = System.currentTimeMillis();
-            if (client.player != null && client.gui.screen() == null
+            boolean farming = client.player != null && client.gui.screen() == null
                     && (com.skyblocktoolkit.CropHarvestTracker.isActive(now)
                         || (client.player.getMainHandItem().getItem() instanceof net.minecraft.world.item.HoeItem
-                            && client.options.keyAttack.isDown()))) {
+                            && client.options.keyAttack.isDown()));
+            if (farming) {
                 BoosterStatsManager.farmingActivity(now);
             }
             com.skyblocktoolkit.GoldShardTracker.tick(client);
             RateTracker.onClientTick();
+            PassiveIncomeCapture.tick(client, farming);
             com.skyblocktoolkit.VisualAlertOverlay.tick(System.currentTimeMillis());
 
             if (openMenuRequested) {

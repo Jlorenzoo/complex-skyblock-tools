@@ -104,17 +104,19 @@ public class BoosterManager {
         }
 
         Collection<PlayerScoreEntry> scores = scoreboard.listPlayerScores(objective);
-        java.util.List<String> lines = scores.stream().filter(entry -> !entry.isHidden())
+        java.util.List<Component> components = scores.stream().filter(entry -> !entry.isHidden())
             .sorted(java.util.Comparator.comparingInt(PlayerScoreEntry::value).reversed())
-            .map(entry -> {
+            .<Component>map(entry -> {
                 PlayerTeam team = scoreboard.getPlayersTeam(entry.owner());
-                return PlayerTeam.formatNameForTeam(team, entry.ownerName()).getString();
+                return PlayerTeam.formatNameForTeam(team, entry.ownerName());
             }).toList();
+        java.util.List<String> lines = components.stream().map(Component::getString).toList();
         long now = System.currentTimeMillis();
         for (var type : BoosterTimers.Type.values()) timers.observe(type, BoosterSidebar.parse(lines, type), now);
-        for (String line : lines) {
-            BoosterStatsManager.checkScoreboardLine(line);
-            com.skyblocktoolkit.CropHarvestTracker.checkScoreboardLine(line);
+        for (Component component : components) {
+            BoosterStatsManager.checkScoreboardComponent(component);
+            PassiveIncomeCapture.observe("sidebar", component);
+            com.skyblocktoolkit.CropHarvestTracker.checkScoreboardLine(component.getString());
         }
     }
 }
