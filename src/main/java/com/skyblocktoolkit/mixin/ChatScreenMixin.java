@@ -49,10 +49,6 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void toolkit$onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
-        if (BlackoutManager.isActive() && !ToolkitConfig.get().blackoutChatOverlay) {
-            toolkit$selection.clear();
-            return;
-        }
         if (!ToolkitConfig.get().chatEnabled) {
             toolkit$selection.clear();
             return;
@@ -129,13 +125,11 @@ public abstract class ChatScreenMixin extends Screen {
         }
     }
 
-    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
     private void toolkit$onRenderHead(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (BlackoutManager.isActive()) {
             BlackoutManager.render(graphics, this.width, this.height);
-            if (!ToolkitConfig.get().blackoutChatOverlay) {
-                ci.cancel();
-            }
+            // Open chat is always interactive; the overlay preference controls passive HUD chat.
         }
     }
 

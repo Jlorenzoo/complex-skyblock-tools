@@ -22,7 +22,7 @@ Discovered chests appear by rarity and Tomb/Realm location, with a two-open capa
 
 `ToolkitPalette` defines independent light/red and dark/red menu palettes. `ToolkitTheme.palette()` selects the saved preference; the menu header switches it immediately. Detail screens and controls use the same palette. Gameplay HUD colors remain independent of the menu theme.
 
-Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity during gameplay (up darkens, down clears, 5% per notch). Scrolling activates the overlay without toggling it off, consumes the hotbar scroll, and saves opacity when the key is released. Open menus cancel pending taps.
+Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity during gameplay (up darkens, down clears, 5% per notch). Scrolling activates the overlay without toggling it off, consumes the hotbar scroll, and saves opacity when the key is released. Open menus cancel pending taps. Opening chat always shows its messages and input over blackout, including text selection and copying. **Overlay chat** controls whether passive incoming chat remains visible while the chat box is closed.
 
 ## Build and verify
 

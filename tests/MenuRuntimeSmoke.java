@@ -258,7 +258,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     var chatCfg=ToolkitConfig.get();
                     check(!chatCfg.blackoutChatOverlay,"Overlay chat defaults to disabled");
                     chatCfg.blackoutChatOverlay=true;chatCfg.save();
-                    var reloadedChatCfg=ToolkitConfig.class.getDeclaredConstructor().newInstance();
+                    var chatConfigCtor=ToolkitConfig.class.getDeclaredConstructor();chatConfigCtor.setAccessible(true);
+                    var reloadedChatCfg=chatConfigCtor.newInstance();
                     check(reloadedChatCfg.blackoutChatOverlay,"Overlay chat persists");
                     chatCfg.blackoutChatOverlay=false;chatCfg.save();
                     mc.setScreenAndShow(new ToolkitScreen(null,2));
@@ -698,7 +699,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==250){
+                if(stage>=250 && stage<254){
+                    if(stage>250)capture(mc,"blackout-chat-"+(stage-251));
+                    int sample=stage-250;
+                    var cfg=ToolkitConfig.get();cfg.lightMode=sample%2==1;cfg.blackoutChatOverlay=sample%2==1;cfg.blackoutOpacity=1;cfg.blackoutHint=false;
+                    if(sample==2){mc.getWindow().setWindowed(1000,800);mc.options.guiScale().set(3);mc.resizeGui();}
+                    mc.gui.hud.getChat().addMessage(net.minecraft.network.chat.Component.literal("Blackout chat remains visible"));
+                    var ctor=net.minecraft.client.gui.screens.ChatScreen.class.getConstructors()[0];
+                    Object[] args=new Object[ctor.getParameterCount()];args[0]="Typing during blackout";for(int i=1;i<args.length;i++)args[i]=false;
+                    mc.setScreenAndShow((net.minecraft.client.gui.screens.ChatScreen)ctor.newInstance(args));
+                    BlackoutManager.setActive(true);
+                    stage++;return;
+                }
+                if(stage==254){capture(mc,"blackout-chat-3");BlackoutManager.setActive(false);stage++;return;}
+                if(stage==255){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
