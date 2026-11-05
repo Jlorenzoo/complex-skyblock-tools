@@ -620,11 +620,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     });stage++;return;
                 }
                 if(stage>=161&&stage<230){
-                    String[][] destinations={{"1","Booster timers"},{"1","Coconut alerts"},{"1","Earnings & statistics"},{"2","Farming"},{"2","Fishing"},{"2","Fish sell prices"},{"2","Mining & XP"},{"4","Active HUD elements"},{"4","Layout & positioning"},{"4","Treasure chests"},{"6","Keyboard shortcuts"},{"6","Chat selection & copy"},{"6","Auction notifications"},{"6","Display & visuals"},{"6","Blackout (AFK)"}};
+                    String[][] destinations={{"1","Booster timers"},{"1","Coconut alerts"},{"1","Earnings & statistics"},{"2","Farming"},{"2","Fishing"},{"2","Fish sell prices"},{"2","Mining & XP"},{"4","Active HUD elements"},{"4","Layout & positioning"},{"4","Treasure chests"},{"6","Keyboard shortcuts"},{"6","Chat selection & copy"},{"6","Auction notifications"},{"6","Display & visuals"},{"6","Blackout (AFK)"},{"3","Void Rod"},{"3","Bone Leggings"}};
                     int index=stage-161;
                     if(index>0){capture(mc,"topic-"+(index-1));assertControls(mc);scrollBottom(mc);assertControls(mc);}
-                    if(index==60){stage=230;return;}
-                    int sample=index/15;String[] destination=destinations[index%15];
+                    if(index==destinations.length*4){stage=230;return;}
+                    int sample=index/destinations.length;String[] destination=destinations[index%destinations.length];
                     ToolkitConfig.get().lightMode=sample%2==1;
                     mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                     int page=Integer.parseInt(destination[0]);mc.setScreenAndShow(new ToolkitScreen(null,page));
@@ -640,15 +640,52 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         check(screen.children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"XP per hour HUD")),"Category remembers selected topic");
                     }
                     // Re-selecting the active category gives the overview even after switching tabs.
-                    String category=page==1?"Boost":page==2?"Skills":page==4?"HUD":"Util";
+                    String category=page==1?"Boost":page==2?"Skills":page==4?"HUD":page==3?"Season":"Util";
                     press(mc,category);
                     check(screen.children().stream().noneMatch(c->c instanceof AbstractWidget w&&w.getMessage().getString().startsWith("< All ")),"Active category returns to overview");
                     pressTopic(mc,destination[1]);
                     stage++;return;
                 }
-                if(stage==230){
+                if(stage>=230&&stage<250){
+                    int sample=(stage-230)/5,step=(stage-230)%5;
+                    if(step==0){
+                        ToolkitConfig.get().lightMode=sample%2==1;
+                        mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Farming");
+                    }else if(step==1){
+                        capture(mc,"focused-farming-"+sample);assertControls(mc);
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"Gold shard value ($ each)")),"Secondary shard fields start hidden");
+                        pressTopic(mc,"Gold shards & income");
+                        check(mc.gui.screen().getFocused() instanceof Button b&&b.getMessage().getString().startsWith("Gold shards & income:"),"Disclosure retains keyboard focus after expanding");
+                    }else if(step==2){
+                        capture(mc,"focused-shards-"+sample);assertControls(mc);
+                        var screen=mc.gui.screen();
+                        var back=screen.children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().startsWith("< All ")).map(c->(Button)c).findFirst().orElseThrow();
+                        int backY=back.getY();scrollBottom(mc);
+                        check(back.visible&&back.getY()==backY,"Topic breadcrumb stays visible while scrolling");
+                        press(mc,"< All ");
+                        check(screen.children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Gold shard value ($ each)")),"Fixed Back returns to overview");
+                        search(mc,"chat opacity");press(mc,"Utilities / Chat opacity");
+                        check(screen.children().stream().anyMatch(c->c instanceof AbstractWidget w&&w.visible&&ToolkitScreen.searchTarget(w,"Chat opacity")),"Search expands Chat appearance and reveals its slider");
+                    }else if(step==3){
+                        capture(mc,"focused-chat-"+sample);assertControls(mc);
+                        pressTopic(mc,"Chat appearance");
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton),"Closing appearance removes hidden sliders from keyboard navigation");
+                        switchTheme(mc);
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton),"Theme retains disclosure state");
+                        switchTheme(mc);
+                        search(mc,"bone display style");press(mc,"Seasonals / Display style");
+                    }else{
+                        capture(mc,"focused-seasonal-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.visible&&b.getMessage().getString().startsWith("< All Seasonals")),"Seasonal Back remains visible");
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");pressTopic(mc,"Fish sell prices");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Cod · 60%")),"Fishing links directly to its price topic");
+                    }
+                    stage++;return;
+                }
+                if(stage==250){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
-                    Files.writeString(output.resolve("PASS.txt"),"PASS: isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
+                    Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
                 }
 
@@ -685,7 +722,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     void pressTopic(net.minecraft.client.Minecraft mc,String title){
         var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,100);
         for(int i=0;i<12;i++){
-            for(var child:screen.children())if(child instanceof Button b&&b.visible&&b.getMessage().getString().equals(title)){b.onPress(null);return;}
+            for(var child:screen.children())if(child instanceof Button b&&b.visible&&(b.getMessage().getString().equals(title)||b.getMessage().getString().startsWith(title+": "))){b.onPress(null);return;}
             screen.mouseScrolled(screen.width/2,screen.height/2,0,-1);
         }
         throw new AssertionError("topic missing: "+title);

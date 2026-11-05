@@ -44,6 +44,18 @@ public final class ToolkitButton extends Button {
         });
         return new ToolkitButton(x,y,w,40,title,press,7,false,null,icon,summary);
     }
+    public static ToolkitButton searchResult(String setting,String path,String accessibleTitle,OnPress press,int x,int y,int w){
+        var button=new ToolkitButton(x,y,w,32,setting,press,10,false,null,null,path);
+        button.setMessage(Component.literal(accessibleTitle));return button;
+    }
+    public static ToolkitButton breadcrumb(String category,String topic,OnPress press,int x,int y,int w){
+        var button=new ToolkitButton(x,y,w,20,"< All "+category,press,9,false,null,null,topic);
+        button.setMessage(Component.literal("< All "+category+" / "+topic));return button;
+    }
+    public static ToolkitButton disclosure(String title,boolean open,OnPress press,int x,int y,int w){
+        var button=new ToolkitButton(x,y,w,20,title,press,8,open,null,null,null);
+        button.setMessage(Component.literal(title+": "+(open?"expanded":"collapsed")));return button;
+    }
     public static ToolkitButton setting(String label,Supplier<String> value,OnPress press,int x,int y,int w){
         var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
         button.value=value;return button;
@@ -51,6 +63,21 @@ public final class ToolkitButton extends Button {
     @Override protected void extractContents(GuiGraphicsExtractor g,int mx,int my,float tick){
         var font=Minecraft.getInstance().font;boolean hover=isHoveredOrFocused()&&active;
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
+        if(kind==8||kind==9){
+            var palette=ToolkitTheme.palette();
+            ToolkitTheme.rounded(g,x,y,w,h,3,hover?palette.hover():palette.surface());
+            if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,palette.accent());
+            if(kind==9){
+                String back=ToolkitTheme.clipText(font,Component.literal(label),w/2);
+                ToolkitTheme.text(g,font,back,x+6,y+6,palette.muted());
+                int offset=ToolkitTheme.textWidth(font,back)+18;
+                ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),w-offset-8),x+offset,y+6,palette.text());
+            }else{
+                ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),w-30),x+6,y+6,selected?palette.accent():palette.text());
+                ToolkitTheme.text(g,font,selected?"-":"+",x+w-14,y+6,palette.muted());
+            }
+            return;
+        }
         if(kind==5){
             var palette=ToolkitTheme.palette();String current=value.get();
             setMessage(Component.literal(description+": "+current));
@@ -97,7 +124,7 @@ public final class ToolkitButton extends Button {
             ToolkitTheme.text(g,font,">",x+w-16,y+16,ToolkitTheme.palette().muted());
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),w-24),x+12,y+43,ToolkitTheme.palette().muted());return;
         }
-        if(kind==6||kind==7){
+        if(kind==6||kind==7||kind==10){
             var palette=ToolkitTheme.palette();
             ToolkitTheme.rounded(g,x,y,w,h,4,hover?palette.hover():palette.surface());
             if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,palette.accent());
@@ -112,7 +139,7 @@ public final class ToolkitButton extends Button {
             int maxTextW=w-(kind==7?70:hasIcon?48:26);
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),maxTextW),textX,y+(kind==7?9:6),selected?palette.accent():palette.text());
             ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),maxTextW),textX,y+(kind==7?24:18),palette.muted());
-            String chevron=kind==7?">":selected?"▾":"▸";
+            String chevron=kind==7||kind==10?">":selected?"▾":"▸";
             ToolkitTheme.text(g,font,chevron,x+w-14,y+(h-8)/2,palette.muted());return;
         }
         String text=ToolkitTheme.clipText(font,getMessage(),w-12);

@@ -14,6 +14,12 @@ public final class ToolkitLayoutTest {
    if(results.size()!=1||!results.getFirst().setting().equals("Sell all key")||results.getFirst().page()!=6)
     throw new AssertionError("Expected one canonical sell-all setting: "+query);
   }
+  for(String query:new String[]{"fullbright key","include boosters in crop average"}){
+   if(com.skyblocktoolkit.ToolkitSearch.find(query).size()!=1)throw new AssertionError("Shared controls have one search destination: "+query);
+  }
+  if(com.skyblocktoolkit.ToolkitSearch.find("booster timers").stream().noneMatch(e->e.setting().equals("Money timer")))
+   throw new AssertionError("Search matches the visible topic name");
+  if(com.skyblocktoolkit.ToolkitSearch.find("chat appearance").size()!=5)throw new AssertionError("Appearance group is discoverable by name");
   var minimum=com.skyblocktoolkit.ToolkitSearch.find("  MiNiMuM   boost ");
   if(minimum.size()!=1||!minimum.getFirst().setting().equals("Minimum boost (%)"))throw new AssertionError("Individual setting terms");
   if(!com.skyblocktoolkit.ToolkitSearch.find("coconut history").isEmpty())throw new AssertionError("Unrelated controls must not combine keywords");

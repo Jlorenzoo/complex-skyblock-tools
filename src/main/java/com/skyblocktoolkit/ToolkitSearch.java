@@ -8,7 +8,7 @@ public final class ToolkitSearch {
     public record Entry(int page,String category,String section,String setting,String keywords){
         public String title(){return category+" / "+setting;}
         public boolean matches(String query){
-            String haystack=(title()+" "+keywords).toLowerCase(Locale.ROOT);
+            String haystack=(title()+" "+section+" "+keywords).toLowerCase(Locale.ROOT);
             return java.util.Arrays.stream(query.toLowerCase(Locale.ROOT).strip().split("\\s+"))
                 .allMatch(haystack::contains);
         }
@@ -25,7 +25,6 @@ public final class ToolkitSearch {
         new Entry(1,"Boosters","Booster timers","Preview ending","expiring ending warning flash banner test preview"),
         new Entry(1,"Boosters","Earnings & statistics","History","session bonus latest past earnings booster"),
         new Entry(1,"Boosters","Earnings & statistics","Rate tests","hourly average base rate test tracker statistics"),
-        new Entry(1,"Boosters","Earnings & statistics","Include boosters in crop average","money base earnings crop average booster"),
         new Entry(1,"Boosters","Coconut alerts","Coconut sound","money alert enabled coconut sound notification"),
         new Entry(1,"Boosters","Coconut alerts","Coconut banner","money alert title banner coconut notification visual"),
         new Entry(1,"Boosters","Coconut alerts","Coconut screen flash","money alert screen flash border glow coconut visual"),
@@ -79,11 +78,11 @@ public final class ToolkitSearch {
         new Entry(6,"Utilities","Chat selection & copy","Chat selection","enabled drag copy clipboard ctrl text select chat copy"),
         new Entry(6,"Utilities","Chat selection & copy","Select word","double triple click word line expand selection chat copy"),
         new Entry(6,"Utilities","Chat selection & copy","Quick /gc code click","gc gift code card tebex copy click redeem menu quick chat copy selection"),
-        new Entry(6,"Utilities","Chat selection & copy","Highlight color","selection theme style chat copy"),
-        new Entry(6,"Utilities","Chat selection & copy","Highlight strength","selection opacity alpha strength visibility chat copy"),
-        new Entry(6,"Utilities","Chat selection & copy","Chat size","scale font size height zoom chat copy"),
-        new Entry(6,"Utilities","Chat selection & copy","Chat width","width horizontal dimensions size chat copy"),
-        new Entry(6,"Utilities","Chat selection & copy","Chat opacity","opacity transparency background alpha chat copy"),
+        new Entry(6,"Utilities","Chat selection & copy","Highlight color","selection theme style chat copy chat appearance"),
+        new Entry(6,"Utilities","Chat selection & copy","Highlight strength","selection opacity alpha strength visibility chat copy chat appearance"),
+        new Entry(6,"Utilities","Chat selection & copy","Chat size","scale font size height zoom chat copy chat appearance"),
+        new Entry(6,"Utilities","Chat selection & copy","Chat width","width horizontal dimensions size chat copy chat appearance"),
+        new Entry(6,"Utilities","Chat selection & copy","Chat opacity","opacity transparency background alpha chat copy chat appearance"),
         new Entry(6,"Utilities","Auction notifications","Sale alert","notification enabled ah auction house sale sound"),
         new Entry(6,"Utilities","Auction notifications","Sound","audio type sound orb bell chime auction"),
         new Entry(6,"Utilities","Auction notifications","Volume","audio volume loudness auction sound"),
@@ -92,7 +91,6 @@ public final class ToolkitSearch {
         new Entry(6,"Utilities","Blackout (AFK)","Turn blackout on","dim screen audio afk blackout activate start"),
         new Entry(6,"Utilities","Blackout (AFK)","Opacity","dim screen opacity darkness transparency blackout"),
         new Entry(6,"Utilities","Display & visuals","Fullbright","fullbright gamma brightness lighting night vision dark light caves"),
-        new Entry(6,"Utilities","Display & visuals","Fullbright key","fullbright key binding toggle shortcut"),
         new Entry(6,"Utilities","Keyboard shortcuts","Menu key","binding shortcut toolkit menu open gui key general"),
         new Entry(6,"Utilities","Keyboard shortcuts","Sell all key","sellall command binding shortcut farming boosters general"),
         new Entry(6,"Utilities","Keyboard shortcuts","Wake key","blackout dim binding shortcut wake key exit afk"),
