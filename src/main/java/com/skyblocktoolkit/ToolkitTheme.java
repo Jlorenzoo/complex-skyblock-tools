@@ -2,6 +2,7 @@ package com.skyblocktoolkit;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 /** Restrained shared colors and small native-pixel corner radii. */
 public final class ToolkitTheme {
     public static ToolkitPalette palette(){return ToolkitPalette.of(ToolkitConfig.get().lightMode);}
@@ -16,6 +17,8 @@ public final class ToolkitTheme {
         g.pose().pushMatrix();g.pose().translate(x,y);g.pose().scale(MENU_TEXT_SCALE,MENU_TEXT_SCALE);
         g.text(font,text,0,0,color,false);g.pose().popMatrix();
     }
+    private static final Identifier CRYSTAL_DARK=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/crystal-dark.png");
+    private static final Identifier CRYSTAL_LIGHT=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/crystal-light.png");
     private ToolkitTheme(){}
     /** Static, native-pixel geometry echoes the artwork without loading a background image. */
     public static void line(GuiGraphicsExtractor g,int x,int y,int endX,int endY,int color){
@@ -50,27 +53,9 @@ public final class ToolkitTheme {
         g.fill(x+61,cy+75,x+67,cy+78,p.brand());
         g.fill(x+132,y+12,x+133,y+h-12,p.border());
     }
-    /** Facets are filled scanline triangles, matching Minecraft's native pixel grid. */
-    private static void triangle(GuiGraphicsExtractor g,int ax,int ay,int bx,int by,int cx,int cy,int color){
-        int low=Math.min(ay,Math.min(by,cy)),high=Math.max(ay,Math.max(by,cy));
-        for(int y=low;y<high;y++){
-            double scan=y+.5,min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY;
-            if((ay<=scan&&scan<by)||(by<=scan&&scan<ay)){double v=ax+(scan-ay)*(bx-ax)/(by-ay);min=Math.min(min,v);max=Math.max(max,v);}
-            if((by<=scan&&scan<cy)||(cy<=scan&&scan<by)){double v=bx+(scan-by)*(cx-bx)/(cy-by);min=Math.min(min,v);max=Math.max(max,v);}
-            if((cy<=scan&&scan<ay)||(ay<=scan&&scan<cy)){double v=cx+(scan-cy)*(ax-cx)/(ay-cy);min=Math.min(min,v);max=Math.max(max,v);}
-            if(min<=max)g.fill((int)Math.floor(min),y,(int)Math.ceil(max),y+1,color);
-        }
-    }
+    /** A single textured quad keeps the facets stable in the GUI batching tree. */
     public static void crystal(GuiGraphicsExtractor g,int x,int y,int w,int h){
-        var p=palette();int tipX=x+w*3/4,midX=x+w/3,midY=y+h/2;
-        triangle(g,tipX,y,x,midY,midX,midY+2,p.facetLight());
-        triangle(g,tipX,y,midX,midY+2,x+w,midY+6,p.facetDark());
-        triangle(g,x,midY,midX,midY+2,x+w/4,y+h,p.facetDark());
-        triangle(g,midX,midY+2,x+w,midY+6,x+w/4,y+h,p.motif());
-        line(g,tipX,y,x,midY,p.accent());
-        line(g,x,midY,x+w/4,y+h,p.facetLight());
-        line(g,tipX,y,midX,midY+2,p.facetLight());
-        line(g,midX,midY+2,x+w/4,y+h,p.facetLight());
+        g.blit(palette()==ToolkitPalette.LIGHT?CRYSTAL_LIGHT:CRYSTAL_DARK,x,y,x+w,y+h,0f,1f,0f,1f);
     }
     public static void brandHeader(GuiGraphicsExtractor g,int x,int y,int w,boolean compact){
         var p=palette();
