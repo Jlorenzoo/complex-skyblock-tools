@@ -669,7 +669,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     if(stage==155){stage=156;return;}
                     int sample=stage-151;ToolkitConfig.get().lightMode=sample%2==1;
                     mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
-                    mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"reward pool estimates");press(mc,"HUD & Overlays / Reward pool estimates");
+                    mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"treasure thirty seconds");press(mc,"HUD & Overlays / Only show last 30 seconds");
                     boolean oldThirty=ToolkitConfig.get().treasureLastThirtySeconds;
                     press(mc,"Only show last 30 seconds");
                     check(ToolkitConfig.get().treasureLastThirtySeconds!=oldThirty,"Final 30 seconds toggle");
