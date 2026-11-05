@@ -54,6 +54,7 @@ public final class ToolkitButton extends Button {
         if(kind==1){
             if(selected){
                 ToolkitTheme.rounded(g,x,y,w,h,3,ToolkitTheme.palette().accentSurface());
+                g.fill(x,y+4,x+2,y+h-4,ToolkitTheme.palette().brand());
             }else if(hover)ToolkitTheme.rounded(g,x,y,w,h,4,ToolkitTheme.palette().surface());
             int pad=w<70?4:8;
             String clipped=ToolkitTheme.clipText(font,getMessage(),w-pad*2);

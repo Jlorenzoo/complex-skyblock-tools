@@ -521,17 +521,20 @@ public final class ToolkitScreen extends Screen {
         ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
         if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,132,h,6,ToolkitTheme.palette().sidebar());g.fill(x+124,y,x+132,y+h,ToolkitTheme.palette().sidebar());
-            g.blit(LOGO,x+12,y+12,x+38,y+38,0f,1f,0f,1f);
-            ToolkitTheme.text(g,font,"COMPLEXIFY",x+44,y+15,ToolkitTheme.palette().text());
-            ToolkitTheme.text(g,font,"v"+UpdateManager.getCurrentVersion(),x+44,y+28,ToolkitTheme.palette().muted());
+            ToolkitTheme.brandFrame(g,x,y,w,h,false);
+            g.blit(LOGO,x+10,y+8,x+44,y+42,0f,1f,0f,1f);
+            ToolkitTheme.text(g,font,"COMPLEXIFY",x+49,y+15,ToolkitTheme.palette().text());
+            ToolkitTheme.text(g,font,"v"+UpdateManager.getCurrentVersion(),x+49,y+28,ToolkitTheme.palette().muted());
             g.text(font,query.isBlank()?(page<PAGES.length?PAGES[page]:""):"Search settings",layout.bodyX(),y+20,ToolkitTheme.palette().text(),false);
             ToolkitTheme.text(g,font,query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories",layout.bodyX(),y+39,ToolkitTheme.palette().muted());
             g.fill(layout.bodyX(),y+55,layout.bodyX()+layout.bodyWidth(),y+56,ToolkitTheme.palette().border());
+            g.fill(layout.bodyX(),y+55,layout.bodyX()+32,y+56,ToolkitTheme.palette().brand());
             int sx=x+12,sy=y+52,sw=112;
             ToolkitTheme.rounded(g,sx,sy,sw,20,3,ToolkitTheme.palette().surface());
             if(searchBox.isFocused())g.fill(sx+4,sy+19,sx+sw-4,sy+20,ToolkitTheme.palette().accent());
             if(query.isEmpty()&&!searchBox.isFocused())g.text(font,"Search...",searchBox.getX(),searchBox.getY()+3,ToolkitTheme.palette().muted(),false);
         }else{
+            ToolkitTheme.brandFrame(g,x,y,w,h,true);
             g.blit(LOGO,x+8,y+10,x+26,y+28,0f,1f,0f,1f);
             g.text(font,"Complexify",x+30,y+15,ToolkitTheme.palette().text(),false);
             int sx=layout.bodyX(),sy=y+68,sw=layout.bodyWidth();

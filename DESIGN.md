@@ -26,9 +26,9 @@ Complexify’s visual identity is inspired by high-performance esports HUDs and 
    - **In-Game Gameplay HUD**: Green money and purple XP timers, neutral stat pills and white readouts. The optional final-five-second cue keeps the timer's identity and uses a soft outline rather than an urgent red flash.
    - **Modpack Menu & Hub**: The unified Crimson Red and Crisp White brand theme.
 2. **Dark-Room Balance (Anti-Eye Strain)**:
-   - Searing, hyper-saturated neon red and blinding 100% white are strictly avoided.
-   - Accents use a balanced, rich crimson (`#B82D42`) and warm burgundy fill (`#2D131A`).
-   - Text and handles use soft silver-white (`#DDE1E6`, `#E2E6EA`) with gentle luminance to keep late-night sessions comfortable in completely dark rooms.
+   - Keep large surfaces neutral; reserve vivid crimson and white for small controls and branding.
+   - Structural rails and selected markers use artwork crimson (`#E5254A`); text accents use contrast-adjusted crimson and rose.
+   - Text uses crisp silver-white (`#F4F5F7`) and handles use white with gentle luminance to keep late-night sessions comfortable in completely dark rooms.
 3. **Official Modpack Branding**:
    - The official emblem from [`assets/logo.png`](assets/logo.png) (with transparent background) is embedded directly into the header/sidebar of the toolkit UI.
 
@@ -42,17 +42,19 @@ The menu header switches between **Dark mode** and **Light mode** using a compac
 
 | Palette accessor | Dark / red | Light / red | Purpose |
 | :--- | :--- | :--- | :--- |
-| `panel()` | `#1B1D22` | `#F9F9FC` | Main panel |
-| `sidebar()` | `#15171B` | `#F0F0F5` | Sidebar |
-| `surface()` | `#25282E` | `#E8E9F0` | Controls and fields |
+| `panel()` | `#1B1D21` | `#FAFAFC` | Main panel |
+| `sidebar()` | `#101216` | `#EEEFF3` | Sidebar |
+| `surface()` | `#24272D` | `#E8E9F0` | Controls and fields |
 | `hover()` | `#30343B` | `#DDDFE8` | Hover / focus fill |
-| `text()` | `#E4E7EC` | `#232632` | Primary text |
-| `muted()` | `#A3AAB5` | `#596171` | Secondary text |
-| `accent()` | `#E6647A` | `#B41F42` | Brand, selection, focus |
-| `accentSurface()` | `#391E28` | `#F8DDE4` | Selected navigation fill |
-| `accentTrack()` | `#C33D56` | `#BF2949` | Enabled switch / slider |
+| `text()` | `#F4F5F7` | `#232632` | Primary text |
+| `muted()` | `#ADB4BF` | `#596171` | Secondary text |
+| `accent()` | `#FF7089` | `#AE1939` | Brand, selection, focus |
+| `accentSurface()` | `#361923` | `#F8DDE4` | Selected navigation fill |
+| `accentTrack()` | `#E5254A` | `#D51F43` | Enabled switch / slider |
 | `border()` | `#373B44` | `#CCD0DB` | Subtle panel / control edge |
 | `error()` | `#FF9EAD` | `#AA2140` | Invalid input |
+
+The hub echoes the artwork with a larger shield emblem, broken crimson edge rails, angular crystal linework, and a faint carbon weave confined to the sidebar. Compact layouts keep only the emblem and edge rails. Decorations stay outside the scrolling settings and use palette-backed colors. Selected tabs have a crimson marker as well as a tinted fill.
 
 Both themes use deliberate surface contrast, restrained red accents, matching subtle borders, a small header accent, and soft shadows. Light mode uses an off-white canvas and deep ink text, rather than reversing the colors mechanically. Toggles and slider thumbs stay warm white against their tracks. History, rate tests, inputs and detail screens use the same shared palette.
 
