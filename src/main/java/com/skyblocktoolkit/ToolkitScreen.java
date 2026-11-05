@@ -23,7 +23,8 @@ public final class ToolkitScreen extends Screen {
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall, 4=fullbright
     private boolean fishEarnings;
     private String statsProfileId,statsSessionId;
-    private ItemStatsTracker.Slot statsSlot=ItemStatsTracker.Slot.HAND;
+    private long statsUpdated;
+    private ItemStatsLocation statsArea;
     private final Set<String> expandedDetails=new HashSet<>();
     private int topicOffset;
     private Button topicBack;
@@ -337,7 +338,19 @@ public final class ToolkitScreen extends Screen {
             link("Farming income settings",92,2,"Farming");
         }
     }
-    private void statsRefresh(){clearBody();buildBody();}
+    private void statsRefresh(){
+        String focused=getFocused() instanceof AbstractWidget w?w.getMessage().getString():null;
+        clearBody();buildBody();
+        if(focused!=null)for(var row:controls)if(row.widget().visible&&row.widget().getMessage().getString().equals(focused)){setFocused(row.widget());break;}
+    }
+    private void statsNextArea(){statsArea=statsArea==null?ItemStatsLocation.OVERWORLD:statsArea==ItemStatsLocation.OVERWORLD?ItemStatsLocation.REALM:statsArea==ItemStatsLocation.REALM?ItemStatsLocation.UNKNOWN:null;scroll=0;statsRefresh();}
+    private String statsAreaName(){return statsArea==null?"All":statsArea==ItemStatsLocation.REALM?"Realm":statsArea==ItemStatsLocation.UNKNOWN?"Unknown":statsArea.label();}
+    private ItemStatsHistory.Totals statsTotals(String id){return ItemStatsTracker.history().totals(id,statsArea);}
+    @Override public void tick(){
+        super.tick();
+        long now=System.currentTimeMillis();
+        if(page==13&&statsProfileId==null&&query.isEmpty()&&now-statsUpdated>=1000){statsUpdated=now;statsRefresh();}
+    }
     private static String statsTime(long ms){long seconds=ms/1000;return String.format(java.util.Locale.ROOT,"%dh %02dm %02ds",seconds/3600,seconds/60%60,seconds%60);}
     private static String statsDate(long ms){return java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("dd MMM HH:mm"));}
     private String statsMoney(double cash){return BoosterStatsManager.formatMoney(cash);}
@@ -345,19 +358,17 @@ public final class ToolkitScreen extends Screen {
         var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
         if(profile==null){
             statsProfileId=null;statsSessionId=null;
-            pair(()->"Slot: "+statsSlot.label,()->{statsSlot=ItemStatsTracker.Slot.values()[(statsSlot.ordinal()+1)%ItemStatsTracker.Slot.values().length];statsRefresh();},
-                ()->"Register item",()->{var p=ItemStatsTracker.register(statsSlot);if(p!=null)statsProfileId=p.id;statsRefresh();},0);
-            label("Register each physical item separately; reuse its profile.",28);
-            label("New tier / enchants? Register a new profile.",42);
+            pair(()->"Current item",()->{statsProfileId=ItemStatsTracker.currentItem();scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
+            label("Tools and seasonals are recognized automatically.",28);
+            label(ItemStatsTracker::message,44,ToolkitTheme.palette().accent(),0.85f);
             int top=60;
-            if(!ItemStatsTracker.message().isEmpty()){label(ItemStatsTracker::message,58,ToolkitTheme.palette().accent(),0.85f);top=76;}
             var profiles=history.profiles(ItemStatsTracker.scope());
-            if(profiles.isEmpty())label("No items yet. Equip a tool or seasonal to register it.",top);
+            if(profiles.isEmpty())label("Use a hoe, rod or tool. Its history appears here.",top);
             for(var p:profiles){
-                var totals=history.totals(p.id);
+                var totals=statsTotals(p.id);
                 String subtitle=totals.sessions()+" sessions · "+statsMoney(totals.hourly(totals.cash()))+"/h · "+totals.shards()+" shards";
-                var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),false,b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
-                row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+" · configuration "+p.fingerprint.substring(0,8))));
+                var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),history.recording(p.id),b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+                row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+"\n"+(p.physicalId!=null&&!p.physicalId.startsWith("local:")?"Recognized by server item ID.":"Recognized by item data and inventory continuity. Identical items without server IDs can be ambiguous."))));
                 controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=30;
             }
             return;
@@ -369,35 +380,30 @@ public final class ToolkitScreen extends Screen {
             label(profile.title(),28);
             label("Started: "+statsDate(session.started),44);
             label(()->session.status+" · "+statsTime(session.elapsed()),60,ToolkitTheme.palette().accent(),1);
-            label(()->"Cash: "+statsMoney(session.cash)+" · Base: "+statsMoney(session.baseCash),84,ToolkitTheme.palette().text(),1);
-            label(()->"Cash / hour: "+statsMoney(session.elapsed()>0?session.cash*3600000/session.elapsed():0),100,ToolkitTheme.palette().text(),1);
-            label(()->"Gold shards: "+session.shards+" · "+CropHarvestTracker.format(session.elapsed()>0?session.shards*3600000.0/session.elapsed():0)+"/h",116,ToolkitTheme.palette().text(),1);
-            label(()->"Fish: "+session.fish+" · Est. value: "+statsMoney(session.fishValue),132,ToolkitTheme.palette().text(),1);
-            label("Fish value uses prices at catch time; separate from cash.",156);
-            label("Shard counts exclude value estimates; base removes money boost.",170);
+            label("Area: "+session.location.label(),76);
+            label(()->"Cash: "+statsMoney(session.cash)+" · Base: "+statsMoney(session.baseCash),100,ToolkitTheme.palette().text(),1);
+            label(()->"Cash / hour: "+statsMoney(session.elapsed()>0?session.cash*3600000/session.elapsed():0),116,ToolkitTheme.palette().text(),1);
+            label(()->"Gold shards: "+session.shards+" · "+CropHarvestTracker.format(session.elapsed()>0?session.shards*3600000.0/session.elapsed():0)+"/h",132,ToolkitTheme.palette().text(),1);
+            label(()->"Fish: "+session.fish+" · Est. value: "+statsMoney(session.fishValue),148,ToolkitTheme.palette().text(),1);
+            label("Fish value uses prices at catch time; separate from cash.",172);
+            label("Shard counts exclude value estimates; base removes money boost.",186);
             return;
         }
-        pair(()->"< All items",()->{statsProfileId=null;scroll=0;statsRefresh();},
-            ()->history.active()!=null&&history.active().profileId.equals(profile.id)?"Stop session":"Start session",
-            ()->{if(history.active()!=null&&history.active().profileId.equals(profile.id))ItemStatsTracker.stop();else ItemStatsTracker.start(profile);statsRefresh();},0);
-        int fieldTop=28;
-        var name=addRenderableWidget(new EditBox(font,layout.bodyX()+6,layout.bodyY(),Math.min(260,layout.bodyWidth()-12),18,Component.literal("Item label")));
-        name.setBordered(false);name.setMaxLength(48);name.setTextColor(ToolkitTheme.palette().text());name.setTextShadow(false);name.setValue(profile.label);
-        name.setTooltip(Tooltip.create(Component.literal(profile.name+" · #"+profile.id.substring(0,6)+" · "+profile.slot+"\nSelect this profile only for this physical item. Base cash removes money boosters.")));
-        name.setResponder(value->{history.rename(profile,value);});settingFields.add(name);controls.add(new Control(name,fieldTop,18));contentHeight=Math.max(contentHeight,fieldTop+18);
-        label(()->{var t=history.totals(profile.id);return "Avg cash: "+statsMoney(t.hourly(t.cash()))+"/h · Base: "+statsMoney(t.hourly(t.baseCash()))+"/h";},56,ToolkitTheme.palette().text(),1);
-        label(()->{var t=history.totals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},72,ToolkitTheme.palette().text(),1);
-        label(()->{var t=history.totals(profile.id);return "Total cash: "+statsMoney(t.cash())+" · Avg/session: "+statsMoney(t.sessions()>0?t.cash()/t.sessions():0);},88,ToolkitTheme.palette().text(),1);
-        label(()->{var t=history.totals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},104,ToolkitTheme.palette().text(),1);
-        label(()->{var t=history.totals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},120,ToolkitTheme.palette().text(),1);
-        label(ItemStatsTracker::message,142,ToolkitTheme.palette().accent(),0.85f);
-        label("Idle time counts. Cash measures income while using this item.",160);
+        pair(()->"< All items",()->{statsProfileId=null;scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
+        label(profile.title(),28);
+        label(()->{var t=statsTotals(profile.id);return "Avg cash: "+statsMoney(t.hourly(t.cash()))+"/h · Base: "+statsMoney(t.hourly(t.baseCash()))+"/h";},56,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},72,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Total cash: "+statsMoney(t.cash())+" · Avg/session: "+statsMoney(t.sessions()>0?t.cash()/t.sessions():0);},88,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},104,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},120,ToolkitTheme.palette().text(),1);
+        label(()->history.recording(profile.id)?"Recording automatically":"Automatic · paused / not equipped",142,ToolkitTheme.palette().accent(),0.85f);
+        label("Pauses after 30s idle. Cash is income while this item is equipped.",160);
         label("Past sessions",184);
         int top=200;
-        if(history.sessions(profile.id).isEmpty())label("No sessions yet. Equip this configuration and press Start.",top);
-        for(var s:history.sessions(profile.id)){
+        if(history.sessions(profile.id,statsArea).isEmpty())label("No sessions in this area yet. Tracking starts automatically.",top);
+        for(var s:history.sessions(profile.id,statsArea)){
             var row=addRenderableWidget(ToolkitButton.topic(statsDate(s.started)+" · "+s.status,
-                statsTime(s.elapsed())+" · "+statsMoney(s.cash)+" · "+s.shards+" shards",b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+                s.location.label()+" · "+statsTime(s.elapsed())+" · "+statsMoney(s.cash)+" · "+s.shards+" shards",b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
             controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);top+=36;
         }
     }

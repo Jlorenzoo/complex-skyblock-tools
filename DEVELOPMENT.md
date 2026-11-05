@@ -26,16 +26,32 @@ Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity durin
 
 ## Build and verify
 
-**Stats** (also `/toolkit stats`) keeps named profiles for individual tools and worn
-seasonals. Select a slot, register the item, label it, then start a session from its
-profile. Register each physical item separately, even if two have identical names
-and components. The server does not always expose an individual ID; matching
-components verify the configuration but cannot prove physical identity. Select the
-correct profile yourself. Tier, enchantment, lore and custom-data changes require
-a new registration; ordinary durability and repair cost do not. Dynamic server lore
-or counters may conservatively stop a session too. Changing the selected hotbar
-slot, removing/changing the registered configuration, changing worlds, disconnecting
-or closing the game ends recording. One item session can run at a time.
+**Stats** (also `/toolkit stats`) recognizes inventory tools and seasonal gear
+automatically. No registration, profile selection, Start/Stop or setup is required.
+Normal attack/use, active harvesting, casts and confirmed rewards start sessions
+for the equipped items. Switching tools or unequipping gear closes the old session;
+30 seconds without activity pauses recording. Returning to an item starts a new
+session in its saved history, including after restarting Minecraft. Worn seasonal
+gear and held tools can record simultaneously; these histories describe the same
+equipped activity and must not be summed as separate sources of income.
+
+Server item UUIDs/instance IDs are preferred; material and owner IDs are not unique
+item IDs. Otherwise saved item data and inventory-location continuity distinguish
+physical occurrences, including two matching tools present together. Completely
+identical items with no unique server data can be ambiguous if moved/swapped while
+unobserved. The UI tooltip describes this fallback; no manual workaround is required.
+Tier/enchantment changes automatically receive separate histories. Durability,
+repair cost and recognized harvest/catch/kill/XP/cooldown counters do not split a
+history. Unknown custom-data or lore changes conservatively separate configurations.
+Existing manually created histories are adopted when their item data matches.
+
+Sessions also record **Overworld** or **Pharaoh's Realm** from the received sidebar.
+The case-insensitive `Pharaoh's Realm` marker (including formatted text and curly
+apostrophes) identifies Realm; a populated sidebar without it identifies Overworld.
+A missing/empty sidebar is Unknown area. Entering/leaving Realm automatically
+splits sessions without changing item identity. The Stats **Area** filter separates
+money/shard averages, totals and history for All, Overworld, Realm and Unknown.
+Old sessions retain Unknown because their historical location was not recorded.
 
 History is saved separately in `config/skyblocktoolkit-item-stats.json`, scoped by
 server and player UUID. Cash uses the existing reconciled balance ledger and its
@@ -46,7 +62,7 @@ session boundaries are excluded. Shards use the existing chat/inventory deduplic
 and their observation timestamps, including delayed delivery. Fish counts use
 confirmed catch messages; their separate estimated value freezes configured prices
 at catch time. Neither shard value nor fish estimates are added to cash. Session
-time includes idle time and menus; stop recording for breaks. Average rates divide
+time includes the 30-second inactivity grace and menus until paused. Average rates divide
 combined rewards by combined session time. Restart closes unfinished sessions at
 their last checkpoint, without counting offline time. Old booster history cannot
 be backfilled to individual items.

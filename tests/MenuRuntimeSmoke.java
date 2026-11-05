@@ -770,8 +770,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Void Rod · Tier III","HAND",null);
                             statsFixtureId=p.id;
                             history.rename(p,"My Void Rod · WLB IV");
-                            history.start(p,now-300000);history.tick(now-1000);
+                            history.start(p,now-300000,ItemStatsLocation.REALM);history.tick(now-1000);
                             history.money(1500000,50,now-299000,now-1000);history.shards(64,now-10000);history.fish(120,240000,now-10000);history.stop(now,"Stopped");
+                            history.start(p,now-600000,ItemStatsLocation.OVERWORLD);history.tick(now-400000);history.money(300000,0,now-599000,now-400000);history.stop(now-400000,"Stopped");
                             history.register(ItemStatsTracker.scope(),"fedcba9876543210","Void Rod · Tier III","HAND",null);
                         }
                         ToolkitConfig.get().lightMode=sample%2==1;
@@ -780,9 +781,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }else if(step==1){
                         capture(mc,"stats-library-"+sample);assertControls(mc);
                         pressTopic(mc,ItemStatsTracker.history().profile(statsFixtureId).title());assertControls(mc);
-                        var field=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Item label")).map(c->(net.minecraft.client.gui.components.EditBox)c).findFirst().orElseThrow();
-                        field.setValue("My Void Rod · WLB IV");
-                        press(mc,"Start session");check(ItemStatsTracker.history().active()==null,"Offline profile cannot start without the matching equipped item");
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&(b.getMessage().getString().contains("Start session")||b.getMessage().getString().contains("Register"))),"Stats has no registration or manual session controls");
+                        press(mc,"Area: All");check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).count()==1,"Overworld filter selects only Overworld sessions");
+                        press(mc,"Area: Overworld");check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).count()==1,"Realm filter selects only Realm sessions");
                     }else if(step==2){
                         capture(mc,"stats-item-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
                     }else if(step==3){
@@ -792,13 +793,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }else{
                         capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
                         mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
-                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Start session")),"Escape returns to item statistics");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("< All items")),"Escape returns to item statistics");
                         mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
-                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Register item")),"Escape returns to item library");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Current item")),"Escape returns to automatic item library");
                     }
                     stage++;return;
                 }
                 if(stage==275){
+                    Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: automatic Stats library with no registration/start controls; Overworld/Realm filters, session history and detail views in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);

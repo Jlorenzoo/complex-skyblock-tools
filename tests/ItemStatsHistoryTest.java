@@ -23,7 +23,7 @@ public final class ItemStatsHistoryTest {
             h.money(Double.NaN,0,1001,60000);h.money(-1,0,1001,60000);
             h.money(999,0,999,2000); // spanning start is ambiguous
             h.stop(61000,"Stopped");
-            h.money(150,50,60000,61000);h.shards(3,61000); // late delivery uses observation time
+            h.money(150,50,60000,61000);h.shards(3,60999); // late delivery uses observation time
             var two=h.start(duplicate,62000);h.tick(122000);
             h.money(999,0,60000,63000); // spanning items cannot be assigned
             h.money(50,0,62001,100000);h.shards(2,63000);
