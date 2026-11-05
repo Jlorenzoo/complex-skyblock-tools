@@ -519,14 +519,15 @@ public final class ToolkitScreen extends Screen {
         }
         if(topic("Treasure chests",0)){
             toggle("Treasurechest timer","Open the treasure menu to sync the countdown.",16,()->cfg.treasureChestHud,()->cfg.treasureChestHud=!cfg.treasureChestHud);
-            toggle("Show discovered chests",48,()->cfg.treasureShowChests,()->cfg.treasureShowChests=!cfg.treasureShowChests);
-            toggle("Reward pool estimates",72,()->cfg.treasureInferOpens,()->cfg.treasureInferOpens=!cfg.treasureInferOpens);
-            int next=132;
-            if(details("Appearance & timing",104,"Treasure background","Chest details duration","Treasure HUD scale")){
-                toggle("Treasure background",132,()->cfg.treasureBackground,()->cfg.treasureBackground=!cfg.treasureBackground);
-                setting("Chest details duration",156,()->cfg.treasureDetailsSeconds+"s",()->cfg.treasureDetailsSeconds=cfg.treasureDetailsSeconds>=300?30:cfg.treasureDetailsSeconds+30);
-                setting("Treasure HUD scale",180,()->Math.round(cfg.treasureScale*100)+"%",()->cfg.treasureScale=cfg.treasureScale>=1.5?.6:Math.min(1.5,Math.round((cfg.treasureScale+.1)*10)/10.0));
-                next=208;
+            toggle("Only show last 30 seconds",48,()->cfg.treasureLastThirtySeconds,()->cfg.treasureLastThirtySeconds=!cfg.treasureLastThirtySeconds);
+            toggle("Show discovered chests",72,()->cfg.treasureShowChests,()->cfg.treasureShowChests=!cfg.treasureShowChests);
+            toggle("Reward pool estimates",96,()->cfg.treasureInferOpens,()->cfg.treasureInferOpens=!cfg.treasureInferOpens);
+            int next=156;
+            if(details("Appearance & timing",128,"Treasure background","Chest details duration","Treasure HUD scale")){
+                toggle("Treasure background",156,()->cfg.treasureBackground,()->cfg.treasureBackground=!cfg.treasureBackground);
+                setting("Chest details duration",180,()->cfg.treasureDetailsSeconds+"s",()->cfg.treasureDetailsSeconds=cfg.treasureDetailsSeconds>=300?30:cfg.treasureDetailsSeconds+30);
+                setting("Treasure HUD scale",204,()->Math.round(cfg.treasureScale*100)+"%",()->cfg.treasureScale=cfg.treasureScale>=1.5?.6:Math.min(1.5,Math.round((cfg.treasureScale+.1)*10)/10.0));
+                next=232;
             }
             if(details("How tracking works",next)){
                 label("Later two-hour cycles are marked as estimates.",next+28);

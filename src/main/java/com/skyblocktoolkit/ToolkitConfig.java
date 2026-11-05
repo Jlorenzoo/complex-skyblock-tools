@@ -34,7 +34,7 @@ public final class ToolkitConfig {
     public int boneLeggingsHudX=-1,boneLeggingsHudY=12;
     public int boneLeggingsHudStyle=0; // 0=Leggings & effect badge, 1=Icon & Mode, 2=Effect badge only, 3=Mode only
     public boolean boneLeggingsBackground=false;
-    public boolean treasureChestHud=false,treasureShowChests=true,treasureInferOpens=true,treasureBackground=true;
+    public boolean treasureChestHud=false,treasureLastThirtySeconds=false,treasureShowChests=true,treasureInferOpens=true,treasureBackground=true;
     public int treasureDetailsSeconds=120,treasureHudX=-1,treasureHudY=48;
     public double treasureScale=1;
     public boolean fullBright=false;
@@ -102,6 +102,7 @@ public final class ToolkitConfig {
             if(j.has("boneLeggingsHudStyle"))boneLeggingsHudStyle=Math.clamp(j.get("boneLeggingsHudStyle").getAsInt(),0,3);
             if(j.has("boneLeggingsBackground"))boneLeggingsBackground=j.get("boneLeggingsBackground").getAsBoolean();
             if(j.has("treasureChestHud"))treasureChestHud=j.get("treasureChestHud").getAsBoolean();
+            if(j.has("treasureLastThirtySeconds"))treasureLastThirtySeconds=j.get("treasureLastThirtySeconds").getAsBoolean();
             if(j.has("treasureShowChests"))treasureShowChests=j.get("treasureShowChests").getAsBoolean();
             if(j.has("treasureInferOpens"))treasureInferOpens=j.get("treasureInferOpens").getAsBoolean();
             if(j.has("treasureBackground"))treasureBackground=j.get("treasureBackground").getAsBoolean();
@@ -160,6 +161,7 @@ public final class ToolkitConfig {
             j.addProperty("boneLeggingsHudY",boneLeggingsHudY);
             j.addProperty("boneLeggingsHudStyle",boneLeggingsHudStyle);
             j.addProperty("boneLeggingsBackground",boneLeggingsBackground);
+            j.addProperty("treasureLastThirtySeconds",treasureLastThirtySeconds);
             j.addProperty("treasureChestHud",treasureChestHud);j.addProperty("treasureShowChests",treasureShowChests);
             j.addProperty("treasureInferOpens",treasureInferOpens);j.addProperty("treasureBackground",treasureBackground);
             j.addProperty("treasureDetailsSeconds",treasureDetailsSeconds);j.addProperty("treasureScale",treasureScale);

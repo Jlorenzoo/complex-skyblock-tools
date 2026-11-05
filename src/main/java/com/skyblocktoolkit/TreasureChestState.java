@@ -69,13 +69,20 @@ public final class TreasureChestState {
         reward=detail+" · "+(names.isEmpty()?"unknown pool":names)+(certain?"":" · unassigned");rewardAt=now;
     }
     public List<String> lines(long now,int seconds,boolean showChests,boolean infer){
-        List<String> result=new ArrayList<>();result.add(timer(now));
+        return lines(now,seconds,showChests,infer,false);
+    }
+    public List<String> lines(long now,int seconds,boolean showChests,boolean infer,boolean lastThirtySeconds){
+        // Advance estimated cycles even while the countdown is hidden.
+        String countdown=timer(now);
+        List<String> result=new ArrayList<>();
+        if(!lastThirtySeconds||(deadline!=0&&deadline-now<=30_000))result.add(countdown);
+        int timerRows=result.size();
         if(showChests){
             for(var c:chests)if(now-c.at<seconds*1000L){
                 String count=infer&&c.possible>c.confirmed?c.confirmed+"–"+Math.max(c.confirmed,c.possible):Integer.toString(c.confirmed);
                 result.add(c.rarity.label+" · "+c.location+" · "+count+"/2 observed");
             }
-            if(infer&&!reward.isEmpty()&&now-rewardAt<seconds*1000L&&result.size()>1){
+            if(infer&&!reward.isEmpty()&&now-rewardAt<seconds*1000L&&result.size()>timerRows){
                 String[] parts=reward.split(" · ",3);result.add(parts[0]+(reward.endsWith("unassigned")?" · unassigned":""));
                 if(parts.length>1)result.add("Pool: "+parts[1]);
             }

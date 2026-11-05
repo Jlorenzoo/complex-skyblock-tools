@@ -32,6 +32,17 @@ public final class TreasureChestStateTest {
         s.sync(3337,10000);check(s.timer(10000).contains("0:55:37"),"authoritative sync");
         check(s.timer(3347000).contains("~2:00:00"),"subsequent period explicitly estimated");
         s.reset();check(rows(s,999999).contains("open treasure menu")&&s.lines(999999,120,true,true).size()==1,"disconnect clears stale clock and chest state");
+        check(s.lines(1000,120,false,true,true).isEmpty(),"unsynced countdown hidden in final-30 mode");
+        s.sync(31,1000);
+        check(s.lines(1999,120,false,true,true).isEmpty(),"hidden immediately before 30 seconds");
+        check(s.lines(2000,120,false,true,true).getFirst().contains("0:00:30"),"visible at exactly 30 seconds");
+        check(s.lines(31999,120,false,true,true).getFirst().contains("0:00:01"),"visible until spawn");
+        check(s.lines(32000,120,false,true,true).isEmpty(),"hidden again at cycle rollover");
+        check(s.lines(7202000,120,false,true,true).getFirst().contains("~0:00:30"),"estimated cycles also respect threshold");
+        s.reset();s.sync(300,1000);spawn(s,"Rare",1000);reward(s,64,1500);
+        var details=s.lines(2000,120,true,true,true);
+        check(details.size()==3&&details.getFirst().startsWith("Rare")&&details.get(1).contains("unassigned"),"discovery and reward details remain independent of hidden timer");
+        check(s.lines(2000,120,true,true,false).getFirst().startsWith("Treasure"),"disabling preference restores countdown");
         System.out.println("PASS: treasure menu synchronization, observed broadcasts, spoof rejection, reward ambiguity, two-open cap, expiry and disconnect");
     }
 }

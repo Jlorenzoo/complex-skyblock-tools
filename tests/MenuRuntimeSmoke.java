@@ -670,6 +670,18 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     int sample=stage-151;ToolkitConfig.get().lightMode=sample%2==1;
                     mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"reward pool estimates");press(mc,"HUD & Overlays / Reward pool estimates");
+                    boolean oldThirty=ToolkitConfig.get().treasureLastThirtySeconds;
+                    press(mc,"Only show last 30 seconds");
+                    check(ToolkitConfig.get().treasureLastThirtySeconds!=oldThirty,"Final 30 seconds toggle");
+                    var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);
+                    check(ctor.newInstance().treasureLastThirtySeconds==!oldThirty,"Final 30 seconds preference persists");
+                    TreasureChestTracker.STATE.reset();TreasureChestTracker.STATE.sync(60,System.currentTimeMillis());
+                    ToolkitConfig.get().treasureLastThirtySeconds=true;
+                    check(TreasureChestTracker.lines(false).isEmpty(),"Hidden countdown has no HUD rows");
+                    check(!TreasureChestTracker.lines(true).isEmpty(),"Editor preview stays visible");
+                    TreasureChestTracker.STATE.sync(29,System.currentTimeMillis());
+                    check(TreasureChestTracker.lines(false).getFirst().contains("0:00:29"),"Countdown appears in final 30 seconds");
+                    TreasureChestTracker.STATE.reset();ToolkitConfig.get().treasureLastThirtySeconds=oldThirty;ToolkitConfig.get().save();
                     stage++;return;
                 }
                 if(stage>=156&&stage<=160){
