@@ -23,7 +23,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         BoosterStatsManager.checkScoreboardLine("§6Balance: §a$2.34B");
         check(BoosterStatsManager.isBalanceRounded() && BoosterStatsManager.getLastKnownBalance()==2_340_000_000d,
                 "Real sidebar handler accepts billion balances");
-        check(BoosterStatsManager.averageLabel().contains("balance rounded"), "HUD explains why cash is still waiting");
+        check(BoosterStatsManager.averageLabel().contains("waiting"), "HUD shows when rounded cash is still waiting");
         long now=System.currentTimeMillis();
         BoosterStatsManager.farmingActivity(now);
         check(BoosterStatsManager.earningsActivity.select(now,true,false,false,false,false)==EarningsActivity.Tracker.CROPS,

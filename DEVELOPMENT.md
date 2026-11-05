@@ -55,7 +55,7 @@ Crop income remains visible while the received crop counter increases or the
 player holds attack with a hoe during gameplay, even when a K/M/B balance has
 not changed. Abbreviated balance gains span the time between displayed changes,
 rather than the last sidebar poll. Their money rates show `~`; before a measurable
-gain the crop HUD shows `--/h (balance rounded)`. Changing the balance's displayed
+gain the crop HUD shows `waiting`. Changing the balance's displayed
 precision establishes a fresh baseline. Hidden digits cannot be reconstructed;
 short tests and booster-boundary estimates remain limited by the printed balance
 resolution. Longer samples covering several balance changes are more useful.

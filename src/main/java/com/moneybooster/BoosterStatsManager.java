@@ -24,8 +24,8 @@ public class BoosterStatsManager {
         boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
         double rate=(boosted?averageRate:baseAverageRate)+com.skyblocktoolkit.GoldShardTracker.hourlyValue();
         boolean ready=average.ready(System.currentTimeMillis())||(shards&&com.skyblocktoolkit.GoldShardTracker.ready());
-        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "+(ready?(isBalanceRounded()?"~":"")+formatMoney(rate):"--")+"/h"
-                + (!ready && isBalanceRounded()?" (balance rounded)":"");
+        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "
+                + (ready?(isBalanceRounded()?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
     }
     private static double lastKnownBalance = -1;
     private static double balanceResolution = 0.01;
