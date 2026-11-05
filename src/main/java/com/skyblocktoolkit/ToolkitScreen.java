@@ -22,6 +22,8 @@ public final class ToolkitScreen extends Screen {
     private double grabX,grabY;
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall, 4=fullbright
     private boolean fishEarnings;
+    private String statsProfileId,statsSessionId;
+    private ItemStatsTracker.Slot statsSlot=ItemStatsTracker.Slot.HAND;
     private final Set<String> expandedDetails=new HashSet<>();
     private int topicOffset;
     private Button topicBack;
@@ -101,7 +103,7 @@ public final class ToolkitScreen extends Screen {
         Label {top=ToolkitLayout.settingY(top);scale*=ToolkitTheme.MENU_TEXT_SCALE;}
         Label(Supplier<String> text,int top,int color,float scale){this(text,top,color,scale,0);}
     }
-    private static final String[] PAGES={"Boosters","Boosters","Skills","Seasonals","HUD & Overlays","HUD layout","Utilities"};
+    private static final String[] PAGES={"Boosters","Boosters","Skills","Seasonals","HUD & Overlays","HUD layout","Utilities","","","","","","","Stats"};
     private static final String[] DESCRIPTIONS={
         "",
         "Timers, coconut alerts & session statistics",
@@ -109,7 +111,8 @@ public final class ToolkitScreen extends Screen {
         "Seasonal items, custom tools & unique gear",
         "On-screen displays & layout configuration",
         "Interactive HUD placement canvas",
-        "Chat selection, auction sales & blackout mode"
+        "Chat selection, auction sales & blackout mode","","","","","","",
+        "Individual items, earnings & past sessions"
     };
     public ToolkitScreen(Screen parent,int page){super(Component.literal("Complexify"));this.parent=parent;this.page=routePage(page);}
     private static int routePage(int p){
@@ -120,6 +123,7 @@ public final class ToolkitScreen extends Screen {
             case 4,8->4;
             case 5->5;
             case 6,7,10->6;
+            case 13->13;
             default->Math.clamp(p,1,6);
         };
     }
@@ -128,8 +132,8 @@ public final class ToolkitScreen extends Screen {
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
-        int[] targets={1,2,3,4,6};String[] names={"Boosters","Skills","Seasonals","HUD & Overlays","Utilities"};
-        String[] compactNames={"Boost","Skills","Season","HUD","Utils"};
+        int[] targets={1,2,3,13,4,6};String[] names={"Boosters","Skills","Seasonals","Stats","HUD & Overlays","Utilities"};
+        String[] compactNames={"Boost","Skills","Season","Stats","HUD","Utils"};
         for(int i=0;i<targets.length;i++){
             final int target=targets[i];int bx=layout.compact()?x+6+i*((w-12)/targets.length):x+12;
             int by=layout.compact()?y+40:y+82+i*30,bw=layout.compact()?(w-12)/targets.length-2:112;
@@ -203,7 +207,8 @@ public final class ToolkitScreen extends Screen {
             }
         }else{
             if(!jumpSection.isEmpty())selectedTopics.put(page,jumpSection);
-            if(!selectedTopics.containsKey(page))topicOverview();
+            if(page==13)stats();
+            else if(!selectedTopics.containsKey(page))topicOverview();
             else {
                 topicBack();
                 switch(page){
@@ -330,6 +335,70 @@ public final class ToolkitScreen extends Screen {
             label(()->"Session bonus: +"+BoosterStatsManager.formatMoney(BoosterStatsManager.getSessionBonusEarned()),48,ToolkitTheme.palette().text(),1);
             label(()->{var e=BoosterStatsManager.history().latestMoneyBooster();return "Latest bonus: "+(e==null?"--":"+"+BoosterStatsManager.formatMoney(e.bonus));},64,ToolkitTheme.palette().muted(),1);
             link("Farming income settings",92,2,"Farming");
+        }
+    }
+    private void statsRefresh(){clearBody();buildBody();}
+    private static String statsTime(long ms){long seconds=ms/1000;return String.format(java.util.Locale.ROOT,"%dh %02dm %02ds",seconds/3600,seconds/60%60,seconds%60);}
+    private static String statsDate(long ms){return java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("dd MMM HH:mm"));}
+    private String statsMoney(double cash){return BoosterStatsManager.formatMoney(cash);}
+    private void stats(){
+        var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
+        if(profile==null){
+            statsProfileId=null;statsSessionId=null;
+            pair(()->"Slot: "+statsSlot.label,()->{statsSlot=ItemStatsTracker.Slot.values()[(statsSlot.ordinal()+1)%ItemStatsTracker.Slot.values().length];statsRefresh();},
+                ()->"Register item",()->{var p=ItemStatsTracker.register(statsSlot);if(p!=null)statsProfileId=p.id;statsRefresh();},0);
+            label("Register each physical item separately; reuse its profile.",28);
+            label("New tier / enchants? Register a new profile.",42);
+            int top=60;
+            if(!ItemStatsTracker.message().isEmpty()){label(ItemStatsTracker::message,58,ToolkitTheme.palette().accent(),0.85f);top=76;}
+            var profiles=history.profiles(ItemStatsTracker.scope());
+            if(profiles.isEmpty())label("No items yet. Equip a tool or seasonal to register it.",top);
+            for(var p:profiles){
+                var totals=history.totals(p.id);
+                String subtitle=totals.sessions()+" sessions · "+statsMoney(totals.hourly(totals.cash()))+"/h · "+totals.shards()+" shards";
+                var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),false,b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+                row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+" · configuration "+p.fingerprint.substring(0,8))));
+                controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=30;
+            }
+            return;
+        }
+        if(statsSessionId!=null){
+            var session=history.sessions(profile.id).stream().filter(s->s.id.equals(statsSessionId)).findFirst().orElse(null);
+            button("< Item statistics",0,()->{statsSessionId=null;scroll=0;statsRefresh();});
+            if(session==null)return;
+            label(profile.title(),28);
+            label("Started: "+statsDate(session.started),44);
+            label(()->session.status+" · "+statsTime(session.elapsed()),60,ToolkitTheme.palette().accent(),1);
+            label(()->"Cash: "+statsMoney(session.cash)+" · Base: "+statsMoney(session.baseCash),84,ToolkitTheme.palette().text(),1);
+            label(()->"Cash / hour: "+statsMoney(session.elapsed()>0?session.cash*3600000/session.elapsed():0),100,ToolkitTheme.palette().text(),1);
+            label(()->"Gold shards: "+session.shards+" · "+CropHarvestTracker.format(session.elapsed()>0?session.shards*3600000.0/session.elapsed():0)+"/h",116,ToolkitTheme.palette().text(),1);
+            label(()->"Fish: "+session.fish+" · Est. value: "+statsMoney(session.fishValue),132,ToolkitTheme.palette().text(),1);
+            label("Fish value uses prices at catch time; separate from cash.",156);
+            label("Shard counts exclude value estimates; base removes money boost.",170);
+            return;
+        }
+        pair(()->"< All items",()->{statsProfileId=null;scroll=0;statsRefresh();},
+            ()->history.active()!=null&&history.active().profileId.equals(profile.id)?"Stop session":"Start session",
+            ()->{if(history.active()!=null&&history.active().profileId.equals(profile.id))ItemStatsTracker.stop();else ItemStatsTracker.start(profile);statsRefresh();},0);
+        int fieldTop=28;
+        var name=addRenderableWidget(new EditBox(font,layout.bodyX()+6,layout.bodyY(),Math.min(260,layout.bodyWidth()-12),18,Component.literal("Item label")));
+        name.setBordered(false);name.setMaxLength(48);name.setTextColor(ToolkitTheme.palette().text());name.setTextShadow(false);name.setValue(profile.label);
+        name.setTooltip(Tooltip.create(Component.literal(profile.name+" · #"+profile.id.substring(0,6)+" · "+profile.slot+"\nSelect this profile only for this physical item. Base cash removes money boosters.")));
+        name.setResponder(value->{history.rename(profile,value);});settingFields.add(name);controls.add(new Control(name,fieldTop,18));contentHeight=Math.max(contentHeight,fieldTop+18);
+        label(()->{var t=history.totals(profile.id);return "Avg cash: "+statsMoney(t.hourly(t.cash()))+"/h · Base: "+statsMoney(t.hourly(t.baseCash()))+"/h";},56,ToolkitTheme.palette().text(),1);
+        label(()->{var t=history.totals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},72,ToolkitTheme.palette().text(),1);
+        label(()->{var t=history.totals(profile.id);return "Total cash: "+statsMoney(t.cash())+" · Avg/session: "+statsMoney(t.sessions()>0?t.cash()/t.sessions():0);},88,ToolkitTheme.palette().text(),1);
+        label(()->{var t=history.totals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},104,ToolkitTheme.palette().text(),1);
+        label(()->{var t=history.totals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},120,ToolkitTheme.palette().text(),1);
+        label(ItemStatsTracker::message,142,ToolkitTheme.palette().accent(),0.85f);
+        label("Idle time counts. Cash measures income while using this item.",160);
+        label("Past sessions",184);
+        int top=200;
+        if(history.sessions(profile.id).isEmpty())label("No sessions yet. Equip this configuration and press Start.",top);
+        for(var s:history.sessions(profile.id)){
+            var row=addRenderableWidget(ToolkitButton.topic(statsDate(s.started)+" · "+s.status,
+                statsTime(s.elapsed())+" · "+statsMoney(s.cash)+" · "+s.shards+" shards",b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+            controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);top+=36;
         }
     }
     private void skills(){
@@ -652,6 +721,10 @@ public final class ToolkitScreen extends Screen {
         return super.mouseScrolled(mx,my,horizontal,vertical);
     }
     @Override public boolean keyPressed(KeyEvent event){
+        if(page==13&&event.key()==GLFW.GLFW_KEY_ESCAPE&&query.isEmpty()&&statsProfileId!=null){
+            if(statsSessionId!=null)statsSessionId=null;else statsProfileId=null;
+            scroll=0;statsRefresh();return true;
+        }
         if(bindingTarget>0){
             if(event.key()!=GLFW.GLFW_KEY_ESCAPE){
                 int key=event.key()==GLFW.GLFW_KEY_DELETE||event.key()==GLFW.GLFW_KEY_BACKSPACE?GLFW.GLFW_KEY_UNKNOWN:event.key();

@@ -29,7 +29,10 @@ public final class GoldShardTracker {
         earnings.observe(count,farming,now,RateTracker.getActiveTestId());
         deliver();
     }
-    private static void deliver(){for(var gain:earnings.drain())RateTracker.onShardGain(gain.count(),gain.at(),gain.testId());}
+    private static void deliver(){for(var gain:earnings.drain()){
+        RateTracker.onShardGain(gain.count(),gain.at(),gain.testId());
+        ItemStatsTracker.shards(gain.count(),gain.at());
+    }}
     public static double value(long count){var c=ToolkitConfig.get();return c.includeGoldShards?count*c.goldShardPrice:0;}
     public static double hourlyValue(){var c=ToolkitConfig.get();return c.includeGoldShards?earnings.perHour(System.currentTimeMillis())*c.goldShardPrice:0;}
     public static boolean ready(){return earnings.ready(System.currentTimeMillis());}

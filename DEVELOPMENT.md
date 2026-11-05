@@ -26,6 +26,31 @@ Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity durin
 
 ## Build and verify
 
+**Stats** (also `/toolkit stats`) keeps named profiles for individual tools and worn
+seasonals. Select a slot, register the item, label it, then start a session from its
+profile. Register each physical item separately, even if two have identical names
+and components. The server does not always expose an individual ID; matching
+components verify the configuration but cannot prove physical identity. Select the
+correct profile yourself. Tier, enchantment, lore and custom-data changes require
+a new registration; ordinary durability and repair cost do not. Dynamic server lore
+or counters may conservatively stop a session too. Changing the selected hotbar
+slot, removing/changing the registered configuration, changing worlds, disconnecting
+or closing the game ends recording. One item session can run at a time.
+
+History is saved separately in `config/skyblocktoolkit-item-stats.json`, scoped by
+server and player UUID. Cash uses the existing reconciled balance ledger and its
+known trade exclusions. Base cash removes the observed money booster per receipt.
+This measures income while using the selected item, not the item's isolated bonus.
+Only cash samples wholly within one session are assigned; ambiguous samples across
+session boundaries are excluded. Shards use the existing chat/inventory deduplication
+and their observation timestamps, including delayed delivery. Fish counts use
+confirmed catch messages; their separate estimated value freezes configured prices
+at catch time. Neither shard value nor fish estimates are added to cash. Session
+time includes idle time and menus; stop recording for breaks. Average rates divide
+combined rewards by combined session time. Restart closes unfinished sessions at
+their last checkpoint, without counting offline time. Old booster history cannot
+be backfilled to individual items.
+
 **Minecraft 1.21.11 / Java 21 is the maintained pack target.** Run
 `python build.py` to compile/remap the shared features and run all Java regression
 suites through the Gradle wrapper in [`versions/1.21.11`](versions/1.21.11/README.md).

@@ -16,6 +16,7 @@ import org.lwjgl.glfw.GLFW;
 public final class MenuRuntimeSmoke implements ClientModInitializer {
     int ticks,stage=Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
+    String statsFixtureId;
     private static void checkBlackoutScroll(net.minecraft.client.Minecraft mc) throws Exception {
         var previous = mc.gui.screen();
         var cfg = ToolkitConfig.get();
@@ -712,7 +713,43 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage==254){capture(mc,"blackout-chat-3");BlackoutManager.setActive(false);stage++;return;}
-                if(stage==255){
+                if(stage>=255&&stage<275){
+                    int sample=(stage-255)/5,step=(stage-255)%5;
+                    if(step==0){
+                        if(stage==255){
+                            var history=ItemStatsTracker.history();long now=System.currentTimeMillis();
+                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Void Rod · Tier III","HAND",null);
+                            statsFixtureId=p.id;
+                            history.rename(p,"My Void Rod · WLB IV");
+                            history.start(p,now-300000);history.tick(now-1000);
+                            history.money(1500000,50,now-299000,now-1000);history.shards(64,now-10000);history.fish(120,240000,now-10000);history.stop(now,"Stopped");
+                            history.register(ItemStatsTracker.scope(),"fedcba9876543210","Void Rod · Tier III","HAND",null);
+                        }
+                        ToolkitConfig.get().lightMode=sample%2==1;
+                        mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        mc.setScreenAndShow(new ToolkitScreen(null,13));
+                    }else if(step==1){
+                        capture(mc,"stats-library-"+sample);assertControls(mc);
+                        pressTopic(mc,ItemStatsTracker.history().profile(statsFixtureId).title());assertControls(mc);
+                        var field=mc.gui.screen().children().stream().filter(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Item label")).map(c->(net.minecraft.client.gui.components.EditBox)c).findFirst().orElseThrow();
+                        field.setValue("My Void Rod · WLB IV");
+                        press(mc,"Start session");check(ItemStatsTracker.history().active()==null,"Offline profile cannot start without the matching equipped item");
+                    }else if(step==2){
+                        capture(mc,"stats-item-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                    }else if(step==3){
+                        capture(mc,"stats-history-"+sample);
+                        String sessionTitle=mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).map(c->((Button)c).getMessage().getString()).findFirst().orElseThrow();
+                        pressTopic(mc,sessionTitle);assertControls(mc);
+                    }else{
+                        capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                        mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Start session")),"Escape returns to item statistics");
+                        mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("Register item")),"Escape returns to item library");
+                    }
+                    stage++;return;
+                }
+                if(stage==275){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);

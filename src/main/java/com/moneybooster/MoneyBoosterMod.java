@@ -43,6 +43,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
 
         // 4. Tick event for scoreboard checks, rate tracker ticks, and delayed screen opening
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            com.skyblocktoolkit.ItemStatsTracker.tick(client);
             if (client.level != previousLevel) {
                 BoosterManager.reset(); BoosterStatsManager.resetConnection(); RateTracker.disconnect();
                 com.skyblocktoolkit.CropHarvestTracker.reset();

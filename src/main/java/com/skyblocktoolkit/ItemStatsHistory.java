@@ -1,0 +1,98 @@
+package com.skyblocktoolkit;
+
+import com.google.gson.*;
+import java.nio.file.*;
+import java.util.*;
+
+/** Explicit per-item profiles and bounded session receipts, independent of the booster history. */
+public final class ItemStatsHistory {
+    public static final class Profile {
+        public String id, scope, fingerprint, name, label, slot, icon;
+        public String title(){return label+" #"+id.substring(0,6);}
+    }
+    public static final class Session {
+        public String id, profileId, status="Recording";
+        public long started, lastSeen, ended, shards, fish;
+        public double cash, baseCash, fishValue;
+        public long elapsed(){return Math.max(0,(ended>0?ended:lastSeen)-started);}
+    }
+    public record Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue) {
+        public double hourly(double value){return elapsed>0?value*3_600_000.0/elapsed:0;}
+    }
+    private static final Gson GSON=new GsonBuilder().setPrettyPrinting().create();
+    private static final class Data {int schema=1;List<Profile> profiles=new ArrayList<>();List<Session> sessions=new ArrayList<>();}
+    private final Path path;
+    private Data data=new Data();
+    private Session active;
+    private long savedAt;
+    private boolean dirty,readOnly;
+    private String error="";
+    public ItemStatsHistory(Path path) {
+        this.path=path;
+        if(!Files.exists(path))return;
+        try {
+            Data loaded=GSON.fromJson(Files.readString(path),Data.class);
+            if(loaded==null||loaded.schema!=1||loaded.profiles==null||loaded.sessions==null)throw new IllegalArgumentException("Unsupported stats file");
+            Set<String> ids=new HashSet<>();
+            for(var p:loaded.profiles)if(p==null||p.id==null||p.id.length()<6||!ids.add(p.id)||p.scope==null||p.fingerprint==null||p.fingerprint.length()<8||p.label==null||p.slot==null)throw new IllegalArgumentException("Invalid item profile");
+            Set<String> sessionIds=new HashSet<>();
+            for(var s:loaded.sessions) {
+                if(s==null||s.id==null||!sessionIds.add(s.id)||!ids.contains(s.profileId)||s.started<0||s.lastSeen<s.started||s.ended<0||s.ended>0&&s.ended<s.started||s.shards<0||s.fish<0||!valid(s.cash)||!valid(s.baseCash)||!valid(s.fishValue))throw new IllegalArgumentException("Invalid session");
+                if(s.ended==0){s.ended=Math.max(s.started,s.lastSeen);s.status="Interrupted";dirty=true;}
+            }
+            data=loaded;
+        } catch(Exception e){readOnly=true;error="Stats could not be loaded; original file preserved.";System.err.println("[Complexify] "+error+" "+e.getMessage());}
+    }
+    private static boolean valid(double value){return Double.isFinite(value)&&value>=0;}
+    public String error(){return error;}
+    public Profile register(String scope,String fingerprint,String name,String slot,String icon) {
+        if(readOnly)throw new IllegalStateException(error);
+        var p=new Profile();p.id=UUID.randomUUID().toString();p.scope=scope;p.fingerprint=fingerprint;
+        p.name=p.label=name;p.slot=slot;p.icon=icon;data.profiles.add(p);dirty=true;return p;
+    }
+    public List<Profile> profiles(String scope){return data.profiles.stream().filter(p->p.scope.equals(scope)).toList();}
+    public Profile profile(String id){return data.profiles.stream().filter(p->p.id.equals(id)).findFirst().orElse(null);}
+    public List<Session> sessions(String profileId){var result=new ArrayList<>(data.sessions.stream().filter(s->s.profileId.equals(profileId)).toList());Collections.reverse(result);return result;}
+    public Session active(){return active;}
+    public Profile activeProfile(){return active==null?null:profile(active.profileId);}
+    public void rename(Profile p,String name){if(readOnly||p==null||name==null||name.isBlank())return;p.label=name.strip().substring(0,Math.min(48,name.strip().length()));dirty=true;}
+    public Session start(Profile p,long now) {
+        if(readOnly||active!=null||p==null||profile(p.id)!=p)throw new IllegalStateException("Cannot start session");
+        var s=new Session();s.id=UUID.randomUUID().toString();s.profileId=p.id;s.started=s.lastSeen=now;
+        data.sessions.add(s);active=s;dirty=true;return s;
+    }
+    public void stop(long now,String reason){if(active==null)return;active.lastSeen=active.ended=Math.max(active.started,now);active.status=reason;active=null;dirty=true;}
+    public void tick(long now){if(active!=null){active.lastSeen=Math.max(active.started,now);dirty=true;}if(dirty&&now-savedAt>=2000)save(now);}
+    // Only a receipt wholly inside one session can be assigned. Boundary-spanning samples stay unassigned.
+    private Session containing(long from,long to){
+        if(to<from)return null;
+        for(int i=data.sessions.size()-1;i>=0;i--){var s=data.sessions.get(i);long end=s.ended>0?s.ended:s.lastSeen;
+            if(from>=s.started&&to<=end&&to>s.started)return s;
+        }
+        return null;
+    }
+    public void money(double cash,int percentage,long from,long to){
+        if(!valid(cash)||cash==0)return;var s=containing(from,to);if(s==null)return;
+        s.cash+=cash;s.baseCash+=cash/(1+Math.max(0,percentage)/100.0);dirty=true;
+    }
+    public void shards(long count,long at){if(count<=0)return;var s=containing(at,at);if(s!=null){s.shards+=count;dirty=true;}}
+    public void fish(long count,double value,long at){if(count<=0||!valid(value))return;var s=containing(at,at);if(s!=null){s.fish+=count;s.fishValue+=value;dirty=true;}}
+    public Totals totals(String profileId){
+        long elapsed=0,shards=0,fish=0;double cash=0,base=0,value=0;int count=0;
+        for(var s:data.sessions)if(s.profileId.equals(profileId)){count++;elapsed+=s.elapsed();cash+=s.cash;base+=s.baseCash;shards+=s.shards;fish+=s.fish;value+=s.fishValue;}
+        return new Totals(count,elapsed,cash,base,shards,fish,value);
+    }
+    public void save(long now){
+        if(readOnly||!dirty)return;
+        Path temporary=null;
+        try {
+            Files.createDirectories(path.toAbsolutePath().getParent());
+            temporary=Files.createTempFile(path.toAbsolutePath().getParent(),"item-stats-",".tmp");
+            Files.writeString(temporary,GSON.toJson(data));
+            try{Files.move(temporary,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
+            catch(AtomicMoveNotSupportedException e){Files.move(temporary,path,StandardCopyOption.REPLACE_EXISTING);}
+            dirty=false;savedAt=now;error="";
+        }catch(Exception e){error="Stats save failed; retrying. "+e.getMessage();}
+        finally{if(temporary!=null)try{Files.deleteIfExists(temporary);}catch(Exception ignored){}}
+    }
+}

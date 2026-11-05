@@ -41,6 +41,7 @@ public final class ToolkitMod implements ClientModInitializer {
     }
     @Override public void onInitializeClient(){
         ToolkitConfig.get();
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc->ItemStatsTracker.shutdown());
         StartupConnection.init();
         ClearHarvest.init();
         UpdateManager.cleanOldBackups();
@@ -55,7 +56,10 @@ public final class ToolkitMod implements ClientModInitializer {
             var mc=net.minecraft.client.Minecraft.getInstance();if(!overlay&&mc.level!=null&&mc.player!=null){
                 if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
                 String text=message.getString();
-                FISHING_EARNINGS.accept(text,System.currentTimeMillis());
+                if(FISHING_EARNINGS.accept(text,System.currentTimeMillis())){
+                    long count=com.fishingpings.FishingEarnings.caught(text);
+                    ItemStatsTracker.fish(count,count*FISHING.settings().averageFishPrice(),System.currentTimeMillis());
+                }
                 AhSaleNotifier.onChatMessage(text);
                 TreasureChestTracker.connection(mc.getConnection());TreasureChestTracker.chat(text);
             }
@@ -124,8 +128,8 @@ public final class ToolkitMod implements ClientModInitializer {
                 var command=ClientCommands.literal(rootName).executes(ctx->{requestedPage=0;requested=true;return 1;});
                 command.then(ClientCommands.literal("update").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
                 command.then(ClientCommands.literal("checkupdate").executes(ctx->{UpdateManager.triggerUpdateFromCommand();return 1;}));
-                String[] modules={"boosters","skills","farming","farm","fishing","mining","seasonal","seasonals","voidrod","hud","overlays","layout","utilities","chat","auction","blackout"};
-                int[] pages={1,2,2,2,2,2,3,3,3,4,4,5,6,6,6,6};
+                String[] modules={"boosters","skills","farming","farm","fishing","mining","seasonal","seasonals","voidrod","hud","overlays","layout","utilities","chat","auction","blackout","stats"};
+                int[] pages={1,2,2,2,2,2,3,3,3,4,4,5,6,6,6,6,13};
                 for(int i=0;i<modules.length;i++){
                     final int target=pages[i];
                     command.then(ClientCommands.literal(modules[i]).executes(ctx->{requestedPage=target;requested=true;return 1;}));

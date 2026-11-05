@@ -14,6 +14,7 @@ public final class ToolkitSearch {
         }
     }
     public static final List<Entry> ENTRIES=List.of(
+        new Entry(13,"Stats","Item statistics","Register item","individual seasonal tool tier enchant session money cash shard history average statistics"),
         new Entry(1,"Boosters","Booster timers","Money timer","money booster visibility hud timer"),
         new Entry(1,"Boosters","Booster timers","XP timer","experience booster visibility hud timer xp"),
         new Entry(1,"Boosters","Booster timers","Ending banner","ending warning title banner booster expiring alert"),
