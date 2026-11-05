@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.util.function.*;
 /** Native keyboard/narration behavior, with quiet actions, switches and module tiles. */
 public final class ToolkitButton extends Button {
@@ -25,7 +26,23 @@ public final class ToolkitButton extends Button {
         return new ToolkitButton(x,y,w,32,name,press,6,expanded,null,icon,subtitle);
     }
     public static ToolkitButton topic(String title,String summary,OnPress press,int x,int y,int w){
-        return new ToolkitButton(x,y,w,32,title,press,7,false,null,null,summary);
+        ItemStack icon=new ItemStack(switch(title){
+            case "Booster timers" -> Items.CLOCK;
+            case "Coconut alerts" -> Items.COCOA_BEANS;
+            case "Earnings & statistics", "Fish sell prices" -> Items.GOLD_INGOT;
+            case "Farming" -> Items.WHEAT;
+            case "Fishing" -> Items.FISHING_ROD;
+            case "Mining & XP" -> Items.EXPERIENCE_BOTTLE;
+            case "Active HUD elements" -> Items.SPYGLASS;
+            case "Layout & positioning" -> Items.COMPASS;
+            case "Treasure chests" -> Items.CHEST;
+            case "Keyboard shortcuts" -> Items.REPEATER;
+            case "Chat selection & copy" -> Items.WRITABLE_BOOK;
+            case "Auction notifications" -> Items.BELL;
+            case "Display & visuals" -> Items.SUNFLOWER;
+            default -> Items.ENDER_EYE;
+        });
+        return new ToolkitButton(x,y,w,40,title,press,7,false,null,icon,summary);
     }
     public static ToolkitButton setting(String label,Supplier<String> value,OnPress press,int x,int y,int w){
         var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
@@ -85,11 +102,16 @@ public final class ToolkitButton extends Button {
             ToolkitTheme.rounded(g,x,y,w,h,4,hover?palette.hover():palette.surface());
             if(isFocused())g.fill(x+4,y+h-1,x+w-4,y+h,palette.accent());
             boolean hasIcon=icon!=null&&!icon.isEmpty();
-            if(hasIcon)g.item(icon,x+8,y+(h-16)/2);
-            int textX=x+(hasIcon?30:8);
-            int maxTextW=w-(hasIcon?48:26);
-            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),maxTextW),textX,y+6,selected?palette.accent():palette.text());
-            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),maxTextW),textX,y+18,palette.muted());
+            if(kind==7){
+                ToolkitTheme.rounded(g,x+6,y+6,28,28,4,palette.accentSurface());
+                ToolkitTheme.line(g,x+w-32,y+h-1,x+w-12,y+1,palette.motif());
+                g.fill(x+8,y+h-1,x+(hover?w-8:40),y+h,hover?palette.brand():palette.motif());
+            }
+            if(hasIcon)g.item(icon,x+(kind==7?12:8),y+(h-16)/2);
+            int textX=x+(kind==7?44:hasIcon?30:8);
+            int maxTextW=w-(kind==7?70:hasIcon?48:26);
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(label),maxTextW),textX,y+(kind==7?9:6),selected?palette.accent():palette.text());
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(description),maxTextW),textX,y+(kind==7?24:18),palette.muted());
             String chevron=kind==7?">":selected?"▾":"▸";
             ToolkitTheme.text(g,font,chevron,x+w-14,y+(h-8)/2,palette.muted());return;
         }

@@ -54,7 +54,7 @@ The menu header switches between **Dark mode** and **Light mode** using a compac
 | `border()` | `#373B44` | `#CCD0DB` | Subtle panel / control edge |
 | `error()` | `#FF9EAD` | `#AA2140` | Invalid input |
 
-The hub echoes the artwork with a larger shield emblem, broken crimson edge rails, angular crystal linework, and a faint carbon weave confined to the sidebar. Compact layouts keep only the emblem and edge rails. Decorations stay outside the scrolling settings and use palette-backed colors. Selected tabs have a crimson marker as well as a tinted fill.
+The hub echoes the artwork with a larger shield emblem, broken crimson edge rails, filled crystal facets, and a faint carbon weave confined to the sidebar. A burgundy / pale rose header carries a small crystal constellation. Topic rows use 40px surfaces with native item icons on burgundy / pale rose badges, angular end details, and a crimson hover rail; the settings body stays neutral. Compact layouts retain a reduced header crystal cluster, the emblem and edge rails. Decorations stay outside the scrolling settings and use palette-backed colors. Selected tabs have a crimson marker as well as a tinted fill.
 
 Both themes use deliberate surface contrast, restrained red accents, matching subtle borders, a small header accent, and soft shadows. Light mode uses an off-white canvas and deep ink text, rather than reversing the colors mechanically. Toggles and slider thumbs stay warm white against their tracks. History, rate tests, inputs and detail screens use the same shared palette.
 

@@ -46,8 +46,8 @@ public final class ToolkitScreen extends Screen {
         for(var topic:topics()){
             String title=topic.title();
             var row=addRenderableWidget(ToolkitButton.topic(title,topic.summary(),b->openTopic(title),layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
-            controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+26);
-            top+=32;
+            controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);
+            top+=40;
         }
     }
     private void openTopic(String title){
@@ -578,6 +578,7 @@ public final class ToolkitScreen extends Screen {
         ToolkitTheme.rounded(g,x-2,y+3,w+4,h+2,7,com.skyblocktoolkit.ToolkitTheme.palette().shadow());
         ToolkitTheme.rounded(g,x-1,y-1,w+2,h+2,7,ToolkitTheme.palette().border());
         ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());
+        ToolkitTheme.brandHeader(g,x,y,w,layout.compact());
         if(!layout.compact()){
             ToolkitTheme.rounded(g,x,y,132,h,6,ToolkitTheme.palette().sidebar());g.fill(x+124,y,x+132,y+h,ToolkitTheme.palette().sidebar());
             ToolkitTheme.brandFrame(g,x,y,w,h,false);
@@ -585,7 +586,7 @@ public final class ToolkitScreen extends Screen {
             ToolkitTheme.text(g,font,"COMPLEXIFY",x+49,y+15,ToolkitTheme.palette().text());
             ToolkitTheme.text(g,font,"v"+UpdateManager.getCurrentVersion(),x+49,y+28,ToolkitTheme.palette().muted());
             g.text(font,query.isBlank()?(page<PAGES.length?PAGES[page]:""):"Search settings",layout.bodyX(),y+20,ToolkitTheme.palette().text(),false);
-            ToolkitTheme.text(g,font,query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories",layout.bodyX(),y+39,ToolkitTheme.palette().muted());
+            ToolkitTheme.text(g,font,ToolkitTheme.clipText(font,Component.literal(query.isBlank()?(page<DESCRIPTIONS.length?DESCRIPTIONS[page]:""):"Across all categories"),layout.bodyWidth()-100),layout.bodyX(),y+39,ToolkitTheme.palette().muted());
             g.fill(layout.bodyX(),y+55,layout.bodyX()+layout.bodyWidth(),y+56,ToolkitTheme.palette().border());
             g.fill(layout.bodyX(),y+55,layout.bodyX()+32,y+56,ToolkitTheme.palette().brand());
             int sx=x+12,sy=y+52,sw=112;

@@ -39,15 +39,48 @@ public final class ToolkitTheme {
         // Carbon weave belongs only to the navigation rail, away from setting text.
         for(int row=78;row<h-34;row+=10)
             line(g,x+2,y+row,x+128,y+Math.min(h-30,row+36),p.carbon());
-        int cy=y+h-85;
-        line(g,x+14,cy+12,x+48,cy-5,p.motif());
-        line(g,x+48,cy-5,x+109,cy+26,p.motif());
-        line(g,x+109,cy+26,x+72,cy+50,p.motif());
-        line(g,x+72,cy+50,x+48,cy-5,p.motif());
-        line(g,x+48,cy-5,x+53,cy+24,p.motif());
-        line(g,x+53,cy+24,x+72,cy+50,p.motif());
-        line(g,x+14,cy+12,x+53,cy+24,p.motif());
+        int cy=y+h-108;
+        line(g,x+12,cy+27,x+54,cy+5,p.motif());
+        line(g,x+54,cy+5,x+118,cy+51,p.motif());
+        line(g,x+118,cy+51,x+37,cy+69,p.motif());
+        crystal(g,x+38,cy+7,29,57);
+        crystal(g,x+82,cy+29,19,34);
+        crystal(g,x+14,cy+51,12,22);
+        g.fill(x+46,cy+76,x+82,cy+77,p.motif());
+        g.fill(x+61,cy+75,x+67,cy+78,p.brand());
         g.fill(x+132,y+12,x+133,y+h-12,p.border());
+    }
+    /** Facets are filled scanline triangles, matching Minecraft's native pixel grid. */
+    private static void triangle(GuiGraphicsExtractor g,int ax,int ay,int bx,int by,int cx,int cy,int color){
+        int low=Math.min(ay,Math.min(by,cy)),high=Math.max(ay,Math.max(by,cy));
+        for(int y=low;y<high;y++){
+            double scan=y+.5,min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY;
+            if((ay<=scan&&scan<by)||(by<=scan&&scan<ay)){double v=ax+(scan-ay)*(bx-ax)/(by-ay);min=Math.min(min,v);max=Math.max(max,v);}
+            if((by<=scan&&scan<cy)||(cy<=scan&&scan<by)){double v=bx+(scan-by)*(cx-bx)/(cy-by);min=Math.min(min,v);max=Math.max(max,v);}
+            if((cy<=scan&&scan<ay)||(ay<=scan&&scan<cy)){double v=cx+(scan-cy)*(ax-cx)/(ay-cy);min=Math.min(min,v);max=Math.max(max,v);}
+            if(min<=max)g.fill((int)Math.floor(min),y,(int)Math.ceil(max),y+1,color);
+        }
+    }
+    public static void crystal(GuiGraphicsExtractor g,int x,int y,int w,int h){
+        var p=palette();int tipX=x+w*3/4,midX=x+w/3,midY=y+h/2;
+        triangle(g,tipX,y,x,midY,midX,midY+2,p.facetLight());
+        triangle(g,tipX,y,midX,midY+2,x+w,midY+6,p.facetDark());
+        triangle(g,x,midY,midX,midY+2,x+w/4,y+h,p.facetDark());
+        triangle(g,midX,midY+2,x+w,midY+6,x+w/4,y+h,p.motif());
+        line(g,tipX,y,x,midY,p.accent());
+        line(g,x,midY,x+w/4,y+h,p.facetLight());
+        line(g,tipX,y,midX,midY+2,p.facetLight());
+        line(g,midX,midY+2,x+w/4,y+h,p.facetLight());
+    }
+    public static void brandHeader(GuiGraphicsExtractor g,int x,int y,int w,boolean compact){
+        var p=palette();
+        int left=compact?x+1:x+133,height=compact?35:61;
+        g.fill(left,y+1,x+w-5,y+height,p.accentSurface());
+        line(g,x+w-170,y+height-1,x+w-124,y+5,p.motif());
+        line(g,x+w-124,y+5,x+w-82,y+height-1,p.motif());
+        crystal(g,x+w-146,y+5,compact?19:28,compact?26:45);
+        crystal(g,x+w-112,y+15,compact?10:16,compact?17:29);
+        g.fill(left,y+height,x+w-6,y+height+1,p.motif());
     }
     public static void rounded(GuiGraphicsExtractor g,int x,int y,int w,int h,int radius,int color){
         int r=Math.clamp(radius,0,Math.min(w,h)/2);

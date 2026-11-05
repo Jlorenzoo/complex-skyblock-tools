@@ -16,5 +16,7 @@ public record ToolkitPalette(int panel, int sidebar, int surface, int hover, int
     public int brand(){return 0xFFE5254A;}
     public int motif(){return this==LIGHT?0xFFE1BCC6:0xFF43202C;}
     public int carbon(){return this==LIGHT?0xFFE5E6EB:0xFF181B20;}
+    public int facetLight(){return this==LIGHT?0xFFD47990:0xFF9D344E;}
+    public int facetDark(){return this==LIGHT?0xFFE9B7C4:0xFF542133;}
     public static ToolkitPalette of(boolean light) { return light ? LIGHT : DARK; }
 }
