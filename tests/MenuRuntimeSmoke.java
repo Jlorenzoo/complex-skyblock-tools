@@ -14,9 +14,57 @@ import org.lwjgl.glfw.GLFW;
 
 /** Offline disposable client: exercise real widgets, input and rendering without a server. */
 public final class MenuRuntimeSmoke implements ClientModInitializer {
-    int ticks,stage=Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
+    int ticks,stage=Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     String statsFixtureId;
+
+    private void checkRoundedIncome() throws Exception {
+        BoosterStatsManager.resetConnection();
+        BoosterStatsManager.checkScoreboardLine("§6Balance: §a$2.34B");
+        check(BoosterStatsManager.isBalanceRounded() && BoosterStatsManager.getLastKnownBalance()==2_340_000_000d,
+                "Real sidebar handler accepts billion balances");
+        check(BoosterStatsManager.averageLabel().contains("balance rounded"), "HUD explains why cash is still waiting");
+        long now=System.currentTimeMillis();
+        BoosterStatsManager.farmingActivity(now);
+        check(BoosterStatsManager.earningsActivity.select(now,true,false,false,false,false)==EarningsActivity.Tracker.CROPS,
+                "Farming HUD stays visible without a rounded balance change");
+        BoosterStatsManager.checkScoreboardLine("Balance: $2,340,123,456.78");
+        check(!BoosterStatsManager.isBalanceRounded(), "Full cash restores exact observation mode");
+        BoosterStatsManager.checkScoreboardLine("Balance: $2.34B");
+        Files.writeString(output.resolve("rounded-income.txt"),"PASS: billion sidebar parsing, precision rebasing, waiting label and farming visibility without a balance change\n");
+    }
+    private void roundedPreview(net.minecraft.client.Minecraft mc) throws Exception {
+        int sample=(stage-400)/2, kind=sample/4;
+        boolean light=sample%2==1, compact=sample%4>=2;
+        if(stage%2==0){
+            checkRoundedIncome();
+            var cfg=ToolkitConfig.get();cfg.lightMode=light;cfg.cropEarningsHud=true;cfg.includeGoldShards=false;cfg.rateTestXp=false;
+            long now=System.currentTimeMillis();
+            if(kind>0){
+                for(String name:new String[]{"average","baseAverage"}){
+                    var f=BoosterStatsManager.class.getDeclaredField(name);f.setAccessible(true);
+                    ((RollingEarnings)f.get(null)).reset(now-10000);
+                }
+                var settled=BoosterStatsManager.class.getDeclaredMethod("onSettled",MoneyLedger.Receipt.class);
+                settled.setAccessible(true);settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-10000,now,true));
+                BoosterStatsManager.tick();
+                check(BoosterStatsManager.averageLabel().contains("~$"),"Rounded HUD marks its numerical estimate");
+            }
+            if(kind==2){
+                for(var entry:java.util.Map.<String,Object>of("running",false,"completed",true,"startTimeMs",now-60000,"stopTimeMs",now,"baseEarned",1000000d,"totalEarned",1000000d,"shardsEarned",0L,"moneyEstimated",true).entrySet()){
+                    var f=RateTracker.class.getDeclaredField(entry.getKey());f.setAccessible(true);f.set(null,entry.getValue());
+                }
+                check(RateTracker.formatDisplayedRate().startsWith("~$"),"Money test marks its numerical estimate");
+            }
+            mc.getWindow().setWindowed(compact?1000:1280,800);mc.options.guiScale().set(compact?3:2);mc.resizeGui();
+            ModConfig.getInstance().setAveragePosition(12,90);
+            mc.setScreenAndShow(kind==2?new BoosterStatsScreen(null,true):new ToolkitScreen(null,5));
+        }else{
+            capture(mc,"rounded-"+kind+"-"+(light?"light":"dark")+"-"+(compact?"compact":"full"));
+            if(sample==11){Files.writeString(output.resolve("PASS.txt"),"PASS: rounded waiting/estimated HUD and money tests in both themes and layouts\n");System.exit(0);}
+        }
+        stage++;
+    }
     private static void checkBlackoutScroll(net.minecraft.client.Minecraft mc) throws Exception {
         var previous = mc.gui.screen();
         var cfg = ToolkitConfig.get();
@@ -141,6 +189,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             try{
                 if(mc.gui.overlay()!=null||++ticks<100)return;
                 if(ticks%Integer.getInteger("toolkit.menuTickInterval",20)!=0)return;
+                if(stage>=400){roundedPreview(mc);return;}
                 if(stage==-2){
                     var voice=Class.forName("de.maxhenkel.voicechat.VoicechatClient");
                     check(voice.getField("CLIENT_CONFIG").get(null)!=null,"Voice chat client initialized alongside toolkit");
@@ -157,7 +206,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
-                    checkShardSettings(mc);checkTreasureSettings(mc);
+                    checkShardSettings(mc);checkTreasureSettings(mc);checkRoundedIncome();
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");

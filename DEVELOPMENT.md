@@ -51,6 +51,16 @@ combined rewards by combined session time. Restart closes unfinished sessions at
 their last checkpoint, without counting offline time. Old booster history cannot
 be backfilled to individual items.
 
+Crop income remains visible while the received crop counter increases or the
+player holds attack with a hoe during gameplay, even when a K/M/B balance has
+not changed. Abbreviated balance gains span the time between displayed changes,
+rather than the last sidebar poll. Their money rates show `~`; before a measurable
+gain the crop HUD shows `--/h (balance rounded)`. Changing the balance's displayed
+precision establishes a fresh baseline. Hidden digits cannot be reconstructed;
+short tests and booster-boundary estimates remain limited by the printed balance
+resolution. Longer samples covering several balance changes are more useful.
+Tracking reads received data only and sends no balance queries or gameplay actions.
+
 **Minecraft 1.21.11 / Java 21 is the maintained pack target.** Run
 `python build.py` to compile/remap the shared features and run all Java regression
 suites through the Gradle wrapper in [`versions/1.21.11`](versions/1.21.11/README.md).

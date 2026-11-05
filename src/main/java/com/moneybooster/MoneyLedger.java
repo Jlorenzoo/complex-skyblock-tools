@@ -13,11 +13,13 @@ public final class MoneyLedger {
     private static final Pattern FEE=Pattern.compile("^You paid a listing fee of \\$"+MONEY+" \\(\\d+(?:\\.\\d+)?%\\)$");
     private static final Pattern PAY_IN=Pattern.compile("^\\(/pay\\) .+ has sent you: \\$"+MONEY+" \\(\\$"+MONEY+" [➜→] \\$"+MONEY+"\\)$");
     private static final Pattern PAY_OUT=Pattern.compile("^\\(/pay\\) (?:[✔✓]\\s*)?You paid .+?: \\$"+MONEY+" \\(\\$"+MONEY+" [➜→] \\$"+MONEY+"\\)(?: for 'money'\\.)?$");
-    public record Receipt(double earned, int percentage, int testId, long boosterId, long fromMs, long toMs) {}
+    public record Receipt(double earned, int percentage, int testId, long boosterId, long fromMs, long toMs, boolean estimated) {}
     public record Shop(double delta, double before, double after) {}
     private static final class Window {
         double baseline, balance, external;
         long baselineAt;
+        long changedAt;
+        boolean rounded;
         long opened = -1, lastShop = -1, sampled = -1, closed = -1;
         boolean shopReflected;
         final int percentage, testId;
@@ -70,21 +72,31 @@ public final class MoneyLedger {
     private void context(long now, int pct, int id, long boosterId) {
         if (current == null || (current.percentage == pct && current.testId == id && current.boosterId == boosterId)) return;
         current.closed = now;
-        current = new Window(current.balance, pct, id, boosterId); current.baselineAt=now; windows.add(current);
+        boolean rounded = current.rounded;
+        current = new Window(current.balance, pct, id, boosterId); current.baselineAt=current.changedAt=now; current.rounded=rounded; windows.add(current);
     }
     public void observe(double value, long now, int pct, int id) { observe(value, now, pct, id, -1); }
     public void observe(double value, long now, int pct, int id, long boosterId) {
+        observe(value, now, pct, id, boosterId, false);
+    }
+    public void observe(double value, long now, int pct, int id, long boosterId, boolean rounded) {
         if (!Double.isFinite(value) || value < 0) return;
-        if (current == null) { current = new Window(value, pct, id, boosterId); current.baselineAt=now; windows.add(current); }
+        if (current == null) { current = new Window(value, pct, id, boosterId); current.baselineAt=current.changedAt=now; current.rounded=rounded; windows.add(current); }
         // Finish a known transaction across a state change before freezing the old window.
         if (current.external != 0 && !current.shopReflected &&
             (current.percentage != pct || current.testId != id || current.boosterId != boosterId)) {
             current.sampled = now;
             if (value == current.balance && now - current.lastShop < 1500) return;
+            if (value != current.balance) current.changedAt = now;
             current.balance = value; current.shopReflected = true;
         }
         context(now, pct, id, boosterId);
-        if (value != current.balance) { if(current.opened<0)current.baselineAt=current.sampled>=0?current.sampled:now; current.open(now); current.balance = value; }
+        if (value != current.balance) {
+            // Repeated rounded readings reveal no new income timing. Spread a bucket
+            // change over the interval between changes, not the last 250ms poll.
+            if(current.opened<0 && !current.rounded)current.baselineAt=current.sampled>=0?current.sampled:now;
+            current.open(now); current.balance = value; current.changedAt = now;
+        }
         current.sampled = now;
     }
     public void shop(Shop shop, long now, int pct, int id) { shop(shop, now, pct, id, -1); }
@@ -117,14 +129,21 @@ public final class MoneyLedger {
             if (now - w.opened < 2000 || (w.lastShop >= 0 && now - w.lastShop < 1500)) continue;
             if (w == current && (w.sampled < w.opened || (w.lastShop >= 0 && w.sampled < w.lastShop + 500))) continue;
             double earned = w.balance - w.baseline - w.external;
-            if (Double.isFinite(earned) && earned > 0) sink.accept(new Receipt(earned, w.percentage, w.testId, w.boosterId, w.baselineAt, w.closed >= 0 ? w.closed : w.sampled));
+            long end = w.rounded ? w.changedAt : w.closed >= 0 ? w.closed : w.sampled;
+            if (Double.isFinite(earned) && earned > 0 && (!w.rounded || end > w.baselineAt))
+                sink.accept(new Receipt(earned, w.percentage, w.testId, w.boosterId, w.baselineAt, end, w.rounded));
             if (w != current) iterator.remove();
-            else { w.baseline = w.balance; w.baselineAt=w.sampled; w.external = 0; w.opened = w.lastShop = -1; }
+            else { w.baseline = w.balance; w.baselineAt=w.rounded?w.changedAt:w.sampled; w.external = 0; w.opened = w.lastShop = -1; }
         }
     }
     public boolean pendingForTest(int id) {
         for (Window w : windows) if (w.opened >= 0 && w.testId == id) return true;
         return false;
+    }
+    /** Do not spread the first rounded farming gain over an earlier idle session. */
+    public void resumeFarming(long now) {
+        if (current != null && current.rounded && current.opened < 0)
+            current.baselineAt = current.changedAt = now;
     }
     public void reset() { current = null; windows.clear(); }
 }

@@ -32,6 +32,31 @@ public class MoneyLedgerTest {
   setup();ledger.shop(MoneyLedger.parseTransaction("(/ah)  [Pharaoh➕] 1o74 purchased your listing of ♦ VOTE KEY ♦ x64 for: $34,000,000."),100,20,1);ledger.observe(35001000,200,20,1);settle(35001000);expect(1000);
   setup();ledger.observe(35001000,100,20,1);ledger.shop(MoneyLedger.parseTransaction("(/ah)  [Pharaoh➕] 1o74 purchased your listing of ♦ VOTE KEY ♦ x64 for: $34,000,000."),200,20,1);ledger.observe(35001000,300,0,-1);ledger.shop(tx(-475000,35001000),400,0,-1);ledger.observe(34526000,500,0,-1);ledger.observe(34526000,3000,0,-1);ledger.tick(3000);expect(1000);
   if(results.size()!=1||results.get(0).testId()!=1)throw new AssertionError("Post-booster purchases credited to old activation");
-  System.out.println("PASS: parser, spoof rejection, sales, purchases, mixed trades, packet order, zero-net balance, reconnect, boundaries, finite inputs and no double counting");
+  // An unchanged billion-scale bucket must not compress a 10s gain into 250ms.
+  results.clear();ledger=new MoneyLedger(results::add);
+  ledger.observe(2_340_000_000d,0,0,1,-1,true);
+  for(long t=250;t<10000;t+=250)ledger.observe(2_340_000_000d,t,0,1,-1,true);
+  ledger.observe(2_350_000_000d,10000,0,1,-1,true);
+  ledger.observe(2_350_000_000d,12000,0,1,-1,true);ledger.tick(12000);
+  expect(10_000_000);
+  var rounded=results.get(0);
+  if(!rounded.estimated()||rounded.fromMs()!=0||rounded.toMs()!=10000)throw new AssertionError("Rounded gain interval: "+rounded);
+  for(long t=12250;t<20000;t+=250)ledger.observe(2_350_000_000d,t,0,1,-1,true);
+  ledger.observe(2_360_000_000d,20000,0,1,-1,true);
+  ledger.observe(2_360_000_000d,22000,0,1,-1,true);ledger.tick(22000);
+  if(results.get(1).fromMs()!=10000||results.get(1).toMs()!=20000)throw new AssertionError("Settlement polling shortened second interval");
+  var roundedAverage=new RollingEarnings();roundedAverage.reset(0);
+  for(var receipt:results)roundedAverage.add(receipt.earned(),receipt.fromMs(),receipt.toMs());
+  if(Math.abs(roundedAverage.perHour(22000)-3_600_000_000d)>.01)throw new AssertionError("Rounded rate spikes");
+  ledger.resumeFarming(50000);
+  ledger.observe(2_370_000_000d,60000,0,1,-1,true);
+  ledger.observe(2_370_000_000d,62000,0,1,-1,true);ledger.tick(62000);
+  if(results.get(2).fromMs()!=50000)throw new AssertionError("Idle included in resumed farming interval");
+  results.clear();ledger=new MoneyLedger(results::add);
+  ledger.observe(2_340_000_000d,0,0,1,-1,true);
+  ledger.shop(tx(-100,2_340_000_000d),100,0,1);
+  ledger.observe(2_340_000_000d,3000,0,1,-1,true);ledger.tick(3000);
+  expect(0); // A purchase hidden inside one rounded bucket is not a measured gain.
+  System.out.println("PASS: transactions, boundaries, packet order, billion-scale intervals and no double counting");
  }
 }

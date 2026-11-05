@@ -10,9 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BoosterStatsManager {
-    private static final Pattern BALANCE_PATTERN = Pattern.compile(
-            "(?i)Balance:\\s*\\$([0-9.,]+)\\s*([KMBkmb])?"
-    );
     private static final Pattern CHAT_EFFECT_PATTERN = Pattern.compile(
             "(?i)^(?:[✔✓]\\s*)?You have gained (?:the effect of )?(?:a )?([^!]+) for (\\d+) second"
     );
@@ -27,9 +24,12 @@ public class BoosterStatsManager {
         boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
         double rate=(boosted?averageRate:baseAverageRate)+com.skyblocktoolkit.GoldShardTracker.hourlyValue();
         boolean ready=average.ready(System.currentTimeMillis())||(shards&&com.skyblocktoolkit.GoldShardTracker.ready());
-        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "+(ready?formatMoney(rate):"--")+"/h";
+        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "+(ready?(isBalanceRounded()?"~":"")+formatMoney(rate):"--")+"/h"
+                + (!ready && isBalanceRounded()?" (balance rounded)":"");
     }
     private static double lastKnownBalance = -1;
+    private static double balanceResolution = 0.01;
+    public static boolean isBalanceRounded() { return balanceResolution > 0.01 + 1e-9; }
     private static final MoneyLedger ledger = new MoneyLedger(BoosterStatsManager::onSettled);
     private static int excludedTransactions;
     private static double excludedVolume;
@@ -95,6 +95,7 @@ public class BoosterStatsManager {
         coconutBoosterProcs = 0;
         ledger.reset();
         lastKnownBalance = -1;
+        balanceResolution = 0.01;
         wasBoosterActive = false;
         excludedTransactions = 0;
         excludedVolume = 0;
@@ -128,29 +129,18 @@ public class BoosterStatsManager {
     }
 
     public static void checkScoreboardLine(String line) {
-        if (line == null) return;
-        Matcher m = BALANCE_PATTERN.matcher(line);
-        if (m.find()) {
-            try {
-                double val = Double.parseDouble(m.group(1).replace(",", ""));
-                String unit = m.group(2);
-                if (unit != null) {
-                    char u = Character.toUpperCase(unit.charAt(0));
-                    if (u == 'K') val *= 1_000.0;
-                    else if (u == 'M') val *= 1_000_000.0;
-                    else if (u == 'B') val *= 1_000_000_000.0;
-                }
-                onBalanceUpdated(val);
-            } catch (Exception ignored) {
-            }
-        }
+        var reading = BalanceReading.parse(line);
+        if (reading != null) onBalanceUpdated(reading.amount(), reading.resolution());
     }
 
     public static int getExcludedTransactions() { return excludedTransactions; }
     public static double getExcludedVolume() { return excludedVolume; }
     public static boolean isSettlingTest(int id) { return ledger.pendingForTest(id); }
+    public static void farmingActivity(long now) {
+        if (earningsActivity.cropActivity(now)) ledger.resumeFarming(now);
+    }
     public static void markContext() {
-        if (lastKnownBalance >= 0) ledger.observe(lastKnownBalance, System.currentTimeMillis(), BoosterManager.isActive() ? BoosterManager.getPercentage() : 0, RateTracker.getActiveTestId(), history.activeId());
+        if (lastKnownBalance >= 0) ledger.observe(lastKnownBalance, System.currentTimeMillis(), BoosterManager.isActive() ? BoosterManager.getPercentage() : 0, RateTracker.getActiveTestId(), history.activeId(), isBalanceRounded());
     }
     public static void tick() {
         long now = System.currentTimeMillis();
@@ -165,15 +155,22 @@ public class BoosterStatsManager {
     public static void resetConnection() {
         history.finish(System.currentTimeMillis(), "Interrupted"); history.save(System.currentTimeMillis());
         resetAverage(); BoosterSources.reset(); ledger.reset(); lastKnownBalance = -1; wasBoosterActive = false;
+        balanceResolution = 0.01;
     }
     public static void onBalanceUpdated(double newBal) {
+        onBalanceUpdated(newBal, 0.01);
+    }
+    private static void onBalanceUpdated(double newBal, double resolution) {
         if (!Double.isFinite(newBal) || newBal < 0) return;
+        // A formatting/precision change establishes a new baseline. It is not income.
+        if (lastKnownBalance >= 0 && balanceResolution != resolution) { ledger.reset(); resetAverage(); }
+        balanceResolution = resolution;
         boolean active = BoosterManager.isActive();
         if (active && history.activeId() < 0) {
             ensureActiveHistory(BoosterManager.getPercentage(), System.currentTimeMillis());
         }
         wasBoosterActive = active;
-        ledger.observe(newBal, System.currentTimeMillis(), active ? BoosterManager.getPercentage() : 0, RateTracker.getActiveTestId(), history.activeId());
+        ledger.observe(newBal, System.currentTimeMillis(), active ? BoosterManager.getPercentage() : 0, RateTracker.getActiveTestId(), history.activeId(), isBalanceRounded());
         lastKnownBalance = newBal;
     }
     public static void ensureActiveHistory(int pct, long now) {
@@ -196,7 +193,7 @@ public class BoosterStatsManager {
         com.skyblocktoolkit.ItemStatsTracker.money(receipt.earned(),receipt.percentage(),receipt.fromMs(),receipt.toMs());
         earningsActivity.cropIncome(receipt.toMs());
         average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
-        RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId());
+        RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId(), receipt.estimated());
         if (receipt.percentage() > 0) {
             sessionTotalEarned += receipt.earned();
             double bonus = receipt.earned() * receipt.percentage() / (100.0 + receipt.percentage());

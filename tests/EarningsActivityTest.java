@@ -40,6 +40,13 @@ public class EarningsActivityTest {
         expect(activity.select(320001, true, true, false, false, false), NONE);
         activity.reset();
         expect(activity.select(320002, true, true, false, true, false), NONE);
-        System.out.println("PASS: idle expiry, exclusive switching, toggles, long casts, 2min recast grace and reset");
+        // Harvest activity does not require a balance change or a settled receipt.
+        activity.cropActivity(400000);
+        expect(activity.select(400000, true, false, false, false, false), CROPS);
+        activity.cropActivity(410000);
+        expect(activity.select(414999, true, false, false, false, false), CROPS);
+        expect(activity.select(415000, true, false, false, false, false), NONE);
+        expect(activity.select(410001, false, false, false, false, false), NONE);
+        System.out.println("PASS: idle expiry, harvesting without balance changes, switching, toggles and reset");
     }
 }

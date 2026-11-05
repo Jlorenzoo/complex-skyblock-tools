@@ -8,7 +8,13 @@ public final class EarningsActivity {
     private long lastCropIncome = -1;
     private long lastFishingActivity = -1;
 
-    public void cropIncome(long at) { lastCropIncome = Math.max(lastCropIncome, at); }
+    public void cropIncome(long at) { cropActivity(at); }
+    /** Harvesting stays visible while rounded balance digits have not changed yet. */
+    public boolean cropActivity(long at) {
+        boolean resumed = lastCropIncome < 0 || at - lastCropIncome >= IDLE_MS;
+        lastCropIncome = Math.max(lastCropIncome, at);
+        return resumed;
+    }
     public void reset() { lastCropIncome = lastFishingActivity = -1; }
 
     public Tracker select(long now, boolean cropsEnabled, boolean fishEnabled,

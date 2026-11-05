@@ -43,6 +43,8 @@ public class RateTracker {
     private static long shardsEarned = 0;
     private static double baseEarned = 0;
     private static double totalEarned = 0;
+    private static boolean moneyEstimated;
+    public static boolean isMoneyEstimated() { return moneyEstimated; }
     private static final XpRateMeasurement xpMeasurement = new XpRateMeasurement();
     private static long showFinishedUntilMs = 0;
 
@@ -92,6 +94,7 @@ public class RateTracker {
         shardsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
+        moneyEstimated = BoosterStatsManager.isBalanceRounded();
         xpMeasurement.reset();
         showFinishedUntilMs = 0;
     }
@@ -106,6 +109,7 @@ public class RateTracker {
         shardsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
+        moneyEstimated = BoosterStatsManager.isBalanceRounded();
         xpMeasurement.start(startTimeMs, selectedDuration.seconds);
 
         Minecraft mc = Minecraft.getInstance();
@@ -178,14 +182,19 @@ public class RateTracker {
     }
     public static String formatDisplayedRate() {
         return isXpSelected() ? XpTracker.format(getXpRatePerHour(com.skyblocktoolkit.ToolkitConfig.get().xpIncludesBoosters))
-                : BoosterStatsManager.formatMoney(getCurrentRatePerHour());
+                : moneyEstimated && totalEarned == 0 && getShardsEarned() == 0 ? "--"
+                : (moneyEstimated ? "~" : "") + BoosterStatsManager.formatMoney(getCurrentRatePerHour());
     }
     public static void onXpGain(XpEarnings.Gain gain) {
         xpMeasurement.add(gain);
     }
 
     public static void onSettledDelta(double diff, int percentage, int id) {
+        onSettledDelta(diff, percentage, id, false);
+    }
+    public static void onSettledDelta(double diff, int percentage, int id, boolean estimated) {
         if (id != testId || (!running && !completed) || !Double.isFinite(diff) || diff <= 0) return;
+        moneyEstimated |= estimated;
         baseEarned += diff / (1.0 + Math.max(0, percentage) / 100.0);
         totalEarned += diff;
     }

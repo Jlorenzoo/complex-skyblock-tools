@@ -55,6 +55,13 @@ public class MoneyBoosterMod implements ClientModInitializer {
             BoosterStatsManager.tick();
             XpTracker.tick(client);
             com.skyblocktoolkit.CropHarvestTracker.tick();
+            long now = System.currentTimeMillis();
+            if (client.player != null && client.gui.screen() == null
+                    && (com.skyblocktoolkit.CropHarvestTracker.isActive(now)
+                        || (client.player.getMainHandItem().getItem() instanceof net.minecraft.world.item.HoeItem
+                            && client.options.keyAttack.isDown()))) {
+                BoosterStatsManager.farmingActivity(now);
+            }
             com.skyblocktoolkit.GoldShardTracker.tick(client);
             RateTracker.onClientTick();
             com.skyblocktoolkit.VisualAlertOverlay.tick(System.currentTimeMillis());
