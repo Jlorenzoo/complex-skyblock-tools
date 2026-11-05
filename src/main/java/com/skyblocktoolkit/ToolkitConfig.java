@@ -33,6 +33,9 @@ public final class ToolkitConfig {
     public int boneLeggingsHudX=-1,boneLeggingsHudY=12;
     public int boneLeggingsHudStyle=0; // 0=Leggings & effect badge, 1=Icon & Mode, 2=Effect badge only, 3=Mode only
     public boolean boneLeggingsBackground=false;
+    public boolean treasureChestHud=false,treasureShowChests=true,treasureInferOpens=true,treasureBackground=true;
+    public int treasureDetailsSeconds=120,treasureHudX=-1,treasureHudY=48;
+    public double treasureScale=1;
     public boolean fullBright=false;
     public boolean showStatusEffects=true;
     public static ToolkitConfig get(){return INSTANCE;}
@@ -96,6 +99,14 @@ public final class ToolkitConfig {
             if(j.has("boneLeggingsHudY"))boneLeggingsHudY=Math.clamp(j.get("boneLeggingsHudY").getAsInt(),0,10000);
             if(j.has("boneLeggingsHudStyle"))boneLeggingsHudStyle=Math.clamp(j.get("boneLeggingsHudStyle").getAsInt(),0,3);
             if(j.has("boneLeggingsBackground"))boneLeggingsBackground=j.get("boneLeggingsBackground").getAsBoolean();
+            if(j.has("treasureChestHud"))treasureChestHud=j.get("treasureChestHud").getAsBoolean();
+            if(j.has("treasureShowChests"))treasureShowChests=j.get("treasureShowChests").getAsBoolean();
+            if(j.has("treasureInferOpens"))treasureInferOpens=j.get("treasureInferOpens").getAsBoolean();
+            if(j.has("treasureBackground"))treasureBackground=j.get("treasureBackground").getAsBoolean();
+            if(j.has("treasureDetailsSeconds"))treasureDetailsSeconds=Math.clamp(j.get("treasureDetailsSeconds").getAsInt(),30,300);
+            if(j.has("treasureHudX"))treasureHudX=Math.clamp(j.get("treasureHudX").getAsInt(),-1,10000);
+            if(j.has("treasureHudY"))treasureHudY=Math.clamp(j.get("treasureHudY").getAsInt(),0,10000);
+            if(j.has("treasureScale")){double v=j.get("treasureScale").getAsDouble();if(Double.isFinite(v))treasureScale=Math.clamp(v,.6,1.5);}
             if(j.has("fullBright"))fullBright=j.get("fullBright").getAsBoolean();
             if(j.has("showStatusEffects"))showStatusEffects=j.get("showStatusEffects").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
@@ -146,6 +157,10 @@ public final class ToolkitConfig {
             j.addProperty("boneLeggingsHudY",boneLeggingsHudY);
             j.addProperty("boneLeggingsHudStyle",boneLeggingsHudStyle);
             j.addProperty("boneLeggingsBackground",boneLeggingsBackground);
+            j.addProperty("treasureChestHud",treasureChestHud);j.addProperty("treasureShowChests",treasureShowChests);
+            j.addProperty("treasureInferOpens",treasureInferOpens);j.addProperty("treasureBackground",treasureBackground);
+            j.addProperty("treasureDetailsSeconds",treasureDetailsSeconds);j.addProperty("treasureScale",treasureScale);
+            j.addProperty("treasureHudX",treasureHudX);j.addProperty("treasureHudY",treasureHudY);
             j.addProperty("fullBright",fullBright);
             j.addProperty("showStatusEffects",showStatusEffects);
             Files.writeString(temp,new GsonBuilder().setPrettyPrinting().create().toJson(j)+"\n");

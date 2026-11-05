@@ -389,6 +389,7 @@ public final class ToolkitScreen extends Screen {
         toggleCell("Rate test info",88,1,()->cfg.rateTestHud,()->cfg.rateTestHud=!cfg.rateTestHud);
         toggleCell("Potion icons",112,0,()->cfg.showStatusEffects,()->cfg.showStatusEffects=!cfg.showStatusEffects);
 
+        toggleCell("Treasurechest timer",112,1,()->cfg.treasureChestHud,()->cfg.treasureChestHud=!cfg.treasureChestHud);
         section("Layout & positioning",140);
         button("Edit HUD positions",156,()->go(5));
         label("Drag elements directly on-screen to reposition them.",180);
@@ -398,8 +399,19 @@ public final class ToolkitScreen extends Screen {
         button(()->"Reset HUD positions",206,layout.bodyWidth()-resetWidth,resetWidth,()->{
             var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);
             cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;
-            cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;
+            cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;cfg.treasureHudX=-1;cfg.treasureHudY=48;
         });
+        section("Treasure chests",248);
+        toggle("Show discovered chests",264,()->cfg.treasureShowChests,()->cfg.treasureShowChests=!cfg.treasureShowChests);
+        toggle("Reward pool estimates",288,()->cfg.treasureInferOpens,()->cfg.treasureInferOpens=!cfg.treasureInferOpens);
+        toggle("Treasure background",312,()->cfg.treasureBackground,()->cfg.treasureBackground=!cfg.treasureBackground);
+        setting("Chest details duration",336,()->cfg.treasureDetailsSeconds+"s",()->cfg.treasureDetailsSeconds=cfg.treasureDetailsSeconds>=300?30:cfg.treasureDetailsSeconds+30);
+        setting("Treasure HUD scale",360,()->Math.round(cfg.treasureScale*100)+"%",()->cfg.treasureScale=cfg.treasureScale>=1.5?.6:Math.min(1.5,Math.round((cfg.treasureScale+.1)*10)/10.0));
+        label("Open the treasure menu to sync the countdown.",388);
+        label("Later two-hour cycles are marked as estimates.",400);
+        label("Observed opens: 0–1 means zero confirmed, one possible.",412);
+        label("Unassigned rewards may belong to unseen chests.",424);
+        label("Discoveries and rewards are only tracked while online.",436);
     }
     private void utilities(){
         var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
@@ -561,7 +573,8 @@ public final class ToolkitScreen extends Screen {
             new HudPart(3,fish,BoosterHudOverlay.fishX(mc,fish),BoosterHudOverlay.fishY(mc),cfg.fishEarningsHud),
             new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud),
             new HudPart(5,harvest,BoosterHudOverlay.cropHarvestX(mc,harvest),BoosterHudOverlay.cropHarvestY(mc),cfg.cropHarvestHud),
-            new HudPart(6,bone,BoosterHudOverlay.boneLeggingsX(mc,bone),BoosterHudOverlay.boneLeggingsY(mc),cfg.boneLeggingsHud));
+            new HudPart(6,bone,BoosterHudOverlay.boneLeggingsX(mc,bone),BoosterHudOverlay.boneLeggingsY(mc),cfg.boneLeggingsHud),
+            new HudPart(7,"Treasure chests",TreasureChestTracker.x(mc,true),TreasureChestTracker.y(mc,true),cfg.treasureChestHud));
     }
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
@@ -576,7 +589,11 @@ public final class ToolkitScreen extends Screen {
             eye(g,eyeX(bx,BoosterHudOverlay.BAR_WIDTH),rowY-10,visible);
         }
         for(var part:hudParts()){
-            if(part.id()==6){
+            if(part.id()==7){
+                TreasureChestTracker.render(g,mc,true);int pw=TreasureChestTracker.width(mc,true),ph=TreasureChestTracker.height(true);
+                g.outline(part.x()-2,part.y()-2,pw+4,ph+4,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),pw),part.y()-2,part.visible());
+            }else if(part.id()==6){
                 BoneLeggingsTracker.renderWidget(g,mc,part.x(),part.y(),true);
                 int pw=BoneLeggingsTracker.getWidth(mc);
                 int ph=BoneLeggingsTracker.getHeight();
@@ -622,7 +639,7 @@ public final class ToolkitScreen extends Screen {
             var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
             int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc),tx=eyeX(bx,BoosterHudOverlay.BAR_WIDTH);
             for(var part:hudParts()){
-                int pw=part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int pw=part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
                 int ex=eyeX(part.x(),pw);
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
                     if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;
@@ -630,6 +647,7 @@ public final class ToolkitScreen extends Screen {
                     else if(part.id()==4)cfg.xpEarningsHud=!cfg.xpEarningsHud;
                     else if(part.id()==5)cfg.cropHarvestHud=!cfg.cropHarvestHud;
                     else if(part.id()==6)cfg.boneLeggingsHud=!cfg.boneLeggingsHud;
+                    else if(part.id()==7)cfg.treasureChestHud=!cfg.treasureChestHud;
                     persist();return true;
                 }
             }
@@ -641,8 +659,8 @@ public final class ToolkitScreen extends Screen {
                 }
             }
             for(var part:hudParts()){
-                int pw=part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
-                int ph=part.id()==6?BoneLeggingsTracker.getHeight():11;
+                int pw=part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int ph=part.id()==7?TreasureChestTracker.height(true):part.id()==6?BoneLeggingsTracker.getHeight():11;
                 if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+ph+3){
                     dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;
                 }
@@ -654,6 +672,10 @@ public final class ToolkitScreen extends Screen {
     }
     @Override public boolean mouseDragged(MouseButtonEvent event,double dx,double dy){
         var cfg=ModConfig.getInstance();
+        if(dragging==7){var c=ToolkitConfig.get();var mc=Minecraft.getInstance();
+            c.treasureHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-TreasureChestTracker.width(mc,true)-2));
+            c.treasureHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-TreasureChestTracker.height(true)-2));return true;
+        }
         if(dragging==6){
             var c=ToolkitConfig.get();
             int pw=BoneLeggingsTracker.getWidth(Minecraft.getInstance());

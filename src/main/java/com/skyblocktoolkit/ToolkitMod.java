@@ -57,6 +57,7 @@ public final class ToolkitMod implements ClientModInitializer {
                 String text=message.getString();
                 FISHING_EARNINGS.accept(text,System.currentTimeMillis());
                 AhSaleNotifier.onChatMessage(text);
+                TreasureChestTracker.connection(mc.getConnection());TreasureChestTracker.chat(text);
             }
         });
         net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
@@ -74,8 +75,14 @@ public final class ToolkitMod implements ClientModInitializer {
                     VisualAlertOverlay.render(extractor,extractor.guiWidth(),extractor.guiHeight());
             }
         );
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","treasure_chests"),
+            (g,delta)->{var mc=net.minecraft.client.Minecraft.getInstance();
+                if(ToolkitConfig.get().treasureChestHud&&mc.player!=null&&mc.gui.screen()==null&&!mc.gui.hud.isHidden()&&!BlackoutManager.isActive())TreasureChestTracker.render(g,mc,false);
+            });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             optimizeOptions(mc);
+            TreasureChestTracker.tick(mc);
             UpdateManager.tick();
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
             if(mc!=null&&mc.player!=null){

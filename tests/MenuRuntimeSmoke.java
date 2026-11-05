@@ -66,6 +66,36 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         Files.writeString(outputPath().resolve("blackout-scroll.txt"), "PASS: remapped mouse mixin, menu exclusion, hotbar consumption, 5% adjustment, limits, persistence, tap and gesture release\n");
     }
 
+    private void checkTreasureSettings(net.minecraft.client.Minecraft mc) throws Exception {
+        var cfg=ToolkitConfig.get();
+        mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"treasurechest timer");press(mc,"HUD & Overlays / Treasurechest timer");
+        boolean enabled=cfg.treasureChestHud;press(mc,"Treasurechest timer");check(cfg.treasureChestHud!=enabled,"Treasure HUD toggles");
+        search(mc,"chest details duration");press(mc,"HUD & Overlays / Chest details duration");
+        int before=cfg.treasureDetailsSeconds;press(mc,"Chest details duration");check(cfg.treasureDetailsSeconds!=before,"Details duration adjustable");
+        search(mc,"treasure hud scale");press(mc,"HUD & Overlays / Treasure HUD scale");
+        double scaleBefore=cfg.treasureScale;press(mc,"Treasure HUD scale");check(cfg.treasureScale!=scaleBefore,"HUD scale changes and shows actual percentage");
+        cfg.treasureDetailsSeconds=120;cfg.treasureHudX=45;cfg.treasureHudY=62;cfg.treasureScale=.8;cfg.save();
+        var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);var reloaded=ctor.newInstance();
+        check(reloaded.treasureChestHud==cfg.treasureChestHud&&reloaded.treasureDetailsSeconds==120&&reloaded.treasureHudX==45&&reloaded.treasureScale==.8,"Treasure settings persist");
+        TreasureChestTracker.connection(new Object());
+        var stack=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CLOCK);
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Next Chest Spawn"));
+        stack.set(net.minecraft.core.component.DataComponents.LORE,new net.minecraft.world.item.component.ItemLore(java.util.List.of(net.minecraft.network.chat.Component.literal("§b✦ Time: 55m 37s"))));
+        TreasureChestTracker.readMenu(java.util.List.of(stack),1000);
+        check(TreasureChestTracker.STATE.timer(1000).contains("0:55:37"),"Real item component lore syncs countdown");
+        TreasureChestTracker.readMenu(java.util.List.of(stack),3000);
+        check(TreasureChestTracker.STATE.timer(3000).contains("0:55:35"),"Frozen menu lore cannot extend timer");
+        TreasureChestTracker.connection(null);check(TreasureChestTracker.STATE.timer(3000).contains("sync"),"Connection resets tracker");
+        cfg.treasureHudX=180;cfg.treasureHudY=140;cfg.treasureScale=1;
+        mc.setScreenAndShow(new ToolkitScreen(null,5));var layoutScreen=(ToolkitScreen)mc.gui.screen();
+        layoutScreen.mouseClicked(new MouseButtonEvent(185,145,new MouseButtonInfo(0,0)),false);
+        layoutScreen.mouseDragged(new MouseButtonEvent(205,165,new MouseButtonInfo(0,0)),20,20);
+        layoutScreen.mouseReleased(new MouseButtonEvent(205,165,new MouseButtonInfo(0,0)));
+        check(cfg.treasureHudX==200&&cfg.treasureHudY==160,"Treasure HUD drags on isolated canvas");
+        cfg.treasureHudX=-1;cfg.treasureHudY=48;cfg.treasureScale=1;cfg.treasureChestHud=enabled;cfg.save();
+        Files.writeString(outputPath().resolve("treasure-settings.txt"),"PASS: actual clock item lore, frozen lore, connection reset, settings widgets and saved preferences\n");
+    }
+
     private void checkShardSettings(net.minecraft.client.Minecraft mc) throws Exception {
         var cfg=ToolkitConfig.get();boolean enabled=cfg.includeGoldShards;double price=cfg.goldShardPrice;
         mc.setScreenAndShow(new ToolkitScreen(null,2));
@@ -126,7 +156,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
-                    checkShardSettings(mc);
+                    checkShardSettings(mc);checkTreasureSettings(mc);
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
@@ -563,7 +593,28 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     search(mc,"gold shards income");press(mc,"Skills / Include gold shards in income");
                     stage++;return;
                 }
-                if(stage==151){
+                if(stage>=151&&stage<=155){
+                    if(stage>151){capture(mc,"treasure-settings-"+(stage-152));assertControls(mc);}
+                    if(stage==155){stage=156;return;}
+                    int sample=stage-151;ToolkitConfig.get().lightMode=sample%2==1;
+                    mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                    mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"reward pool estimates");press(mc,"HUD & Overlays / Reward pool estimates");
+                    stage++;return;
+                }
+                if(stage>=156&&stage<=160){
+                    if(stage>156)capture(mc,"treasure-hud-"+(stage-157));
+                    if(stage==160){stage=161;return;}
+                    int sample=stage-156;ToolkitConfig.get().lightMode=sample%2==1;
+                    mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                    mc.setScreenAndShow(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("Treasure HUD preview")){
+                        @Override public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor g,int mx,int my,float tick){
+                            g.fill(0,0,width,height,ToolkitTheme.palette().panel());
+                            for(int x=0;x<width;x+=24)g.fill(x,0,x+12,height,ToolkitTheme.palette().surface());
+                            TreasureChestTracker.render(g,mc,true);
+                        }
+                    });stage++;return;
+                }
+                if(stage==161){
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);
