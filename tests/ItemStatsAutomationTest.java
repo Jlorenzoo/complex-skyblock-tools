@@ -35,10 +35,11 @@ public final class ItemStatsAutomationTest {
             b.observe("s/p",connection,List.of(item("0","HAND","same-config-0001","server-id-one"),item("1",null,"same-config-0001","server-id-two")),true,1000);
             String unique=b.currentHand();
             b.observe("s/p",connection,List.of(item("1","HAND","same-config-0001","server-id-one"),item("0",null,"same-config-0001","server-id-two"),item("37","LEGS","bone-leggings-01","server-id-legs")),true,2000);
-            check(b.currentHand().equals(unique)&&ids.activeSessions().size()==2,"server IDs survive identical-item swaps and equipped seasonal gear records concurrently");
+            check(b.currentHand().equals(unique)&&ids.activeSessions().size()==1,"server IDs survive identical-item swaps; worn gear is not an earning source");
             b.observe("s/p",connection,List.of(item("1","HAND","same-config-0001","server-id-one"),item("37","LEGS","bone-leggings-01","server-id-legs")),true,3000);
             ids.money(50,0,2000,3000);ids.shards(3,3000);
-            for(var session:ids.activeSessions())check(session.cash==50&&session.shards==3,"equipped item histories each describe the same observed activity, without summing across items");
+            for(var session:ids.activeSessions())check(session.profileId.equals(unique)&&session.cash==50&&session.shards==3,"only the active earning tool receives rewards");
+            check(ids.profiles("s/p").stream().filter(p->p.physicalId.equals("server-id-legs")).allMatch(p->ids.sessions(p.id).isEmpty()),"leg armor receives no copied sessions or shards");
 
             String raw="{\"id\":\"minecraft:diamond_hoe\",\"components\":{\"minecraft:custom_data\":{\"PublicBukkitValues\":{\"plugin:item_uuid\":\"01234567-uuid-one\",\"plugin:crops_harvested\":123},\"owner\":{\"uuid\":\"owner-12345678\"}},\"minecraft:lore\":[\"Holy Cultivation IV\",\"Crops harvested: 123\"]}}";
             var encoded=JsonParser.parseString(raw);String stable=ItemStatsIdentity.automaticFingerprint(encoded);

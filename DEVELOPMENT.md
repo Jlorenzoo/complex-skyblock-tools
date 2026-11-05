@@ -26,14 +26,24 @@ Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity durin
 
 ## Build and verify
 
-**Stats** (also `/toolkit stats`) recognizes inventory tools and seasonal gear
-automatically. No registration, profile selection, Start/Stop or setup is required.
-Normal attack/use, active harvesting, casts and confirmed rewards start sessions
-for the equipped items. Switching tools or unequipping gear closes the old session;
+**Stats** (also `/toolkit stats`) recognizes earning tools automatically. No
+registration, profile selection, Start/Stop or setup is required. Potential tools
+are matched privately, but a new item is saved and shown only after an observed
+positive cash gain, farming shard drop or confirmed catch. A shard or catch counts
+even when its cash value is unknown. The library's Area filter shows only items
+with actual results in that area. Named storage, armor and movement equipment do
+not qualify just because they have custom names, lore or data. Unused tools never
+add empty rows or new saved profiles.
+
+Normal attack/use, active harvesting and casts measure the held tool's session
+before its first result, avoiding an artificially short first-rate sample.
+Switching tools closes the old session;
 30 seconds without activity pauses recording. Returning to an item starts a new
-session in its saved history, including after restarting Minecraft. Worn seasonal
-gear and held tools can record simultaneously; these histories describe the same
-equipped activity and must not be summed as separate sources of income.
+session in its saved history, including after restarting Minecraft. Farming shards
+are attributed only to hoe sessions, catches only to rod sessions, and generic
+income is never copied to worn gear or off-hand items. The client cannot measure
+an individual armor piece's contribution to a tool's income. Earlier empty entries
+and broad-scan equipment records stay preserved on disk but are hidden from Stats.
 
 Server item UUIDs/instance IDs are preferred; material and owner IDs are not unique
 item IDs. Otherwise saved item data and inventory-location continuity distinguish

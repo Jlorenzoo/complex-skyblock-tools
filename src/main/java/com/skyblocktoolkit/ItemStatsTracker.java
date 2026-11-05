@@ -4,9 +4,8 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.item.*;
@@ -20,7 +19,7 @@ public final class ItemStatsTracker {
     private static Object level;
     private ItemStatsTracker(){}
     public static ItemStatsHistory history(){return HISTORY;}
-    public static String currentItem(){return AUTOMATION.currentHand();}
+    public static String currentItem(){String id=AUTOMATION.currentHand();return id!=null&&HISTORY.hasData(id,null)?id:null;}
     public static ItemStatsLocation location(Minecraft mc){
         if(mc.level==null)return ItemStatsLocation.UNKNOWN;
         var scoreboard=mc.level.getScoreboard();var objective=scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
@@ -31,7 +30,7 @@ public final class ItemStatsTracker {
         if(!lines.isEmpty())lines.add(objective.getDisplayName().getString());
         return ItemStatsLocation.sidebar(lines);
     }
-    public static String message(){return HISTORY.error().isEmpty()?(HISTORY.activeSessions().isEmpty()?"Automatic tracking · waiting for tool use":"Automatically recording "+HISTORY.activeSessions().size()+" equipped item(s)"):HISTORY.error();}
+    public static String message(){long count=HISTORY.earningSessions();return HISTORY.error().isEmpty()?(count==0?"Automatic tracking · waiting for earnings":"Automatically recording "+count+(count==1?" earning tool":" earning tools")):HISTORY.error();}
     public static String scope(){
         var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return "";
         String server=mc.getCurrentServer()!=null?mc.getCurrentServer().ip:mc.getSingleplayerServer()!=null?mc.getSingleplayerServer().getWorldData().getLevelName():"offline";
@@ -47,7 +46,7 @@ public final class ItemStatsTracker {
     }
     public static boolean trackable(ItemStack stack){
         return !stack.isEmpty()&&(stack.is(ItemTags.HOES)||stack.is(ItemTags.PICKAXES)||stack.is(ItemTags.AXES)||stack.is(ItemTags.SHOVELS)||stack.is(ItemTags.SWORDS)||stack.getItem() instanceof FishingRodItem
-            ||stack.getMaxStackSize()==1&&(stack.has(DataComponents.CUSTOM_NAME)||stack.has(DataComponents.CUSTOM_DATA)||stack.has(DataComponents.LORE)));
+            ||ItemStatsEligibility.tool(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()));
     }
     public static void tick(Minecraft mc){sample(mc,false,false);}
     private static void sample(Minecraft mc,boolean force,boolean reward){
@@ -61,8 +60,6 @@ public final class ItemStatsTracker {
                 var stack=inventory.getItem(i);if(!trackable(stack))continue;
                 observeItem(observations,stack,"inventory:"+i,i==selected?"HAND":null);
             }
-            for(var slot:new EquipmentSlot[]{EquipmentSlot.OFFHAND,EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET})
-                observeItem(observations,mc.player.getItemBySlot(slot),"equipment:"+slot.name(),slot.name());
             var hand=mc.player.getMainHandItem();
             activity=mc.gui.screen()==null&&(mc.options.keyAttack.isDown()||mc.options.keyUse.isDown()
                 ||hand.getItem() instanceof FishingRodItem&&mc.player.fishing!=null
@@ -77,7 +74,7 @@ public final class ItemStatsTracker {
         observations.add(new ItemStatsAutomation.Observation(location,slot,ItemStatsIdentity.automaticFingerprint(json),ItemStatsIdentity.physicalId(json),stack.getHoverName().getString(),encoded));
     }
     public static void money(double cash,int percentage,long from,long to){sample(Minecraft.getInstance(),true,false);HISTORY.money(cash,percentage,from,to);}
-    public static void shards(long count,long at){sample(Minecraft.getInstance(),true,true);HISTORY.shards(count,at);}
-    public static void fish(long count,double value,long at){sample(Minecraft.getInstance(),true,true);HISTORY.fish(count,value,at);}
+    public static void shards(long count,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof HoeItem);HISTORY.shards(count,at,ItemStatsEligibility::farming);}
+    public static void fish(long count,double value,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof FishingRodItem);HISTORY.fish(count,value,at,ItemStatsEligibility::fishing);}
     public static void shutdown(){AUTOMATION.end("Game closed");HISTORY.save(System.currentTimeMillis());}
 }

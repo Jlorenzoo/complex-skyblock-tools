@@ -38,16 +38,16 @@ public final class ItemStatsAutomation {
             if(p==null){p=history.register(scope,item.fingerprint(),item.name(),item.slot()==null?"Inventory":item.slot(),item.icon());p.physicalId=item.physicalId()==null?"local:"+UUID.randomUUID():item.physicalId();}
             resolved.put(item,p);claimed.add(p.id);
         }
-        var equipped=new HashSet<String>();
+        var earningTools=new HashSet<String>();
         for(var entry:resolved.entrySet()){
             var item=entry.getKey();var p=entry.getValue();
             if(!p.automatic){p.fingerprint=item.fingerprint();p.physicalId=item.physicalId()==null?"local:"+UUID.randomUUID():item.physicalId();p.icon=item.icon();}
             if(!Objects.equals(p.lastLocation,item.location())||!p.automatic){p.lastLocation=item.location();p.automatic=true;history.changed();}
-            if("HAND".equals(item.slot()))currentHand=p.id;
-            if(item.slot()!=null){equipped.add(p.id);if(!Objects.equals(p.slot,item.slot())){p.slot=item.slot();history.changed();}}
+            if("HAND".equals(item.slot())){currentHand=p.id;earningTools.add(p.id);}
+            if(item.slot()!=null&&!Objects.equals(p.slot,item.slot())){p.slot=item.slot();history.changed();}
         }
-        for(var session:history.activeSessions())if(!equipped.contains(session.profileId))history.stop(session.profileId,session.lastSeen,"Switched / unequipped");
-        if(activity){lastActivity=now;for(String id:equipped)if(!history.recording(id))history.start(history.profile(id),now,location);}
+        for(var session:history.activeSessions())if(!earningTools.contains(session.profileId))history.stop(session.profileId,session.lastSeen,"Switched / unequipped");
+        if(activity){lastActivity=now;for(String id:earningTools)if(!history.recording(id))history.start(history.profile(id),now,location);}
         else if(lastActivity>=0&&now-lastActivity>=IDLE_MS){history.stop(Math.min(now,lastActivity+IDLE_MS),"Paused while idle");lastActivity=-1;}
         history.tick(now);
     }

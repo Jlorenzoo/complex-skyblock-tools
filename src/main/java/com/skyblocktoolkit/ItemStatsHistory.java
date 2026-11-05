@@ -10,6 +10,7 @@ public final class ItemStatsHistory {
         public String id, scope, fingerprint, name, label, slot, icon;
         public String physicalId, lastLocation;
         public boolean automatic;
+        private transient boolean persisted;
         public String title(){return label+" #"+id.substring(0,6);}
     }
     public static final class Session {
@@ -17,6 +18,7 @@ public final class ItemStatsHistory {
         public ItemStatsLocation location=ItemStatsLocation.UNKNOWN;
         public long started, lastSeen, ended, shards, fish;
         public double cash, baseCash, fishValue;
+        public boolean hasData(){return cash>0||shards>0||fish>0;}
         public long elapsed(){return Math.max(0,(ended>0?ended:lastSeen)-started);}
     }
     public record Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue) {
@@ -37,7 +39,10 @@ public final class ItemStatsHistory {
             Data loaded=GSON.fromJson(Files.readString(path),Data.class);
             if(loaded==null||loaded.schema!=1||loaded.profiles==null||loaded.sessions==null)throw new IllegalArgumentException("Unsupported stats file");
             Set<String> ids=new HashSet<>();
-            for(var p:loaded.profiles)if(p==null||p.id==null||p.id.length()<6||!ids.add(p.id)||p.scope==null||p.fingerprint==null||p.fingerprint.length()<8||p.label==null||p.slot==null)throw new IllegalArgumentException("Invalid item profile");
+            for(var p:loaded.profiles){
+                if(p==null||p.id==null||p.id.length()<6||!ids.add(p.id)||p.scope==null||p.fingerprint==null||p.fingerprint.length()<8||p.label==null||p.slot==null)throw new IllegalArgumentException("Invalid item profile");
+                p.persisted=true;
+            }
             Set<String> sessionIds=new HashSet<>();
             for(var s:loaded.sessions) {
                 if(s==null||s.id==null||!sessionIds.add(s.id)||!ids.contains(s.profileId)||s.started<0||s.lastSeen<s.started||s.ended<0||s.ended>0&&s.ended<s.started||s.shards<0||s.fish<0||!valid(s.cash)||!valid(s.baseCash)||!valid(s.fishValue))throw new IllegalArgumentException("Invalid session");
@@ -55,6 +60,10 @@ public final class ItemStatsHistory {
         p.name=p.label=name;p.slot=slot;p.icon=icon;data.profiles.add(p);dirty=true;return p;
     }
     public List<Profile> profiles(String scope){return data.profiles.stream().filter(p->p.scope.equals(scope)).toList();}
+    public boolean hasData(String profileId,ItemStatsLocation location){return data.sessions.stream().anyMatch(s->s.profileId.equals(profileId)&&(location==null||s.location==location)&&s.hasData());}
+    /** Recognition candidates stay internal until a relevant, positive result has been observed. */
+    public List<Profile> visibleProfiles(String scope,ItemStatsLocation location){return profiles(scope).stream().filter(p->ItemStatsEligibility.profile(p)&&hasData(p.id,location)).toList();}
+    public long earningSessions(){return active.stream().filter(s->s.hasData()&&ItemStatsEligibility.profile(profile(s.profileId))).count();}
     public Profile profile(String id){return data.profiles.stream().filter(p->p.id.equals(id)).findFirst().orElse(null);}
     public List<Session> sessions(String profileId){return sessions(profileId,null);}
     public List<Session> sessions(String profileId,ItemStatsLocation location){var result=new ArrayList<>(data.sessions.stream().filter(s->s.profileId.equals(profileId)&&(location==null||s.location==location)).toList());Collections.reverse(result);return result;}
@@ -89,8 +98,10 @@ public final class ItemStatsHistory {
         if(!valid(cash)||cash==0||to<=from)return;
         for(var s:containing(from,to,false)){s.cash+=cash;s.baseCash+=cash/(1+Math.max(0,percentage)/100.0);dirty=true;}
     }
-    public void shards(long count,long at){if(count<=0)return;for(var s:containing(at,at,true)){s.shards+=count;dirty=true;}}
-    public void fish(long count,double value,long at){if(count<=0||!valid(value))return;for(var s:containing(at,at,true)){s.fish+=count;s.fishValue+=value;dirty=true;}}
+    public void shards(long count,long at){shards(count,at,p->true);}
+    public void shards(long count,long at,java.util.function.Predicate<Profile> source){if(count<=0)return;for(var s:containing(at,at,true))if(source.test(profile(s.profileId))){s.shards+=count;dirty=true;}}
+    public void fish(long count,double value,long at){fish(count,value,at,p->true);}
+    public void fish(long count,double value,long at,java.util.function.Predicate<Profile> source){if(count<=0||!valid(value))return;for(var s:containing(at,at,true))if(source.test(profile(s.profileId))){s.fish+=count;s.fishValue+=value;dirty=true;}}
     public Totals totals(String profileId){
         return totals(profileId,null);
     }
@@ -103,11 +114,17 @@ public final class ItemStatsHistory {
         if(readOnly||!dirty)return;
         Path temporary=null;
         try {
+            Data confirmed=new Data();var ids=new HashSet<String>();
+            // Preserve existing history, including old broad-scan entries, but never persist new empty candidates.
+            for(var p:data.profiles)if(p.persisted||hasData(p.id,null)){confirmed.profiles.add(p);ids.add(p.id);}
+            for(var s:data.sessions)if(ids.contains(s.profileId))confirmed.sessions.add(s);
+            if(confirmed.profiles.isEmpty()&&!Files.exists(path)){dirty=false;savedAt=now;return;}
             Files.createDirectories(path.toAbsolutePath().getParent());
             temporary=Files.createTempFile(path.toAbsolutePath().getParent(),"item-stats-",".tmp");
-            Files.writeString(temporary,GSON.toJson(data));
+            Files.writeString(temporary,GSON.toJson(confirmed));
             try{Files.move(temporary,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
             catch(AtomicMoveNotSupportedException e){Files.move(temporary,path,StandardCopyOption.REPLACE_EXISTING);}
+            for(var p:confirmed.profiles)p.persisted=true;
             dirty=false;savedAt=now;error="";
         }catch(Exception e){error="Stats save failed; retrying. "+e.getMessage();}
         finally{if(temporary!=null)try{Files.deleteIfExists(temporary);}catch(Exception ignored){}}

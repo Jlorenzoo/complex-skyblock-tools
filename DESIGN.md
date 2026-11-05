@@ -104,7 +104,7 @@ The toolkit hub (`ToolkitScreen`) uses a streamlined sidebar structured around *
 3. **Seasonals**: Item overview with real in-game icons, names and subtitles. Selecting Void Rod or Bone Leggings opens its dedicated settings page; the fixed breadcrumb returns to the item list.
 4. **HUD & Overlays**: Centralized on-screen displays matrix for all HUD element toggles, the interactive drag-and-drop HUD placement editor (`go(5)`), and restore defaults.
 5. **Utilities**: Quality-of-life tools including chat text selection & copy, auction house sale chime notifications, blackout (AFK) mode, and global keyboard shortcuts.
-6. **Stats**: Automatically recognized individual tools and equipped seasonal gear, automatic sessions and inactivity pauses, weighted cash/shard rates and persistent history across restarts. There are no registration or session controls. Cash and item-value estimates remain distinct.
+6. **Stats**: Earning tools appear automatically after their first cash, shard or catch result, with automatic sessions and inactivity pauses, weighted cash/shard rates and history across restarts. Unused inventory, named storage and passive gear stay out of the library; held-tool income is never copied to armor. There are no registration or session controls. Cash and item-value estimates remain distinct.
 
 Toggle descriptions are part of the owning widget: align both lines at a 6px inset, use 75% muted helper text 3px below the title, and keep the switch level with the title. Described toggles use a 28px target and scroll as one unit, with a consistent gap before the next setting. Keep field hints at the same inset and helper scale.
 

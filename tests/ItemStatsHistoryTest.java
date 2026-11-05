@@ -36,7 +36,7 @@ public final class ItemStatsHistoryTest {
             check(totals.shards()==15&&totals.fish()==4,"delayed shards and fishing counts");close(80,totals.fishValue(),"fish estimate separate from cash");
             close(50,h.totals(duplicate.id).cash(),"separate identical-item cash");
             close(0,h.totals(upgraded.id).cash(),"upgrades have separate history");
-            h.start(upgraded,400000);h.tick(410000);h.save(410000);
+            h.start(upgraded,400000);h.tick(410000);h.shards(1,409999);h.save(410000);
             var reloaded=new ItemStatsHistory(file);
             check(reloaded.active()==null,"never resume a session on restart");
             var interrupted=reloaded.sessions(upgraded.id).getFirst();

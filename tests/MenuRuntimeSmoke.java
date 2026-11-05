@@ -767,19 +767,28 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     if(step==0){
                         if(stage==255){
                             var history=ItemStatsTracker.history();long now=System.currentTimeMillis();
-                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Void Rod · Tier III","HAND",null);
+                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Void Rod · Tier III","HAND","{\"id\":\"minecraft:fishing_rod\"}");
                             statsFixtureId=p.id;
                             history.rename(p,"My Void Rod · WLB IV");
                             history.start(p,now-300000,ItemStatsLocation.REALM);history.tick(now-1000);
                             history.money(1500000,50,now-299000,now-1000);history.shards(64,now-10000);history.fish(120,240000,now-10000);history.stop(now,"Stopped");
                             history.start(p,now-600000,ItemStatsLocation.OVERWORLD);history.tick(now-400000);history.money(300000,0,now-599000,now-400000);history.stop(now-400000,"Stopped");
-                            history.register(ItemStatsTracker.scope(),"fedcba9876543210","Void Rod · Tier III","HAND",null);
+                            history.register(ItemStatsTracker.scope(),"fedcba9876543210","Unused fishing rod","HAND","{\"id\":\"minecraft:fishing_rod\"}");
+                            history.register(ItemStatsTracker.scope(),"0123456789unused","Yellow Shulker Box","Inventory","{\"id\":\"minecraft:yellow_shulker_box\"}");
+                            var armor=history.register(ItemStatsTracker.scope(),"0123456789armor","Bone Leggings","LEGS","{\"id\":\"minecraft:netherite_leggings\"}");
+                            history.start(armor,now-800000,ItemStatsLocation.REALM);history.tick(now-700000);history.shards(1,now-750000);history.stop(now-700000,"Stopped");
+                            var shulker=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.YELLOW_SHULKER_BOX);
+                            shulker.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Named storage box"));
+                            check(!ItemStatsTracker.trackable(shulker),"Real named shulker stack is not an earning tool");
+                            check(!ItemStatsTracker.trackable(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.NETHERITE_LEGGINGS)),"Real armor stack is not credited with held-tool income");
+                            check(ItemStatsTracker.trackable(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.NETHERITE_HOE)),"Real hoe remains detectable before its first result");
                         }
                         ToolkitConfig.get().lightMode=sample%2==1;
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                         mc.setScreenAndShow(new ToolkitScreen(null,13));
                     }else if(step==1){
                         capture(mc,"stats-library-"+sample);assertControls(mc);
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&(b.getMessage().getString().contains("Unused fishing rod")||b.getMessage().getString().contains("Yellow Shulker Box")||b.getMessage().getString().contains("Bone Leggings"))),"Stats excludes unused tools, storage and legacy armor rewards");
                         pressTopic(mc,ItemStatsTracker.history().profile(statsFixtureId).title());assertControls(mc);
                         check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&(b.getMessage().getString().contains("Start session")||b.getMessage().getString().contains("Register"))),"Stats has no registration or manual session controls");
                         press(mc,"Area: All");check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).count()==1,"Overworld filter selects only Overworld sessions");
@@ -800,7 +809,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     stage++;return;
                 }
                 if(stage==275){
-                    Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: automatic Stats library with no registration/start controls; Overworld/Realm filters, session history and detail views in both themes and compact/full layouts\n");
+                    Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
                     System.out.println("PASS: light/dark theme and timer runtime interactions, menus and screenshots");System.exit(0);

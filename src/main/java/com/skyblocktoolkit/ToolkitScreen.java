@@ -358,15 +358,20 @@ public final class ToolkitScreen extends Screen {
         var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
         if(profile==null){
             statsProfileId=null;statsSessionId=null;
-            pair(()->"Current item",()->{statsProfileId=ItemStatsTracker.currentItem();scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
-            label("Tools and seasonals are recognized automatically.",28);
+            pair(()->"Current item",()->{statsProfileId=ItemStatsTracker.currentItem();if(statsProfileId!=null)statsArea=null;scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
+            for(var row:controls)if(row.widget().getMessage().getString().equals("Current item")){
+                row.widget().active=ItemStatsTracker.currentItem()!=null;
+                row.widget().setTooltip(Tooltip.create(Component.literal("Available after the held tool records earnings.")));
+            }
+            label("Items appear after their first cash, shard or catch gain.",28);
             label(ItemStatsTracker::message,44,ToolkitTheme.palette().accent(),0.85f);
             int top=60;
-            var profiles=history.profiles(ItemStatsTracker.scope());
-            if(profiles.isEmpty())label("Use a hoe, rod or tool. Its history appears here.",top);
+            var profiles=history.visibleProfiles(ItemStatsTracker.scope(),statsArea);
+            if(profiles.isEmpty())label("No earnings recorded here yet. Tracking is automatic.",top);
             for(var p:profiles){
                 var totals=statsTotals(p.id);
-                String subtitle=totals.sessions()+" sessions · "+statsMoney(totals.hourly(totals.cash()))+"/h · "+totals.shards()+" shards";
+                String drops=totals.shards()>0||totals.fish()==0?totals.shards()+" shards":totals.fish()+" catches";
+                String subtitle=totals.sessions()+" sessions · "+statsMoney(totals.hourly(totals.cash()))+"/h · "+drops;
                 var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),history.recording(p.id),b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
                 row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+"\n"+(p.physicalId!=null&&!p.physicalId.startsWith("local:")?"Recognized by server item ID.":"Recognized by item data and inventory continuity. Identical items without server IDs can be ambiguous."))));
                 controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=30;
