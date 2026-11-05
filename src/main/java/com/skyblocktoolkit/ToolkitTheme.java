@@ -60,12 +60,12 @@ public final class ToolkitTheme {
     public static void brandHeader(GuiGraphicsExtractor g,int x,int y,int w,boolean compact){
         var p=palette();
         int left=compact?x+1:x+133,height=compact?35:61;
-        g.fill(left,y+1,x+w-5,y+height,p.accentSurface());
+        // Keep the header on the neutral canvas; artwork provides the crimson accent.
         line(g,x+w-170,y+height-1,x+w-124,y+5,p.motif());
         line(g,x+w-124,y+5,x+w-82,y+height-1,p.motif());
         crystal(g,x+w-146,y+5,compact?19:28,compact?26:45);
         crystal(g,x+w-112,y+15,compact?10:16,compact?17:29);
-        g.fill(left,y+height,x+w-6,y+height+1,p.motif());
+        g.fill(left,y+height,x+w-6,y+height+1,p.border());
     }
     public static void rounded(GuiGraphicsExtractor g,int x,int y,int w,int h,int radius,int color){
         int r=Math.clamp(radius,0,Math.min(w,h)/2);
