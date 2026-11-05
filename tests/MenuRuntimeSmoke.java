@@ -179,6 +179,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(((com.skyblocktoolkit.mixin.BossHealthOverlayAccessor)mc.gui.hud.getBossOverlay()).toolkit$getEvents().isEmpty(),"Production boss-bar accessor is remapped");
                     check(((com.skyblocktoolkit.mixin.ChatComponentAccessor)mc.gui.hud.getChat()).toolkit$getTrimmedMessages().isEmpty(),"Production chat accessor is remapped");
                     check(java.util.Arrays.stream(net.minecraft.client.gui.screens.ChatScreen.class.getDeclaredMethods()).anyMatch(m->m.getName().contains("toolkit$onMouseClicked")),"Production chat selection mixin applies");
+                    check(java.util.Arrays.stream(net.minecraft.client.gui.screens.ChatScreen.class.getDeclaredMethods()).anyMatch(m->m.getName().contains("toolkit$onRenderHead")),"Production chat blackout mixin applies");
                     mc.options.guiScale().set(2);mc.resizeGui();
                     mc.setScreenAndShow(new ToolkitScreen(null,0));stage++;return;
                 }
@@ -246,6 +247,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     check(BlackoutManager.isActive(),"Blackout active");
                     BlackoutManager.toggle();
                     check(!BlackoutManager.isActive(),"Wake key toggles blackout off");
+                    var chatCtor=java.util.Arrays.stream(net.minecraft.client.gui.screens.ChatScreen.class.getDeclaredConstructors()).findFirst().orElseThrow();
+                    chatCtor.setAccessible(true);
+                    var chatArgs=new Object[chatCtor.getParameterCount()];chatArgs[0]="";
+                    for(int i=1;i<chatArgs.length;i++)chatArgs[i]=false;
+                    var chatScreen=(net.minecraft.client.gui.screens.ChatScreen)chatCtor.newInstance(chatArgs);
+                    BlackoutManager.setActive(true);
+                    chatScreen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_F6,0,0));
+                    check(!BlackoutManager.isActive(),"Blackout wake key in chat screen toggles blackout off");
+                    var chatCfg=ToolkitConfig.get();
+                    check(!chatCfg.blackoutChatOverlay,"Overlay chat defaults to disabled");
+                    chatCfg.blackoutChatOverlay=true;chatCfg.save();
+                    var reloadedChatCfg=ToolkitConfig.class.getDeclaredConstructor().newInstance();
+                    check(reloadedChatCfg.blackoutChatOverlay,"Overlay chat persists");
+                    chatCfg.blackoutChatOverlay=false;chatCfg.save();
                     mc.setScreenAndShow(new ToolkitScreen(null,2));
                     var fish=(ToolkitScreen)mc.gui.screen();
                     for(var child:fish.children())if(child instanceof Button b&&b.getMessage().getString().equals("Advanced...")){b.onPress(null);break;}

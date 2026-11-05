@@ -1,6 +1,8 @@
 package com.skyblocktoolkit.mixin;
 
+import com.skyblocktoolkit.BlackoutManager;
 import com.skyblocktoolkit.ToolkitConfig;
+import com.skyblocktoolkit.ToolkitMod;
 import com.skyblocktoolkit.chat.ChatSelection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
@@ -47,6 +49,10 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void toolkit$onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        if (BlackoutManager.isActive() && !ToolkitConfig.get().blackoutChatOverlay) {
+            toolkit$selection.clear();
+            return;
+        }
         if (!ToolkitConfig.get().chatEnabled) {
             toolkit$selection.clear();
             return;
@@ -103,6 +109,12 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void toolkit$onKeyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
+        if (BlackoutManager.isActive() && ToolkitMod.blackoutKey != null && ToolkitMod.blackoutKey.matches(event)) {
+            BlackoutManager.toggle();
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
+        }
         if (!ToolkitConfig.get().chatEnabled) {
             toolkit$selection.clear();
             return;
@@ -113,6 +125,16 @@ public abstract class ChatScreenMixin extends Screen {
             if (toolkit$selection.copySelection(Minecraft.getInstance(), this.getFont())) {
                 cir.setReturnValue(true);
                 cir.cancel();
+            }
+        }
+    }
+
+    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+    private void toolkit$onRenderHead(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (BlackoutManager.isActive()) {
+            BlackoutManager.render(graphics, this.width, this.height);
+            if (!ToolkitConfig.get().blackoutChatOverlay) {
+                ci.cancel();
             }
         }
     }

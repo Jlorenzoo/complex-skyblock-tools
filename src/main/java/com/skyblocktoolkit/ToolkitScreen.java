@@ -487,8 +487,9 @@ public final class ToolkitScreen extends Screen {
             button("Turn blackout on",16,()->{persist();BlackoutManager.setActive(true);onClose();});
             slider("Opacity",40,cfg.blackoutOpacity,1,v->cfg.blackoutOpacity=v);
             toggle("Wake hint",64,()->cfg.blackoutHint,()->cfg.blackoutHint=!cfg.blackoutHint);
-            link("Keyboard shortcuts",92,6,"Keyboard shortcuts");
-            label("Dim the game while keeping audio active.",120);
+            toggle("Overlay chat",88,()->cfg.blackoutChatOverlay,()->cfg.blackoutChatOverlay=!cfg.blackoutChatOverlay);
+            link("Keyboard shortcuts",116,6,"Keyboard shortcuts");
+            label("Dim the game while keeping audio active.",144);
         }
         if(topic("Keyboard shortcuts",0)){
             setting("Menu key",16,()->ToolkitMod.menuKey.getTranslatedKeyMessage().getString(),()->bindingTarget=1);

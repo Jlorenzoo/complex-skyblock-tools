@@ -26,6 +26,7 @@ public final class ToolkitConfig {
     public double readySoundGain=1.9,areaSoundGain=1.9,snapSoundGain=1.9,ahSoundGain=1.9;
     public double blackoutOpacity=1.0;
     public boolean blackoutHint=true;
+    public boolean blackoutChatOverlay=false;
     public int highlight=0;
     public double highlightOpacity=.39;
     public boolean boneLeggingsSpeedAlert=true;
@@ -90,6 +91,7 @@ public final class ToolkitConfig {
             snapSoundGain=readGain(j,"snapSoundGain");ahSoundGain=readGain(j,"ahSoundGain");
             if(j.has("blackoutOpacity")){double v=j.get("blackoutOpacity").getAsDouble();if(Double.isFinite(v))blackoutOpacity=Math.clamp(v,0.0,1.0);}
             if(j.has("blackoutHint"))blackoutHint=j.get("blackoutHint").getAsBoolean();
+            if(j.has("blackoutChatOverlay"))blackoutChatOverlay=j.get("blackoutChatOverlay").getAsBoolean();
             if(j.has("highlight"))highlight=Math.clamp(j.get("highlight").getAsInt(),0,2);
             if(j.has("highlightOpacity")){double v=j.get("highlightOpacity").getAsDouble();if(Double.isFinite(v))highlightOpacity=Math.clamp(v,.1,.8);}
             if(j.has("boneLeggingsSpeedAlert"))boneLeggingsSpeedAlert=j.get("boneLeggingsSpeedAlert").getAsBoolean();
@@ -149,6 +151,7 @@ public final class ToolkitConfig {
             j.addProperty("snapSoundGain",snapSoundGain);j.addProperty("ahSoundGain",ahSoundGain);
             j.addProperty("blackoutOpacity",blackoutOpacity);
             j.addProperty("blackoutHint",blackoutHint);
+            j.addProperty("blackoutChatOverlay",blackoutChatOverlay);
             j.addProperty("highlight",highlight);j.addProperty("highlightOpacity",highlightOpacity);
             j.addProperty("boneLeggingsSpeedAlert",boneLeggingsSpeedAlert);
             j.addProperty("boneLeggingsHud",boneLeggingsHud);
