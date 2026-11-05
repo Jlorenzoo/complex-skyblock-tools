@@ -122,7 +122,7 @@ regressionClasses.each { className ->
 tasks.register('menuSmokeJar', Jar) {
     dependsOn testClasses
     archiveClassifier = 'menu-smoke-dev'
-    from(sourceSets.test.output) { include 'com/skyblocktoolkit/MenuRuntimeSmoke*.class', 'com/skyblocktoolkit/smoke/StartupConnectProbe.class' }
+    from(sourceSets.test.output) { include 'com/skyblocktoolkit/MenuRuntimeSmoke*.class', 'com/skyblocktoolkit/smoke/StartupConnectProbe.class', 'com/skyblocktoolkit/smoke/OfflineChatSuggestionsProbe.class' }
     from('src/smoke')
 }
 tasks.register('remapMenuSmoke', net.fabricmc.loom.task.RemapJarTask) {
