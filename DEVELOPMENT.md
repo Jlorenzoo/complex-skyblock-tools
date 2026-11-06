@@ -24,6 +24,8 @@ Discovered chests appear by rarity and Tomb/Realm location, with a two-open capa
 
 Blackout supports a tap to toggle and hold + mouse wheel to adjust opacity during gameplay (up darkens, down clears, 5% per notch). Scrolling activates the overlay without toggling it off, consumes the hotbar scroll, and saves opacity when the key is released. Open menus cancel pending taps. Opening chat always shows its messages and input over blackout, including text selection and copying. **Overlay chat** controls whether passive incoming chat remains visible while the chat box is closed.
 
+Rounded cash HUD rates wait for two consecutive displayed balance changes: the first change covers an unknown fraction of a bucket. Estimates use the latest complete measured interval instead of treating unchanged hidden digits as zero income. They expire after the longer of 60 seconds or twice that interval; gaps restart warmup. Booster and test boundaries preserve the actual rounded balance interval rather than compressing it into the latest activation. Totals and rate-test receipts remain independent. Gold shard HUD rates use the full 60-second window, including startup, so a single early drop does not produce a millisecond-based hourly spike. While rounded cash is warming up, known shard value is labeled separately with cash waiting. No balance commands are sent.
+
 ## Build and verify
 
 **Stats** (also `/toolkit stats`) recognizes earning tools automatically. No

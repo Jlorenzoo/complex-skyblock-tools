@@ -73,7 +73,11 @@ public final class MoneyLedger {
         if (current == null || (current.percentage == pct && current.testId == id && current.boosterId == boosterId)) return;
         current.closed = now;
         boolean rounded = current.rounded;
-        current = new Window(current.balance, pct, id, boosterId); current.baselineAt=current.changedAt=now; current.rounded=rounded; windows.add(current);
+        // A booster/test boundary does not reveal the hidden balance digits.
+        // Keep rounded bucket timing across it instead of squeezing minutes of
+        // income into the few milliseconds since the latest coconut activation.
+        long baselineAt = rounded ? current.changedAt : now;
+        current = new Window(current.balance, pct, id, boosterId); current.baselineAt=current.changedAt=baselineAt; current.rounded=rounded; windows.add(current);
     }
     public void observe(double value, long now, int pct, int id) { observe(value, now, pct, id, -1); }
     public void observe(double value, long now, int pct, int id, long boosterId) {

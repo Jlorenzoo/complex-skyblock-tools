@@ -59,6 +59,6 @@ public final class GoldShardEarnings {
     }
     public List<Gain> drain(){var result=List.copyOf(gains);gains.clear();return result;}
     public long total(){return total;}
-    public double perHour(long now){return rolling.perHour(now);}
+    public double perHour(long now){return rolling.perHourWindow(now);}
     public boolean ready(long now){return rolling.ready(now);}
 }

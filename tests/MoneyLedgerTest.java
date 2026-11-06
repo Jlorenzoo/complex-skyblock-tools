@@ -57,6 +57,17 @@ public class MoneyLedgerTest {
   ledger.shop(tx(-100,2_340_000_000d),100,0,1);
   ledger.observe(2_340_000_000d,3000,0,1,-1,true);ledger.tick(3000);
   expect(0); // A purchase hidden inside one rounded bucket is not a measured gain.
-  System.out.println("PASS: transactions, boundaries, packet order, billion-scale intervals and no double counting");
+  results.clear();ledger=new MoneyLedger(results::add);
+  ledger.observe(1_000_000_000d,0,0,-1,-1,true);
+  ledger.observe(1_000_000_000d,149000,50,-1,1,true);
+  ledger.observe(1_010_000_000d,150000,50,-1,1,true);
+  ledger.observe(1_010_000_000d,152000,50,-1,1,true);ledger.tick(152000);
+  if(results.size()!=1||results.get(0).fromMs()!=0||results.get(0).toMs()!=150000)
+      throw new AssertionError("Coconut context compressed rounded interval: "+results);
+  ledger.observe(1_010_000_000d,299000,20,-1,2,true);
+  ledger.observe(1_020_000_000d,300000,20,-1,2,true);
+  ledger.observe(1_020_000_000d,302000,20,-1,2,true);ledger.tick(302000);
+  if(results.get(1).fromMs()!=150000)throw new AssertionError("Context lost consecutive bucket boundary");
+  System.out.println("PASS: transactions, boundaries, packet order, rounded context timing and no double counting");
  }
 }

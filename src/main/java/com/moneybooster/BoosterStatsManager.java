@@ -23,7 +23,12 @@ public class BoosterStatsManager {
         boolean boosted=ModConfig.getInstance().includesBoostersInAverage();
         boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
         double rate=(boosted?averageRate:baseAverageRate)+com.skyblocktoolkit.GoldShardTracker.hourlyValue();
-        boolean ready=average.ready(System.currentTimeMillis())||(shards&&com.skyblocktoolkit.GoldShardTracker.ready());
+        long now=System.currentTimeMillis();
+        boolean cashReady=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
+        boolean shardReady=shards&&com.skyblocktoolkit.GoldShardTracker.ready();
+        if(isBalanceRounded()&&!cashReady&&shardReady)
+            return "Shards (60s): ~"+formatMoney(com.skyblocktoolkit.GoldShardTracker.hourlyValue())+"/h · cash waiting";
+        boolean ready=cashReady||shardReady;
         return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "
                 + (ready?(isBalanceRounded()?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
     }
@@ -154,7 +159,11 @@ public class BoosterStatsManager {
             ensureActiveHistory(BoosterManager.getPercentage(), now);
         }
         ledger.tick(now); history.tick(now);
-        if (now-averageUpdated>=1000) { averageRate=average.perHour(now);baseAverageRate=baseAverage.perHour(now);averageUpdated=now; }
+        if (now-averageUpdated>=1000) {
+            averageRate=isBalanceRounded()?average.estimatedPerHour(now):average.perHour(now);
+            baseAverageRate=isBalanceRounded()?baseAverage.estimatedPerHour(now):baseAverage.perHour(now);
+            averageUpdated=now;
+        }
     }
     public static void resetConnection() {
         history.finish(System.currentTimeMillis(), "Interrupted"); history.save(System.currentTimeMillis());
@@ -196,7 +205,13 @@ public class BoosterStatsManager {
     private static void onSettled(MoneyLedger.Receipt receipt) {
         com.skyblocktoolkit.ItemStatsTracker.money(receipt.earned(),receipt.percentage(),receipt.fromMs(),receipt.toMs());
         earningsActivity.cropIncome(receipt.toMs());
-        average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
+        if(receipt.estimated()) {
+            average.addEstimated(receipt.earned(),receipt.fromMs(),receipt.toMs());
+            baseAverage.addEstimated(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
+        } else {
+            average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());
+            baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
+        }
         RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId(), receipt.estimated());
         if (receipt.percentage() > 0) {
             sessionTotalEarned += receipt.earned();

@@ -17,6 +17,11 @@ public final class GoldShardEarningsTest {
         e=fresh();e.observe(100,false,2000,4);e.observe(200,false,3000,4);e.observe(100,true,4000,4);e.observe(100,true,5000,4);e.flush(9000);check(e.total()==0,"transfers, spends and unchanged totals ignored");
         e=fresh();e.observe(0,true,2000,4);e.chat(1,3000,4);e.observe(4,true,3100,4);e.flush(5000);check(e.total()==4,"mixed chat and silent reward batch");
         check(e.perHour(6000)>0&&e.ready(6000),"rolling shard rate");e.reset(7000);check(e.total()==0&&e.perHour(8000)==0,"reconnect clears baseline and earnings");
-        System.out.println("PASS: gold shard reward parsing, silent drops, reconciliation, unrelated rewards and sample attribution");
+        e=fresh();e.chat(1,100_000,4); // First drop after a long idle must not become 1,200 shards/h.
+        check(Math.abs(e.perHour(105_000)-60)<.001,"one shard in the 60s window is 60/h");
+        check(Math.abs(e.perHour(120_000)-60)<.001,"sparse drops do not decay during warmup");
+        e.chat(1,130_000,4);check(Math.abs(e.perHour(135_000)-120)<.001,"two shards in the window are 120/h");
+        check(Math.abs(e.perHour(165_000)-60)<.001,"old reward expires independently");
+        System.out.println("PASS: gold shard parsing, reconciliation, attribution and full-window sparse-drop rates");
     }
 }

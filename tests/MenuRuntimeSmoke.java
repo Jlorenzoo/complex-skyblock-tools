@@ -58,13 +58,16 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             checkRoundedIncome();
             var cfg=ToolkitConfig.get();cfg.lightMode=light;cfg.cropEarningsHud=true;cfg.includeGoldShards=false;cfg.rateTestXp=false;
             long now=System.currentTimeMillis();
-            if(kind>0){
+            if(kind>0&&kind<3){
                 for(String name:new String[]{"average","baseAverage"}){
                     var f=BoosterStatsManager.class.getDeclaredField(name);f.setAccessible(true);
                     ((RollingEarnings)f.get(null)).reset(now-10000);
                 }
                 var settled=BoosterStatsManager.class.getDeclaredMethod("onSettled",MoneyLedger.Receipt.class);
-                settled.setAccessible(true);settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-10000,now,true));
+                settled.setAccessible(true);
+                settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-20000,now-10000,true));
+                check(BoosterStatsManager.averageLabel().contains("waiting"),"First partial rounded bucket stays in warmup");
+                settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-10000,now,true));
                 BoosterStatsManager.tick();
                 check(BoosterStatsManager.averageLabel().contains("~$"),"Rounded HUD marks its numerical estimate");
             }
@@ -74,12 +77,21 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 check(RateTracker.formatDisplayedRate().startsWith("~$"),"Money test marks its numerical estimate");
             }
+            if(kind==3){
+                cfg.includeGoldShards=true;cfg.goldShardPrice=125000;
+                var field=GoldShardTracker.class.getDeclaredField("earnings");field.setAccessible(true);
+                var earnings=(GoldShardEarnings)field.get(null);earnings.reset(now-20000);
+                earnings.chat(1,now-10000,-1);
+                check(BoosterStatsManager.averageLabel().startsWith("Shards (60s): ~$7.50M/h")
+                        &&BoosterStatsManager.averageLabel().contains("cash waiting"),
+                        "Shard value cannot make unmeasured cash appear ready");
+            }
             mc.getWindow().setWindowed(compact?1000:1280,800);mc.options.guiScale().set(compact?3:2);mc.resizeGui();
             ModConfig.getInstance().setAveragePosition(12,90);
             mc.setScreenAndShow(kind==2?new BoosterStatsScreen(null,true):new ToolkitScreen(null,5));
         }else{
             capture(mc,"rounded-"+kind+"-"+(light?"light":"dark")+"-"+(compact?"compact":"full"));
-            if(sample==11){Files.writeString(output.resolve("PASS.txt"),"PASS: rounded waiting/estimated HUD and money tests in both themes and layouts\n");System.exit(0);}
+            if(sample==15){Files.writeString(output.resolve("PASS.txt"),"PASS: rounded warmup/steady estimates, shard-only cash-waiting HUD and money tests in both themes and layouts\n");System.exit(0);}
         }
         stage++;
     }

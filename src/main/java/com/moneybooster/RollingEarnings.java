@@ -7,6 +7,7 @@ public final class RollingEarnings {
     private final long windowMs;
     private final long delayMs;
     private long started;
+    private long estimatedBoundary = -1, estimatedEnd = -1, estimatedInterval;
 
     public RollingEarnings() { this(60000, 2000); }
     public RollingEarnings(long windowMs, long delayMs) {
@@ -14,7 +15,27 @@ public final class RollingEarnings {
         this.delayMs = delayMs;
     }
 
-    public void reset(long now) { samples.clear();started=now; }
+    public void reset(long now) { samples.clear();started=now;estimatedBoundary=estimatedEnd=-1;estimatedInterval=0; }
+    /** The first rounded change covers an unknown fraction of a bucket. Warm up
+     * until two consecutive changes delimit a complete measured interval. */
+    public void addEstimated(double amount, long start, long end) {
+        if (!Double.isFinite(amount) || amount <= 0 || end <= start) return;
+        if (estimatedBoundary != start) {
+            samples.clear(); started=end; estimatedBoundary=end; estimatedEnd=-1;
+            return;
+        }
+        add(amount,start,end);
+        estimatedBoundary=estimatedEnd=end; estimatedInterval=end-start;
+    }
+    /** Unchanged rounded digits are missing information, not zero income.
+     * Evaluate at the latest measured boundary and expire stale estimates. */
+    public double estimatedPerHour(long now) {
+        return estimatedReady(now) ? perHour(estimatedEnd+delayMs) : 0;
+    }
+    public boolean estimatedReady(long now) {
+        return estimatedEnd >= 0 && now >= estimatedEnd && now-estimatedEnd < Math.max(windowMs,2*estimatedInterval)
+                && ready(estimatedEnd+delayMs);
+    }
     public void add(double amount,long start,long end) {
         if (!Double.isFinite(amount)||amount<=0||end<=start)return;
         final long cutoff = start - windowMs;
@@ -27,7 +48,13 @@ public final class RollingEarnings {
         samples.add(new Sample(amount,start,end));
     }
     public double perHour(long now) {
-        long end=now-delayMs, start=Math.max(started,end-windowMs);
+        return rate(now, false);
+    }
+    /** Sparse random drops use a full window so a single early reward is not
+     * extrapolated from milliseconds into an enormous hourly estimate. */
+    public double perHourWindow(long now) { return rate(now, true); }
+    private double rate(long now, boolean fullWindow) {
+        long end=now-delayMs, start=fullWindow?end-windowMs:Math.max(started,end-windowMs);
         if(end<=start)return 0;
         samples.removeIf(s->s.end<=end-windowMs);
         if(samples.isEmpty())return 0;
