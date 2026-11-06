@@ -52,6 +52,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         Files.writeString(output.resolve("rounded-income.txt"),"PASS: billion sidebar parsing, precision rebasing, waiting label and farming visibility without a balance change\n");
     }
     private void roundedPreview(net.minecraft.client.Minecraft mc) throws Exception {
+        if(stage==432){
+            if(!Files.exists(output.resolve("screenshots/rounded-3-light-compact.png")))return;
+            Files.writeString(output.resolve("PASS.txt"),"PASS: rounded warmup/steady estimates, shard-only cash-waiting HUD and money tests in both themes and layouts\n");
+            System.exit(0);
+        }
         int sample=(stage-400)/2, kind=sample/4;
         boolean light=sample%2==1, compact=sample%4>=2;
         if(stage%2==0){
@@ -82,8 +87,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 var field=GoldShardTracker.class.getDeclaredField("earnings");field.setAccessible(true);
                 var earnings=(GoldShardEarnings)field.get(null);earnings.reset(now-20000);
                 earnings.chat(1,now-10000,-1);
-                check(BoosterStatsManager.averageLabel().startsWith("Shards (60s): ~$7.50M/h")
-                        &&BoosterStatsManager.averageLabel().contains("cash waiting"),
+                check(BoosterStatsManager.averageLabel().startsWith("Shards ~$7.50M/h")
+                        &&BoosterStatsManager.averageLabel().contains("cash --"),
                         "Shard value cannot make unmeasured cash appear ready");
             }
             mc.getWindow().setWindowed(compact?1000:1280,800);mc.options.guiScale().set(compact?3:2);mc.resizeGui();
@@ -91,7 +96,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             mc.setScreenAndShow(kind==2?new BoosterStatsScreen(null,true):new ToolkitScreen(null,5));
         }else{
             capture(mc,"rounded-"+kind+"-"+(light?"light":"dark")+"-"+(compact?"compact":"full"));
-            if(sample==15){Files.writeString(output.resolve("PASS.txt"),"PASS: rounded warmup/steady estimates, shard-only cash-waiting HUD and money tests in both themes and layouts\n");System.exit(0);}
+            if(sample==15){stage++;return;}
         }
         stage++;
     }

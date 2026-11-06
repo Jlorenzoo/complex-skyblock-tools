@@ -27,7 +27,7 @@ public class BoosterStatsManager {
         boolean cashReady=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
         boolean shardReady=shards&&com.skyblocktoolkit.GoldShardTracker.ready();
         if(isBalanceRounded()&&!cashReady&&shardReady)
-            return "Shards (60s): ~"+formatMoney(com.skyblocktoolkit.GoldShardTracker.hourlyValue())+"/h · cash waiting";
+            return "Shards ~"+formatMoney(com.skyblocktoolkit.GoldShardTracker.hourlyValue())+"/h (cash --)";
         boolean ready=cashReady||shardReady;
         return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "
                 + (ready?(isBalanceRounded()?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
