@@ -844,7 +844,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         check(sessionTitle.startsWith("$114.00M/h"),"Session headline includes cash plus configured shard value over five minutes");
                         pressTopic(mc,sessionTitle);assertControls(mc);
                     }else{
-                        capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                        capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);capture(mc,"stats-session-breakdown-"+sample);
                         mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
                         check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.getMessage().getString().equals("< All items")),"Escape returns to item statistics");
                         mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
