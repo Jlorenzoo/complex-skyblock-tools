@@ -38,6 +38,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
 
     private void checkRoundedIncome() throws Exception {
         BoosterStatsManager.resetConnection();
+        GoldShardTracker.reset();
         BoosterStatsManager.checkScoreboardLine("§6Balance: §a$2.34B");
         check(BoosterStatsManager.isBalanceRounded() && BoosterStatsManager.getLastKnownBalance()==2_340_000_000d,
                 "Real sidebar handler accepts billion balances");
