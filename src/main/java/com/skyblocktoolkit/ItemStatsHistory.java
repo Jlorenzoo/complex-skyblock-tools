@@ -20,9 +20,12 @@ public final class ItemStatsHistory {
         public double cash, baseCash, fishValue;
         public boolean hasData(){return cash>0||shards>0||fish>0;}
         public long elapsed(){return Math.max(0,(ended>0?ended:lastSeen)-started);}
+        public Totals totals(){return new Totals(1,elapsed(),cash,baseCash,shards,fish,fishValue);}
     }
     public record Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue) {
         public double hourly(double value){return elapsed>0?value*3_600_000.0/elapsed:0;}
+        /** Reprice saved counts without changing cash or applying a cash booster to shards. */
+        public double income(boolean base,boolean includeShards,double shardPrice){return (base?baseCash:cash)+(includeShards?shards*shardPrice:0);}
     }
     private static final Gson GSON=new GsonBuilder().setPrettyPrinting().create();
     private static final class Data {int schema=1;List<Profile> profiles=new ArrayList<>();List<Session> sessions=new ArrayList<>();}

@@ -71,7 +71,7 @@ Only cash samples wholly within one session are assigned; ambiguous samples acro
 session boundaries are excluded. Shards use the existing chat/inventory deduplication
 and their observation timestamps, including delayed delivery. Fish counts use
 confirmed catch messages; their separate estimated value freezes configured prices
-at catch time. Neither shard value nor fish estimates are added to cash. Session
+at catch time. Stats money/hour and total/average income include gold shards when Farming inclusion is enabled, repriced from saved counts at the current configured price. Session rows lead with money/hour. Neither shard value nor fish estimates are added to cash. Session
 time includes the 30-second inactivity grace and menus until paused. Average rates divide
 combined rewards by combined session time. Restart closes unfinished sessions at
 their last checkpoint, without counting offline time. Old booster history cannot

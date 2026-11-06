@@ -34,6 +34,13 @@ public final class ItemStatsHistoryTest {
             close(1350,totals.cash(),"cash totals");close(900,totals.baseCash(),"per-receipt booster normalization");
             close(20250,totals.hourly(totals.cash()),"duration-weighted average, not mean of session rates");
             check(totals.shards()==15&&totals.fish()==4,"delayed shards and fishing counts");close(80,totals.fishValue(),"fish estimate separate from cash");
+            close(2850,totals.income(false,true,100),"configured shard value is included in income");
+            close(42750,totals.hourly(totals.income(false,true,100)),"combined income uses total duration");
+            close(2400,totals.income(true,true,100),"cash booster removed without reducing shard value");
+            close(1350,totals.income(false,false,100),"disabling shard estimates keeps cash");
+            close(4350,totals.income(false,true,200),"repricing recomputes historical counts");
+            close(117000,one.totals().hourly(one.totals().income(false,true,100)),"session rate includes its own shards and time");
+            close(0,new ItemStatsHistory.Totals(1,0,0,0,5,0,0).hourly(500),"no infinite rate before elapsed time");
             close(50,h.totals(duplicate.id).cash(),"separate identical-item cash");
             close(0,h.totals(upgraded.id).cash(),"upgrades have separate history");
             h.start(upgraded,400000);h.tick(410000);h.shards(1,409999);h.save(410000);

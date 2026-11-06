@@ -349,11 +349,15 @@ public final class ToolkitScreen extends Screen {
     @Override public void tick(){
         super.tick();
         long now=System.currentTimeMillis();
-        if(page==13&&statsProfileId==null&&query.isEmpty()&&now-statsUpdated>=1000){statsUpdated=now;statsRefresh();}
+        if(page==13&&query.isEmpty()&&now-statsUpdated>=1000){statsUpdated=now;statsRefresh();}
     }
     private static String statsTime(long ms){long seconds=ms/1000;return String.format(java.util.Locale.ROOT,"%dh %02dm %02ds",seconds/3600,seconds/60%60,seconds%60);}
     private static String statsDate(long ms){return java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("dd MMM HH:mm"));}
     private String statsMoney(double cash){return BoosterStatsManager.formatMoney(cash);}
+    private double statsIncome(ItemStatsHistory.Totals totals,boolean base){
+        var config=ToolkitConfig.get();return totals.income(base,config.includeGoldShards,config.goldShardPrice);
+    }
+    private String statsRate(ItemStatsHistory.Totals totals){return statsMoney(totals.hourly(statsIncome(totals,false)))+"/h";}
     private void stats(){
         var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
         if(profile==null){
@@ -371,7 +375,7 @@ public final class ToolkitScreen extends Screen {
             for(var p:profiles){
                 var totals=statsTotals(p.id);
                 String drops=totals.shards()>0||totals.fish()==0?totals.shards()+" shards":totals.fish()+" catches";
-                String subtitle=totals.sessions()+" sessions · "+statsMoney(totals.hourly(totals.cash()))+"/h · "+drops;
+                String subtitle=totals.sessions()+" sessions · "+statsRate(totals)+" · "+drops;
                 var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),history.recording(p.id),b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
                 row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+"\n"+(p.physicalId!=null&&!p.physicalId.startsWith("local:")?"Recognized by server item ID.":"Recognized by item data and inventory continuity. Identical items without server IDs can be ambiguous."))));
                 controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=30;
@@ -386,30 +390,34 @@ public final class ToolkitScreen extends Screen {
             label("Started: "+statsDate(session.started),44);
             label(()->session.status+" · "+statsTime(session.elapsed()),60,ToolkitTheme.palette().accent(),1);
             label("Area: "+session.location.label(),76);
-            label(()->"Cash: "+statsMoney(session.cash)+" · Base: "+statsMoney(session.baseCash),100,ToolkitTheme.palette().text(),1);
-            label(()->"Cash / hour: "+statsMoney(session.elapsed()>0?session.cash*3600000/session.elapsed():0),116,ToolkitTheme.palette().text(),1);
-            label(()->"Gold shards: "+session.shards+" · "+CropHarvestTracker.format(session.elapsed()>0?session.shards*3600000.0/session.elapsed():0)+"/h",132,ToolkitTheme.palette().text(),1);
-            label(()->"Fish: "+session.fish+" · Est. value: "+statsMoney(session.fishValue),148,ToolkitTheme.palette().text(),1);
-            label("Fish value uses prices at catch time; separate from cash.",172);
-            label("Shard counts exclude value estimates; base removes money boost.",186);
+            label(()->"Money / hour: "+statsRate(session.totals()),100,ToolkitTheme.palette().accent(),1);
+            label(()->"Total income: "+statsMoney(statsIncome(session.totals(),false)),116,ToolkitTheme.palette().text(),1);
+            label(()->"Cash: "+statsMoney(session.cash)+" · Base: "+statsMoney(session.baseCash),132,ToolkitTheme.palette().text(),1);
+            label(()->"Gold shards: "+session.shards+" · "+CropHarvestTracker.format(session.totals().hourly(session.shards))+"/h",148,ToolkitTheme.palette().text(),1);
+            label(()->"Shard value: "+statsMoney(GoldShardTracker.value(session.shards))+(ToolkitConfig.get().includeGoldShards?" included":" (excluded)"),164,ToolkitTheme.palette().text(),1);
+            label(()->"Fish: "+session.fish+" · Est. value: "+statsMoney(session.fishValue),180,ToolkitTheme.palette().text(),1);
+            label("Income = cash + enabled shards at your current price.",204);
+            label("Fish estimate is separate. Base removes the cash boost.",218);
+            label("Rounded balances limit precision; time includes idle grace.",232);
             return;
         }
         pair(()->"< All items",()->{statsProfileId=null;scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
         label(profile.title(),28);
-        label(()->{var t=statsTotals(profile.id);return "Avg cash: "+statsMoney(t.hourly(t.cash()))+"/h · Base: "+statsMoney(t.hourly(t.baseCash()))+"/h";},56,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},72,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Total cash: "+statsMoney(t.cash())+" · Avg/session: "+statsMoney(t.sessions()>0?t.cash()/t.sessions():0);},88,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},104,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},120,ToolkitTheme.palette().text(),1);
-        label(()->history.recording(profile.id)?"Recording automatically":"Automatic · paused / not equipped",142,ToolkitTheme.palette().accent(),0.85f);
-        label("Pauses after 30s idle. Cash is income while this item is equipped.",160);
-        label("Past sessions",184);
-        int top=200;
+        label(()->"Avg money: "+statsRate(statsTotals(profile.id)),56,ToolkitTheme.palette().accent(),1);
+        label(()->{var t=statsTotals(profile.id);return "Base + enabled shards: "+statsMoney(t.hourly(statsIncome(t,true)))+"/h";},72,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},88,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Income: "+statsMoney(statsIncome(t,false))+" · Avg/session: "+statsMoney(t.sessions()>0?statsIncome(t,false)/t.sessions():0);},104,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},120,ToolkitTheme.palette().text(),1);
+        label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},136,ToolkitTheme.palette().text(),1);
+        label(()->history.recording(profile.id)?"Recording automatically":"Automatic · paused / not equipped",158,ToolkitTheme.palette().accent(),0.85f);
+        label("Average = total income / total time, including idle grace.",176);
+        label("Past sessions · money per hour",200);
+        int top=216;
         if(history.sessions(profile.id,statsArea).isEmpty())label("No sessions in this area yet. Tracking starts automatically.",top);
         for(var s:history.sessions(profile.id,statsArea)){
-            var row=addRenderableWidget(ToolkitButton.topic(statsDate(s.started)+" · "+s.status,
-                s.location.label()+" · "+statsTime(s.elapsed())+" · "+statsMoney(s.cash)+" · "+s.shards+" shards",b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
-            controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);top+=36;
+            var row=addRenderableWidget(ToolkitButton.topic(statsRate(s.totals())+" \u00b7 "+s.status,
+                statsDate(s.started)+" \u00b7 "+s.location.label()+" \u00b7 "+statsTime(s.elapsed()),b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+            controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);top+=44;
         }
     }
     private void skills(){

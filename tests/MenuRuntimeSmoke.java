@@ -815,6 +815,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         }
                         ToolkitConfig.get().lightMode=sample%2==1;
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        ToolkitConfig.get().includeGoldShards=true;ToolkitConfig.get().goldShardPrice=125000;
                         mc.setScreenAndShow(new ToolkitScreen(null,13));
                     }else if(step==1){
                         capture(mc,"stats-library-"+sample);assertControls(mc);
@@ -828,6 +829,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }else if(step==3){
                         capture(mc,"stats-history-"+sample);
                         String sessionTitle=mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).map(c->((Button)c).getMessage().getString()).findFirst().orElseThrow();
+                        check(sessionTitle.startsWith("$114.00M/h"),"Session headline includes cash plus configured shard value over five minutes");
                         pressTopic(mc,sessionTitle);assertControls(mc);
                     }else{
                         capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
