@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 public final class RollingEarnings {
     private record Sample(double amount,long start,long end) {}
     private final ArrayDeque<Sample> samples=new ArrayDeque<>();
+    private final ArrayDeque<Sample> estimatedSamples=new ArrayDeque<>();
     private final long windowMs;
     private final long delayMs;
     private long started;
@@ -15,26 +16,33 @@ public final class RollingEarnings {
         this.delayMs = delayMs;
     }
 
-    public void reset(long now) { samples.clear();started=now;estimatedBoundary=estimatedEnd=-1;estimatedInterval=0; }
+    public void reset(long now) { samples.clear();estimatedSamples.clear();started=now;estimatedBoundary=estimatedEnd=-1;estimatedInterval=0; }
     /** The first rounded change covers an unknown fraction of a bucket. Warm up
      * until two consecutive changes delimit a complete measured interval. */
     public void addEstimated(double amount, long start, long end) {
         if (!Double.isFinite(amount) || amount <= 0 || end <= start) return;
         if (estimatedBoundary != start) {
-            samples.clear(); started=end; estimatedBoundary=end; estimatedEnd=-1;
+            estimatedSamples.clear(); estimatedBoundary=end; estimatedEnd=-1;
             return;
         }
-        add(amount,start,end);
+        // Average complete bucket intervals. A 60s slice of a multi-minute bucket
+        // collapses to the latest bucket's rate and jumps at every boundary.
+        long horizon=Math.max(windowMs,3*(end-start));
+        estimatedSamples.removeIf(s->s.end<=end-horizon);
+        estimatedSamples.add(new Sample(amount,start,end));
         estimatedBoundary=estimatedEnd=end; estimatedInterval=end-start;
     }
     /** Unchanged rounded digits are missing information, not zero income.
      * Evaluate at the latest measured boundary and expire stale estimates. */
     public double estimatedPerHour(long now) {
-        return estimatedReady(now) ? perHour(estimatedEnd+delayMs) : 0;
+        if(!estimatedReady(now))return 0;
+        double total=0;long duration=0;
+        for(Sample sample:estimatedSamples){total+=sample.amount;duration+=sample.end-sample.start;}
+        return duration>0?total*3600000.0/duration:0;
     }
     public boolean estimatedReady(long now) {
         return estimatedEnd >= 0 && now >= estimatedEnd && now-estimatedEnd < Math.max(windowMs,2*estimatedInterval)
-                && ready(estimatedEnd+delayMs);
+                && !estimatedSamples.isEmpty() && estimatedEnd-estimatedSamples.peekFirst().start>=3000;
     }
     public void add(double amount,long start,long end) {
         if (!Double.isFinite(amount)||amount<=0||end<=start)return;

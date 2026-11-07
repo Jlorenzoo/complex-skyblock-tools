@@ -18,18 +18,21 @@ public class BoosterStatsManager {
     public static final EarningsActivity earningsActivity = new EarningsActivity();
     private static long averageUpdated;
     private static double averageRate, baseAverageRate;
-    public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0; }
+    private static final SmoothedRate cashDisplay = new SmoothedRate(), baseDisplay = new SmoothedRate(), shardDisplay = new SmoothedRate();
+    public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0;cashDisplay.reset();baseDisplay.reset();shardDisplay.reset(); }
     public static String averageLabel() {
         boolean boosted=ModConfig.getInstance().includesBoostersInAverage();
         boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
-        double rate=(boosted?averageRate:baseAverageRate)+com.skyblocktoolkit.GoldShardTracker.hourlyValue();
         long now=System.currentTimeMillis();
+        if(!shards)shardDisplay.reset();
+        double shardRate=shards?shardDisplay.update(com.skyblocktoolkit.GoldShardTracker.hourlyValue(),now):0;
+        double rate=(boosted?averageRate:baseAverageRate)+shardRate;
         boolean cashReady=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
         boolean shardReady=shards&&com.skyblocktoolkit.GoldShardTracker.ready();
         if(isBalanceRounded()&&!cashReady&&shardReady)
-            return "Shards ~"+formatMoney(com.skyblocktoolkit.GoldShardTracker.hourlyValue())+"/h (cash --)";
+            return "Shards ~"+formatMoney(shardRate)+"/h (cash --)";
         boolean ready=cashReady||shardReady;
-        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+" (60s): "
+        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+(isBalanceRounded()?" (avg): ":" (60s): ")
                 + (ready?(isBalanceRounded()?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
     }
     private static double lastKnownBalance = -1;
@@ -160,8 +163,12 @@ public class BoosterStatsManager {
         }
         ledger.tick(now); history.tick(now);
         if (now-averageUpdated>=1000) {
-            averageRate=isBalanceRounded()?average.estimatedPerHour(now):average.perHour(now);
-            baseAverageRate=isBalanceRounded()?baseAverage.estimatedPerHour(now):baseAverage.perHour(now);
+            boolean ready=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
+            if(!ready){cashDisplay.reset();baseDisplay.reset();averageRate=baseAverageRate=0;}
+            else {
+                averageRate=cashDisplay.update(isBalanceRounded()?average.estimatedPerHour(now):average.perHour(now),now);
+                baseAverageRate=baseDisplay.update(isBalanceRounded()?baseAverage.estimatedPerHour(now):baseAverage.perHour(now),now);
+            }
             averageUpdated=now;
         }
     }
@@ -175,8 +182,11 @@ public class BoosterStatsManager {
     }
     private static void onBalanceUpdated(double newBal, double resolution) {
         if (!Double.isFinite(newBal) || newBal < 0) return;
-        // A formatting/precision change establishes a new baseline. It is not income.
-        if (lastKnownBalance >= 0 && balanceResolution != resolution) { ledger.reset(); resetAverage(); }
+        // Abbreviated balances omit trailing zeroes (79.19M -> 79.2M -> 79.21M).
+        // Changing printed decimal places must not discard consecutive cash buckets.
+        // Switching between full cash and abbreviations still needs a new baseline.
+        boolean rounded=resolution>0.01+1e-9;
+        if (lastKnownBalance >= 0 && isBalanceRounded()!=rounded) { ledger.reset(); resetAverage(); }
         balanceResolution = resolution;
         boolean active = BoosterManager.isActive();
         if (active && history.activeId() < 0) {

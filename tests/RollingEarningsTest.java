@@ -33,6 +33,19 @@ public class RollingEarningsTest {
   expect(buckets.estimatedPerHour(273000),240_000_000d);
   expect(buckets.estimatedPerHour(400000),240_000_000d);
   if(buckets.estimatedReady(571000))throw new AssertionError("Slow bucket estimate never expires");
+  buckets.addEstimated(10_000_000,271000,346000);
+  expect(buckets.estimatedPerHour(348000),320_000_000d); // Weighted 225s, not latest 75s = $480M/h.
+  var smooth=new SmoothedRate();
+  expect(smooth.update(100,0),100);
+  double eased=smooth.update(200,1000);
+  if(eased<=100||eased>=105)throw new AssertionError("One-second rate jump: "+eased);
+  expect(smooth.update(900,1000),eased); // Rendering twice cannot accelerate smoothing.
+  var frequent=new SmoothedRate();frequent.update(100,0);
+  for(int second=1;second<=20;second++)frequent.update(200,second*1000);
+  smooth.reset();smooth.update(100,0);
+  expect(smooth.update(200,20000),frequent.update(200,20000));
+  smooth.reset();expect(smooth.update(50,30000),50);
+  expect(smooth.update(Double.NaN,31000),50);
   System.out.println("PASS: rolling expiry, overlap, warmup, idle, reset, finite values, trade exclusion and stable rounded estimates");
  }
 }

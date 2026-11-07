@@ -76,6 +76,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-10000,now,true));
                 BoosterStatsManager.tick();
                 check(BoosterStatsManager.averageLabel().contains("~$"),"Rounded HUD marks its numerical estimate");
+                // Real server formatter drops trailing zeroes below a billion too.
+                for(String balance:new String[]{"$79.19M","$79.2M","$79.21M","$80M","$80.01M"}){
+                    BoosterStatsManager.checkScoreboardLine("Balance: "+balance);
+                    check(BoosterStatsManager.averageLabel().contains("~$"),"Printed precision reset cash average: "+balance);
+                }
             }
             if(kind==2){
                 for(var entry:java.util.Map.<String,Object>of("running",false,"completed",true,"startTimeMs",now-60000,"stopTimeMs",now,"baseEarned",1000000d,"totalEarned",1000000d,"shardsEarned",0L,"moneyEstimated",true).entrySet()){
