@@ -92,8 +92,14 @@ public final class ToolkitMod implements ClientModInitializer {
             (g,delta)->{var mc=net.minecraft.client.Minecraft.getInstance();
                 if(ToolkitConfig.get().treasureChestHud&&mc.player!=null&&mc.gui.screen()==null&&!mc.gui.hud.isHidden()&&!BlackoutManager.isActive())TreasureChestTracker.render(g,mc,false);
             });
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","voice_music"),
+            (g,delta)->{var mc=net.minecraft.client.Minecraft.getInstance();
+                if(ToolkitConfig.get().voiceMusicHud&&net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("voicechat")&&mc.player!=null&&mc.gui.screen()==null&&!mc.gui.hud.isHidden()&&!BlackoutManager.isActive())VoiceMusicHud.render(g,mc,false);
+            });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             optimizeOptions(mc);
+            VoiceMusicHud.tick();
             TreasureChestTracker.tick(mc);
             UpdateManager.tick();
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}

@@ -68,6 +68,7 @@ public final class ToolkitSearch {
         new Entry(4,"HUD & Overlays","Active HUD elements","Bone Leggings","bone leggings pants speed 6 vi hud overlay active elements"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Rate test info","hourly average base rate test tracker statistics hud overlay"),
         new Entry(4,"HUD & Overlays","Active HUD elements","Treasurechest timer","treasure chest spawn timer countdown tomb realm hud overlay"),
+        new Entry(4,"HUD & Overlays","Voice & music","Voice & music status","spotify sonar microphone muted proximity group broadcast input music hud"),
         new Entry(4,"HUD & Overlays","Treasure chests","Only show last 30 seconds","treasure chest timer spawn countdown thirty seconds hide"),
         new Entry(4,"HUD & Overlays","Treasure chests","Show discovered chests","treasure rarity spawn list details"),
         new Entry(4,"HUD & Overlays","Treasure chests","Reward pool estimates","treasure gold shards opens ambiguous uncertain remaining"),

@@ -258,3 +258,22 @@ profile (including schematic placements); all keybindings and crop texture/model
 unchanged. Launcher metadata, runtime caches and old mod binaries are separate.
 Copied worlds are backups: do not open newer-version worlds in the older client.
 Keep personal migration manifests and snapshots local.
+
+## Voice and music status
+
+HUD & Overlays -> Voice & music contains the opt-in status display. Edit HUD positions
+moves it and its eye toggles visibility. It reads Simple Voice Chat's live mute,
+connection, push-to-talk, group and microphone selection through an optional bridge.
+On Windows it polls the installed Sonar loopback API on a daemon thread (no audio
+recording or uploads). OFF / MUSIC / MIC / MUSIC + MIC describes enabled sources,
+not proof of audio reception. Spotify idle, other active apps on Media, incorrect
+input, missing voice connection and stale/unavailable Sonar are shown explicitly.
+The display never changes voice devices, routes, mutes or key bindings. Sonar Stream
+must be selected as the voice microphone for the mixed audio; Sonar Microphone
+contains the microphone alone. Group membership changes the shown audience from
+Proximity to Group. Sonar Media can include any app routed to it.
+
+VoiceMusicStateTest covers source/mute/PTT states, stale data and loopback URL
+validation. -Dtoolkit.voicePreviewOnly=true runs the configured-pack private Xvfb
+check for the real optional bridge, setting/search/persistence, dragging, all four
+source states and input/connection warnings in both themes and compact layouts.

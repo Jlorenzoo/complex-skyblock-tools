@@ -7,6 +7,8 @@ public final class ToolkitConfig {
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true,gcCodeClick=true;
     public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true,expiringFlash=false;
     public boolean lightMode=false;
+    public boolean voiceMusicHud=false;
+    public int voiceHudX=12,voiceHudY=110;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
     public boolean coconutSoundEnabled=true,coconutVisualAlert=true,coconutFlash=false,moneyVisualAlert=true,xpVisualAlert=true;
     public int coconutSoundThreshold=0;
@@ -59,6 +61,9 @@ public final class ToolkitConfig {
             if(j.has("boosterExpiringAlert"))boosterExpiringAlert=j.get("boosterExpiringAlert").getAsBoolean();
             if(j.has("expiringFlash"))expiringFlash=j.get("expiringFlash").getAsBoolean();
             if(j.has("lightMode"))lightMode=j.get("lightMode").getAsBoolean();
+            if(j.has("voiceMusicHud"))voiceMusicHud=j.get("voiceMusicHud").getAsBoolean();
+            if(j.has("voiceHudX"))voiceHudX=Math.clamp(j.get("voiceHudX").getAsInt(),4,10000);
+            if(j.has("voiceHudY"))voiceHudY=Math.clamp(j.get("voiceHudY").getAsInt(),4,10000);
             if(j.has("coconutSoundEnabled"))coconutSoundEnabled=j.get("coconutSoundEnabled").getAsBoolean();
             if(j.has("coconutVisualAlert"))coconutVisualAlert=j.get("coconutVisualAlert").getAsBoolean();
             if(j.has("coconutFlash"))coconutFlash=j.get("coconutFlash").getAsBoolean();
@@ -132,6 +137,7 @@ public final class ToolkitConfig {
             j.addProperty("boosterExpiringAlert",boosterExpiringAlert);
             j.addProperty("expiringFlash",expiringFlash);
             j.addProperty("lightMode",lightMode);
+            j.addProperty("voiceMusicHud",voiceMusicHud);j.addProperty("voiceHudX",voiceHudX);j.addProperty("voiceHudY",voiceHudY);
             j.addProperty("startupServer",startupServer);
             j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutVisualAlert",coconutVisualAlert);
             j.addProperty("coconutFlash",coconutFlash);

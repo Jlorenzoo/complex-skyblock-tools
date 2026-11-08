@@ -34,7 +34,7 @@ public final class ToolkitScreen extends Screen {
         case 1->List.of(new Topic("Booster timers","Money & XP timers, activation and ending alerts"),new Topic("Coconut alerts","Sound, banners and minimum boost"),new Topic("Earnings & statistics","History, rate tests and crop averages"));
         case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Depleted-area warning and audio"),new Topic("Fish sell prices","Fish values and estimated earnings"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
-        case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"));
+        case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
         case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
         default->List.of();
     };}
@@ -522,8 +522,16 @@ public final class ToolkitScreen extends Screen {
             button("Reset HUD positions",76,()->{
                 var c=ModConfig.getInstance();c.setPosition(ModConfig.Position.TOP_CENTER);c.setOffset(0,0);c.setAveragePosition(12,42);
                 cfg.fishHudX=12;cfg.fishHudY=58;cfg.xpHudX=12;cfg.xpHudY=74;cfg.cropHarvestHudX=12;cfg.cropHarvestHudY=90;
-                cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;cfg.treasureHudX=-1;cfg.treasureHudY=48;
+                cfg.boneLeggingsHudX=-1;cfg.boneLeggingsHudY=12;cfg.treasureHudX=-1;cfg.treasureHudY=48;cfg.voiceHudX=12;cfg.voiceHudY=110;
             });
+        }
+        if(topic("Voice & music",0)){
+            toggle("Voice & music status","Shows source switches, mute state and input warnings.",16,()->cfg.voiceMusicHud,()->cfg.voiceMusicHud=!cfg.voiceMusicHud);
+            label("Use Sonar Stream as the voice microphone for music.",56);
+            label("Voice-chat mute stops every source in the mix.",76);
+            label("Sonar source switches select music, mic or both.",96);
+            label("Status shows routing; it does not confirm delivery.",116);
+            button("Edit HUD positions",148,()->go(5));
         }
         if(topic("Treasure chests",0)){
             toggle("Treasurechest timer","Open the treasure menu to sync the countdown.",16,()->cfg.treasureChestHud,()->cfg.treasureChestHud=!cfg.treasureChestHud);
@@ -702,7 +710,8 @@ public final class ToolkitScreen extends Screen {
             new HudPart(4,XpTracker.averageLabel(),BoosterHudOverlay.xpX(mc,XpTracker.averageLabel()),BoosterHudOverlay.xpY(mc),cfg.xpEarningsHud),
             new HudPart(5,harvest,BoosterHudOverlay.cropHarvestX(mc,harvest),BoosterHudOverlay.cropHarvestY(mc),cfg.cropHarvestHud),
             new HudPart(6,bone,BoosterHudOverlay.boneLeggingsX(mc,bone),BoosterHudOverlay.boneLeggingsY(mc),cfg.boneLeggingsHud),
-            new HudPart(7,"Treasure chests",TreasureChestTracker.x(mc,true),TreasureChestTracker.y(mc,true),cfg.treasureChestHud));
+            new HudPart(7,"Treasure chests",TreasureChestTracker.x(mc,true),TreasureChestTracker.y(mc,true),cfg.treasureChestHud),
+            new HudPart(8,"Voice & music",VoiceMusicHud.x(mc,true),VoiceMusicHud.y(mc),cfg.voiceMusicHud));
     }
     private void renderLayout(GuiGraphicsExtractor g,int mx,int my,float tick){
         var mc=Minecraft.getInstance();g.fill(0,0,width,height,0x3506090E);
@@ -717,7 +726,11 @@ public final class ToolkitScreen extends Screen {
             eye(g,eyeX(bx,BoosterHudOverlay.BAR_WIDTH),rowY-10,visible);
         }
         for(var part:hudParts()){
-            if(part.id()==7){
+            if(part.id()==8){
+                VoiceMusicHud.render(g,mc,true);int pw=VoiceMusicHud.width(mc,true),ph=VoiceMusicHud.height();
+                g.outline(part.x()-2,part.y()-2,pw+4,ph+4,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),pw),part.y()-2,part.visible());
+            }else if(part.id()==7){
                 TreasureChestTracker.render(g,mc,true);int pw=TreasureChestTracker.width(mc,true),ph=TreasureChestTracker.height(true);
                 g.outline(part.x()-2,part.y()-2,pw+4,ph+4,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
                 eye(g,eyeX(part.x(),pw),part.y()-2,part.visible());
@@ -772,7 +785,7 @@ public final class ToolkitScreen extends Screen {
             var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
             int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc),tx=eyeX(bx,BoosterHudOverlay.BAR_WIDTH);
             for(var part:hudParts()){
-                int pw=part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
                 int ex=eyeX(part.x(),pw);
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
                     if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;
@@ -781,6 +794,7 @@ public final class ToolkitScreen extends Screen {
                     else if(part.id()==5)cfg.cropHarvestHud=!cfg.cropHarvestHud;
                     else if(part.id()==6)cfg.boneLeggingsHud=!cfg.boneLeggingsHud;
                     else if(part.id()==7)cfg.treasureChestHud=!cfg.treasureChestHud;
+                    else if(part.id()==8)cfg.voiceMusicHud=!cfg.voiceMusicHud;
                     persist();return true;
                 }
             }
@@ -792,8 +806,8 @@ public final class ToolkitScreen extends Screen {
                 }
             }
             for(var part:hudParts()){
-                int pw=part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
-                int ph=part.id()==7?TreasureChestTracker.height(true):part.id()==6?BoneLeggingsTracker.getHeight():11;
+                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int ph=part.id()==8?VoiceMusicHud.height():part.id()==7?TreasureChestTracker.height(true):part.id()==6?BoneLeggingsTracker.getHeight():11;
                 if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+ph+3){
                     dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;
                 }
@@ -805,6 +819,10 @@ public final class ToolkitScreen extends Screen {
     }
     @Override public boolean mouseDragged(MouseButtonEvent event,double dx,double dy){
         var cfg=ModConfig.getInstance();
+        if(dragging==8){var c=ToolkitConfig.get();var mc=Minecraft.getInstance();
+            c.voiceHudX=Math.clamp((int)(event.x()-grabX),4,Math.max(4,width-VoiceMusicHud.width(mc,true)-4));
+            c.voiceHudY=Math.clamp((int)(event.y()-grabY),4,Math.max(4,height-VoiceMusicHud.height()-4));return true;
+        }
         if(dragging==7){var c=ToolkitConfig.get();var mc=Minecraft.getInstance();
             c.treasureHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-TreasureChestTracker.width(mc,true)-2));
             c.treasureHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-TreasureChestTracker.height(true)-2));return true;

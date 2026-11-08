@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** Offline disposable client: exercise real widgets, input and rendering without a server. */
 public final class MenuRuntimeSmoke implements ClientModInitializer {
-    int ticks,stage=Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
+    int ticks,stage=Boolean.getBoolean("toolkit.voicePreviewOnly")?600:Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     String statsFixtureId;
     private void checkPassiveIncome(net.minecraft.client.Minecraft mc) throws Exception {
@@ -104,6 +104,51 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             capture(mc,"rounded-"+kind+"-"+(light?"light":"dark")+"-"+(compact?"compact":"full"));
             if(sample==15){stage++;return;}
         }
+        stage++;
+    }
+    private void voicePreview(net.minecraft.client.Minecraft mc) throws Exception {
+        if(stage==612){
+            if(!Files.exists(output.resolve("screenshots/voice-states-3.png")))return;
+            Files.writeString(output.resolve("PASS.txt"),"PASS: optional real voice-chat reflection, voice HUD settings/search/persistence and six routing/error states in full/compact light/dark layouts\n");
+            System.exit(0);return;
+        }
+        int sample=(stage-600)/3,step=(stage-600)%3;
+        var cfg=ToolkitConfig.get();
+        if(step==0){
+            check(VoiceMusicHud.readVoice().available(),"Optional bridge reads installed Simple Voice Chat without a hard dependency");
+            cfg.lightMode=sample%2==1;cfg.voiceMusicHud=true;
+            mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+            mc.setScreenAndShow(new ToolkitScreen(null,4));search(mc,"voice music");press(mc,"HUD & Overlays / Voice & music status");
+            assertControls(mc);
+            press(mc,"Voice & music status");check(!cfg.voiceMusicHud,"Voice HUD toggle disables");
+            press(mc,"Voice & music status");check(cfg.voiceMusicHud,"Voice HUD toggle enables");
+            var ctor=ToolkitConfig.class.getDeclaredConstructor();ctor.setAccessible(true);
+            check(ctor.newInstance().voiceMusicHud,"Voice HUD preference persists");
+        }else if(step==1){
+            capture(mc,"voice-settings-"+sample);
+            mc.setScreenAndShow(new ToolkitScreen(null,5));
+            int x=VoiceMusicHud.x(mc,true),y=VoiceMusicHud.y(mc);
+            mc.gui.screen().mouseClicked(new MouseButtonEvent(x+6,y+12,new MouseButtonInfo(0,0)),false);
+            mc.gui.screen().mouseDragged(new MouseButtonEvent(x+26,y+36,new MouseButtonInfo(0,0)),20,24);
+            mc.gui.screen().mouseReleased(new MouseButtonEvent(x+26,y+36,new MouseButtonInfo(0,0)));
+            check(cfg.voiceHudY==y+24,"Voice HUD drags in the real editor");
+            mc.setScreenAndShow(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("Voice status preview")){
+                @Override public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor g,int mx,int my,float tick){
+                    var p=ToolkitTheme.palette();g.fill(0,0,width,height,p.sidebar());
+                    g.text(mc.font,"Voice & music · routing states",12,12,p.text(),false);
+                    var v=new VoiceMusicState.Voice(true,true,false,false,false,false,false,true,"SteelSeries Sonar - Stream");
+                    long now=System.currentTimeMillis();
+                    for(int i=0;i<6;i++){
+                        var m=new VoiceMusicState.Mix(true,now,true,false,(i&1)!=0,(i&2)!=0,true,false);
+                        var current=i==4?new VoiceMusicState.Voice(true,true,false,false,false,false,false,true,"Sonar - Microphone"):
+                            i==5?new VoiceMusicState.Voice(true,false,false,false,false,false,false,false,""):v;
+                        VoiceMusicHud.preview=VoiceMusicState.display(current,m,now);cfg.voiceHudX=12;cfg.voiceHudY=30+i*35;
+                        VoiceMusicHud.render(g,mc,false);
+                    }
+                    VoiceMusicHud.preview=null;cfg.voiceHudX=12;cfg.voiceHudY=110;
+                }
+            });
+        }else capture(mc,"voice-states-"+sample);
         stage++;
     }
     private static void checkBlackoutScroll(net.minecraft.client.Minecraft mc) throws Exception {
@@ -230,6 +275,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             try{
                 if(mc.gui.overlay()!=null||++ticks<100)return;
                 if(ticks%Integer.getInteger("toolkit.menuTickInterval",20)!=0)return;
+                if(stage>=600){voicePreview(mc);return;}
                 if(stage>=400){roundedPreview(mc);return;}
                 if(stage==-2){
                     var voice=Class.forName("de.maxhenkel.voicechat.VoicechatClient");
