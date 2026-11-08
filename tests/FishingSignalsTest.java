@@ -6,11 +6,15 @@ public final class FishingSignalsTest {
         check(FishingSignals.depth("֎ What Lurks Below IX - Depth 1.5 blocks")==1.5,"Screenshot format");
         check(FishingSignals.depth("§5What Lurks Below IX §f- Depth 30 blocks")==30,"Formatting");
         check(FishingSignals.depth("Depth: 30/30")==30,"Fraction fallback");
+        check(FishingSignals.depth("֎ What Lurks Below X - Depth: 30.0 blocks ✔")==30,"Current server screenshot at ready depth");
         check(Double.isNaN(FishingSignals.depth("Money booster 30/30")),"Unrelated numbers");
         check(Double.isNaN(FishingSignals.depth("Depth NaN blocks")),"Invalid numeric value");
         check(FishingSignals.voidRod("§5Void Rod"),"Formatted Void Rod accepted");
         check(FishingSignals.voidRod("✦ Void Rod ✦"),"Starred Void Rod accepted");
-        for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]"})
+        check(FishingSignals.voidRod("֎ Void Fishing Rod ֎"),"Observed server Void Fishing Rod accepted");
+        check(FishingSignals.voidRod("§5֎ §lVoid Fishing Rod §r§5֎"),"Formatted server Void Fishing Rod accepted");
+        check(FishingSignals.voidRod("Void Fishing Rod"),"Undecorated server name accepted");
+        for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]","Not Void Fishing Rod","Void Fishing Rod Deluxe"})
             check(!FishingSignals.voidRod(name),"Other item names rejected");
         var s=new FishingSignals();UUID first=UUID.randomUUID(),second=UUID.randomUUID();
         check(!s.ready(first,30,30,0),"Stale initial bossbar");

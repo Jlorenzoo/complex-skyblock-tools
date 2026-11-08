@@ -17,6 +17,24 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     int ticks,stage=Boolean.getBoolean("toolkit.voicePreviewOnly")?600:Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     String statsFixtureId;
+    private void checkVoidRod() throws Exception {
+        var rod=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.FISHING_ROD);
+        rod.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal("֎ ").append(
+                    net.minecraft.network.chat.Component.literal("Void Fishing Rod").withStyle(net.minecraft.ChatFormatting.DARK_PURPLE))
+                    .append(" ֎"));
+        check(com.fishingpings.FishingSignals.voidRod(rod.getHoverName().getString()),"Actual server rod component passes the seasonal sound guard");
+        var meter=new net.minecraft.client.gui.components.LerpingBossEvent(java.util.UUID.randomUUID(),
+                net.minecraft.network.chat.Component.literal("֎ What Lurks Below X - Depth 1.5 blocks"),
+                0.05f,net.minecraft.world.BossEvent.BossBarColor.PURPLE,net.minecraft.world.BossEvent.BossBarOverlay.PROGRESS,false,false,false);
+        var signals=new com.fishingpings.FishingSignals();var hook=java.util.UUID.randomUUID();
+        check(!signals.ready(hook,com.fishingpings.FishingSignals.depth(meter.getName().getString()),30,0),"Server meter starts shallow");
+        meter.setName(net.minecraft.network.chat.Component.literal("֎ What Lurks Below X - Depth: 30.0 blocks ✔"));
+        check(signals.ready(hook,com.fishingpings.FishingSignals.depth(meter.getName().getString()),30,1000),"Server rod and bossbar reach ready cue");
+        check(!signals.ready(hook,30,30,1100),"Server ready cue fires once");
+        ToolkitMod.FISHING.previewDepth();
+        Files.writeString(output.resolve("void-rod.txt"),"PASS: server Void Fishing Rod custom-name component, real bossbar depth threshold, single ready cue and sound preview submission\n");
+    }
     private void checkPassiveIncome(net.minecraft.client.Minecraft mc) throws Exception {
         check(java.util.Arrays.stream(net.minecraft.client.multiplayer.ClientPacketListener.class.getDeclaredMethods())
                 .anyMatch(m->m.getName().contains("toolkit$incomeActionBar")),"Production action-bar packet observer is remapped");
@@ -293,7 +311,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 }
                 if(stage==-1){capture(mc,"voicechat-onboarding");stage++;return;}
                 if(stage==0){
-                    checkShardSettings(mc);checkTreasureSettings(mc);checkPassiveIncome(mc);checkRoundedIncome();
+                    checkShardSettings(mc);checkTreasureSettings(mc);checkPassiveIncome(mc);checkRoundedIncome();checkVoidRod();
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
                         check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");

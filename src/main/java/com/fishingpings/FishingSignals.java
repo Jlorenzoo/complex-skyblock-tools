@@ -22,7 +22,9 @@ public final class FishingSignals {
     public static boolean voidRod(String name){
         if(name==null)return false;
         String clean=name.replaceAll("§.","").strip();
-        return clean.equalsIgnoreCase("Void Rod")||clean.matches("(?i)^[✦★\\[(]?\\s*Void Rod\\s*[\\])★✦]?$");
+        // The server's seasonal item is "֎ Void Fishing Rod ֎". Keep the
+        // short legacy name too; both cues use this same held-item guard.
+        return clean.matches("(?i)^[֎✦★\\[(]?\\s*Void (?:Fishing )?Rod\\s*[\\])★✦֎]?$");
     }
     public static boolean snappedText(String text){
         if(text==null)return false;String clean=text.replaceAll("§.","").strip();
