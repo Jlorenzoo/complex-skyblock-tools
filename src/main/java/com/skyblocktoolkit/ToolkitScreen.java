@@ -452,7 +452,7 @@ public final class ToolkitScreen extends Screen {
             slider("Fishing volume",40,fishCfg.volume,3,v->fishCfg.volume=(float)v);
             button("Preview depleted warning",64,fishing::previewWarning);
             slider("Bite sound volume",92,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
-            toggle("Oni Rod full-energy chime","Chimes when the Cursed Energy bar fills.",116,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
+            link("Oni Rod settings",116,3,"Oni Rod");
             link("Fish sell prices",144,2,"Fish sell prices");
             link("Void Rod settings (Seasonal)",168,3,"Void Rod");
         }
@@ -494,6 +494,11 @@ public final class ToolkitScreen extends Screen {
         pair(()->"Preview ready",fishing::previewDepth,()->"Preview snap",fishing::previewSnap,top);
         top+=24;
         return top;
+    }
+    public int buildOniRodSettings(int top){
+        var fishCfg=ToolkitMod.FISHING.settings();
+        toggle("Oni Rod full-energy chime","Chimes when the Cursed Energy bar fills.",top,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
+        return top+28;
     }
     public int buildBoneLeggingsSettings(int top){
         var cfg=ToolkitConfig.get();

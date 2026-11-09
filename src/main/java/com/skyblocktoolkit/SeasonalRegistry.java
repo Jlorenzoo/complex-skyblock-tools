@@ -15,6 +15,13 @@ public final class SeasonalRegistry {
             (screen, top) -> screen.buildVoidRodSettings(top)
         ),
         new SeasonalItem(
+            "oni_rod",
+            "Oni Rod",
+            "Seasonal Fishing Rod · Cursed Energy chime",
+            () -> new ItemStack(Items.FISHING_ROD),
+            (screen, top) -> screen.buildOniRodSettings(top)
+        ),
+        new SeasonalItem(
             "bone_pants",
             "Bone Leggings",
             "Seasonal Armor Piece · Burning Rush Rune (Speed VI)",

@@ -927,15 +927,19 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage>=275&&stage<283){
-                    int sample=(stage-275)/2;
-                    if((stage-275)%2==0){
+                if(stage>=275&&stage<287){
+                    int sample=(stage-275)/3,step=(stage-275)%3;
+                    if(step==0){
                         ToolkitConfig.get().lightMode=sample%2==1;
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
-                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
+                        mc.setScreenAndShow(new ToolkitScreen(null,3));
+                    }else if(step==1){
+                        capture(mc,"seasonals-oni-overview-"+sample);assertControls(mc);
+                        pressTopic(mc,"Oni Rod");assertControls(mc);
                     }else{
-                        capture(mc,"fishing-audio-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
-                        capture(mc,"fishing-audio-bottom-"+sample);
+                        capture(mc,"seasonals-oni-settings-"+sample);assertControls(mc);
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");pressTopic(mc,"Oni Rod settings");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"Oni Rod full-energy chime")),"Fishing shortcut opens Oni Rod settings");
                         if(sample==0){
                             var fishing=ToolkitMod.FISHING.settings();
                             float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
@@ -947,7 +951,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==283){
+                if(stage==287){
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");
