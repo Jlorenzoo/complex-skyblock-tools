@@ -22,6 +22,7 @@ public final class SoundControlsSmoke implements PreLaunchEntrypoint {
             var engine = Class.forName("net.minecraft.client.sounds.SoundEngine", false, getClass().getClassLoader());
             var channel = Class.forName("com.mojang.blaze3d.audio.Channel", false, getClass().getClassLoader());
             check(Arrays.stream(engine.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$alertGain")), "sound engine injection");
+            check(Arrays.stream(engine.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$replaceBiteSound")), "bite sound replacement injection");
             check(Arrays.stream(channel.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$gainCeiling")), "OpenAL channel injection");
             var packets=Class.forName("net.minecraft.client.multiplayer.ClientPacketListener",false,getClass().getClassLoader());
             check(Arrays.stream(packets.getDeclaredMethods()).anyMatch(m -> m.getName().contains("toolkit$experienceSync")),"XP synchronization injection");

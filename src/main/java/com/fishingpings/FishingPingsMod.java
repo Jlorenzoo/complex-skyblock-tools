@@ -10,6 +10,8 @@ import com.skyblocktoolkit.AlertSound;
 import com.skyblocktoolkit.ItemStatsTracker;
 import com.skyblocktoolkit.ToolkitConfig;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.projectile.FishingHook;
@@ -18,6 +20,7 @@ import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
+    private static final SoundEvent BITE_PING=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping"));
     private final FishingSignals signals=new FishingSignals();
     private FishingConfig config;
     private Object lastLevel;
@@ -97,23 +100,31 @@ public final class FishingPingsMod implements ClientModInitializer {
         return rod.is(Items.FISHING_ROD)&&FishingSignals.oniRod(rod.getHoverName().getString());
     }
     public float biteGain(SoundInstance sound){
-        if(config==null||config.biteSoundVolume==1||sound.isRelative()
-            ||!sound.getIdentifier().equals(SoundEvents.FISHING_BOBBER_SPLASH.location()))return 1;
+        return config!=null&&config.biteSoundVolume!=1&&isOwnBite(sound)?config.biteSoundVolume:1;
+    }
+    public SoundInstance replaceBiteSound(SoundInstance sound){
+        if(config!=null&&config.lowBitePing&&isOwnBite(sound)){
+            return new AlertSound(BITE_PING,sound.getSource(),1,0.45f,config.biteSoundVolume);
+        }
+        return sound;
+    }
+    private static boolean isOwnBite(SoundInstance sound){
+        if(sound.isRelative()||!sound.getIdentifier().equals(SoundEvents.FISHING_BOBBER_SPLASH.location()))return false;
         var mc=Minecraft.getInstance();
-        if(mc==null||mc.level==null||mc.player==null||mc.player.fishing==null)return 1;
+        if(mc==null||mc.level==null||mc.player==null||mc.player.fishing==null)return false;
         var rod=mc.player.getMainHandItem();
         if(!rod.is(Items.FISHING_ROD))rod=mc.player.getOffhandItem();
-        if(!rod.is(Items.FISHING_ROD)||FishingSignals.voidRod(rod.getHoverName().getString()))return 1;
+        if(!rod.is(Items.FISHING_ROD)||FishingSignals.voidRod(rod.getHoverName().getString()))return false;
         double x=sound.getX(),y=sound.getY(),z=sound.getZ();
         var hook=mc.player.fishing;
         double distance=hook.distanceToSqr(x,y,z);
         // Position packets are quantized and the local hook can be interpolating.
-        if(distance>1)return 1;
+        if(distance>1)return false;
         var area=new AABB(x-1,y-1,z-1,x+1,y+1,z+1);
         for(var other:mc.level.getEntitiesOfClass(FishingHook.class,area)){
-            if(other!=hook&&other.distanceToSqr(x,y,z)<=distance)return 1;
+            if(other!=hook&&other.distanceToSqr(x,y,z)<=distance)return false;
         }
-        return config.biteSoundVolume;
+        return true;
     }
     private void snapSound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain));}
     private void readySound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain));}

@@ -927,8 +927,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage>=275&&stage<287){
-                    int sample=(stage-275)/3,step=(stage-275)%3;
+                if(stage>=275&&stage<291){
+                    int sample=(stage-275)/4,step=(stage-275)%4;
                     if(step==0){
                         ToolkitConfig.get().lightMode=sample%2==1;
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
@@ -936,22 +936,34 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }else if(step==1){
                         capture(mc,"seasonals-oni-overview-"+sample);assertControls(mc);
                         pressTopic(mc,"Oni Rod");assertControls(mc);
-                    }else{
+                    }else if(step==2){
                         capture(mc,"seasonals-oni-settings-"+sample);assertControls(mc);
-                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");pressTopic(mc,"Oni Rod settings");
-                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"Oni Rod full-energy chime")),"Fishing shortcut opens Oni Rod settings");
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
+                    }else{
+                        capture(mc,"fishing-low-bite-"+sample);assertControls(mc);
                         if(sample==0){
                             var fishing=ToolkitMod.FISHING.settings();
+                            boolean original=fishing.lowBitePing;
                             float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
-                            fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;fishing.save();
+                            fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;
+                            pressTopic(mc,"Low bite ping");
                             var reloaded=new com.fishingpings.FishingConfig();
-                            check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Fishing audio settings survive reload");
-                            fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();
+                            check(fishing.lowBitePing!=original&&reloaded.lowBitePing==fishing.lowBitePing,"Low bite ping toggle survives reload");
+                            check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
+                            fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;
+                            pressTopic(mc,"Low bite ping");
+                            var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping");
+                            check(mc.getSoundManager().getSoundEvent(id)!=null,"Bundled bite ping loads through the sound manager");
+                            var ping=net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
+                            var result=mc.getSoundManager().play(new AlertSound(ping,1,0.45f,2));
+                            check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Bundled bite ping starts through the production sound engine");
                         }
+                        pressTopic(mc,"Oni Rod settings");
+                        check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"Oni Rod full-energy chime")),"Fishing shortcut opens Oni Rod settings");
                     }
                     stage++;return;
                 }
-                if(stage==287){
+                if(stage==291){
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");

@@ -10,7 +10,11 @@ public final class AlertSound extends SimpleSoundInstance {
     public final float gain;
 
     public AlertSound(SoundEvent sound, float pitch, float volume, double gain) {
-        super(sound.location(), SoundSource.UI, volume, pitch, SoundInstance.createUnseededRandom(),
+        this(sound, SoundSource.UI, pitch, volume, gain);
+    }
+
+    public AlertSound(SoundEvent sound, SoundSource source, float pitch, float volume, double gain) {
+        super(sound.location(), source, volume, pitch, SoundInstance.createUnseededRandom(),
             false, 0, SoundInstance.Attenuation.NONE, 0, 0, 0, true);
         this.gain = (float) (Double.isFinite(gain) ? Math.clamp(gain, 0, 9) : 1.9);
     }

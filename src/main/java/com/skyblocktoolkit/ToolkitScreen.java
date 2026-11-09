@@ -448,13 +448,14 @@ public final class ToolkitScreen extends Screen {
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
         if(topic("Fishing",0)){
-            toggle("Depleted area",16,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
-            slider("Fishing volume",40,fishCfg.volume,3,v->fishCfg.volume=(float)v);
-            button("Preview depleted warning",64,fishing::previewWarning);
-            slider("Bite sound volume",92,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
-            link("Oni Rod settings",116,3,"Oni Rod");
-            link("Fish sell prices",144,2,"Fish sell prices");
-            link("Void Rod settings (Seasonal)",168,3,"Void Rod");
+            slider("Bite sound volume",16,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
+            toggle("Low bite ping","Swap the bite splash for a short, low tone.",40,()->fishCfg.lowBitePing,()->fishCfg.lowBitePing=!fishCfg.lowBitePing);
+            toggle("Depleted area",72,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
+            slider("Fishing volume",96,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+            button("Preview depleted warning",120,fishing::previewWarning);
+            link("Oni Rod settings",148,3,"Oni Rod");
+            link("Fish sell prices",172,2,"Fish sell prices");
+            link("Void Rod settings (Seasonal)",196,3,"Void Rod");
         }
         if(topic("Fish sell prices",0)){
             label("Sell price per fish ($ each; accepts 1.5k / 2m)",16);
