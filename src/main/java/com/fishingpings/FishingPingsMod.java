@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import com.skyblocktoolkit.AlertSound;
+import com.skyblocktoolkit.ItemStatsTracker;
 import com.skyblocktoolkit.ToolkitConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -22,7 +23,6 @@ public final class FishingPingsMod implements ClientModInitializer {
     private Object lastLevel;
     private long secondWarningAt=-1;
     private boolean warnedAboutBossAccess, openMenu,warningPreview;
-    private boolean oniMeterVisible;
     public FishingConfig settings(){return config;}
     public void previewDepth(){readySound(Minecraft.getInstance());}
     public void previewSnap(){snapSound(Minecraft.getInstance());}
@@ -33,6 +33,10 @@ public final class FishingPingsMod implements ClientModInitializer {
         ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
+            if(!overlay&&holdingOniRod(mc)){
+                long shards=FishingSignals.oniShardReward(text);
+                if(shards>0)ItemStatsTracker.oniShards(shards,now);
+            }
             // Actionbar and system messages are supported; signed player-chat is not parsed.
             if(config.snapEnabled&&holdingVoidRod(mc)&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
             if(config.warningEnabled&&signals.warning(text,now))warningSound(mc,now);
@@ -40,7 +44,6 @@ public final class FishingPingsMod implements ClientModInitializer {
         });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             long now=System.currentTimeMillis();
-            oniMeterVisible=false;
             if(mc.level!=lastLevel){signals.reset();secondWarningAt=-1;warningPreview=false;lastLevel=mc.level;}
             if(openMenu){openMenu=false;mc.setScreenAndShow(new com.skyblocktoolkit.ToolkitScreen(null,2));}
             // Positive deadline = middle note; negative deadline = final low note.
@@ -66,7 +69,6 @@ public final class FishingPingsMod implements ClientModInitializer {
                         if(observed!=FishingSignals.Energy.MISSING)energy=observed;
                     }
                 }
-                oniMeterVisible=energy!=FishingSignals.Energy.MISSING;
                 if(signals.oniReady(energy)&&config.oniEnergyAlert){
                     mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_BELL.value(),1.2f,0.8f,1.9));
                 }
@@ -93,10 +95,6 @@ public final class FishingPingsMod implements ClientModInitializer {
         if(mc.player==null)return false;
         var rod=mc.player.getMainHandItem();
         return rod.is(Items.FISHING_ROD)&&FishingSignals.oniRod(rod.getHoverName().getString());
-    }
-    public boolean trackingOniShards(Minecraft mc){
-        return mc.level!=null&&mc.gui.screen()==null&&holdingOniRod(mc)
-            &&(mc.player.fishing!=null||mc.level==lastLevel&&oniMeterVisible);
     }
     public float biteGain(SoundInstance sound){
         if(config==null||config.biteSoundVolume==1||sound.isRelative()

@@ -9,12 +9,21 @@ public final class FishingSignals {
     private static final Pattern SNAP=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*What Lurks Below\\s+[IVXLCDM]+\\s*[┃|]\\s*[✘✗×]?\\s*The fishing line snapped\\.?$");
     private static final Pattern ONI_ROD=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*Oni(?:['’]s)? (?:Fishing )?Rod[^\\p{L}\\p{N}]*$");
     private static final Pattern CURSED_ENERGY=Pattern.compile("(?i)\\bCursed Energy\\s*:\\s*([0-9,]+)\\s*/\\s*([0-9,]+)(?![0-9,])");
+    private static final Pattern ONI_SHARDS=Pattern.compile(
+        "(?i)^[^\\p{L}\\p{N}\\[]*(?:Cursed Spirits|Gold Fish) [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Gold Shards?[^\\p{L}\\p{N}]*$");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
     private boolean oniFull;
     public enum Energy { MISSING, CHARGING, FULL }
     public static boolean oniRod(String name){
         return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
+    }
+    public static long oniShardReward(String text){
+        if(text==null)return 0;
+        var match=ONI_SHARDS.matcher(text.replaceAll("§.","").strip());
+        if(!match.matches())return 0;
+        try{return Long.parseLong(match.group(1).replace(",",""));}
+        catch(NumberFormatException ignored){return 0;}
     }
     public static Energy cursedEnergy(String text){
         if(text==null)return Energy.MISSING;

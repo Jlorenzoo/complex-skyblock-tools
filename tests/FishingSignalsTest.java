@@ -17,7 +17,11 @@ public final class FishingSignalsTest {
         for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]","Not Void Fishing Rod","Void Fishing Rod Deluxe"})
             check(!FishingSignals.voidRod(name),"Other item names rejected");
         var s=new FishingSignals();UUID first=UUID.randomUUID(),second=UUID.randomUUID();
-        check(FishingSignals.oniRod("§c✦ Oni Fishing Rod ✦")&&!FishingSignals.oniRod("Oni Rod Deluxe"),"Oni rod name guard");
+        check(FishingSignals.oniRod("§c👹 Oni Fishing Rod 👹")&&!FishingSignals.oniRod("Oni Rod Deluxe"),"Oni rod name guard");
+        check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==13,"Observed Oni ability reward");
+        check(FishingSignals.oniShardReward("◆ Gold Fish V ┃ ✔ You found 1x  Gold Shard !")==1,"Observed fishing enchant reward");
+        check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other Oni loot is excluded");
+        check(FishingSignals.oniShardReward("[Player] 👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==0,"Prefixed chat is excluded");
         String energyBar="§c☠ Cursed Spirits VIII - §fCursed Energy: ";
         check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"5/170")),"Screenshot meter is charging");
         check(s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170")),"Full meter chimes");

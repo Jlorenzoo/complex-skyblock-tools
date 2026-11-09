@@ -8,9 +8,8 @@ import net.minecraft.world.item.HoeItem;
 /** Gold shards are estimated item value, never a cash or booster ledger entry. */
 public final class GoldShardTracker {
     private static final GoldShardEarnings earnings=new GoldShardEarnings();
-    private static long previousCount=-1;
     private GoldShardTracker() {}
-    public static void reset(){earnings.reset(System.currentTimeMillis());previousCount=-1;}
+    public static void reset(){earnings.reset(System.currentTimeMillis());}
     public static void chat(String text){
         earnings.chat(GoldShardEarnings.parseReward(text),System.currentTimeMillis(),RateTracker.getActiveTestId());
         deliver();
@@ -27,10 +26,6 @@ public final class GoldShardTracker {
         long now=System.currentTimeMillis();
         boolean farming=mc.gui.screen()==null&&mc.player.getMainHandItem().getItem() instanceof HoeItem
             &&(CropHarvestTracker.isActive(now)||mc.options.keyAttack.isDown());
-        if(previousCount>=0&&count>previousCount&&ToolkitMod.FISHING.trackingOniShards(mc)){
-            ItemStatsTracker.oniShards(count-previousCount,now);
-        }
-        previousCount=count;
         earnings.observe(count,farming,now,RateTracker.getActiveTestId());
         deliver();
     }
