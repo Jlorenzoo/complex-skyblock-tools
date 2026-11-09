@@ -1,6 +1,6 @@
 package com.skyblocktoolkit.chat;
 
-import com.skyblocktoolkit.AlertSound;
+import com.skyblocktoolkit.ToolkitAudio;
 import com.skyblocktoolkit.ToolkitConfig;
 import com.skyblocktoolkit.mixin.ChatComponentAccessor;
 import java.util.ArrayList;
@@ -14,7 +14,6 @@ import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
@@ -372,7 +371,7 @@ public class ChatSelection {
 
         // 4. Play confirmation chime
         if (mc.getSoundManager() != null) {
-            mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.8f, 1.0f, 1.0));
+            ToolkitAudio.playCopy(mc);
         }
 
         // 5. Display overlay notification

@@ -1,16 +1,159 @@
 {
   "short_splash": {
     "subtitle": "subtitles.entity.fishing_bobber.splash",
-    "sounds": [{"name": "skyblocktoolkit:short_splash", "preload": true}]
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:short_splash",
+        "preload": true
+      }
+    ]
   },
   "water_drop": {
     "subtitle": "subtitles.entity.fishing_bobber.splash",
-    "sounds": [{"name": "skyblocktoolkit:water_drop", "preload": true}]
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:water_drop",
+        "preload": true
+      }
+    ]
   },
   "oni_full_chime": {
-    "sounds": [{"name": "skyblocktoolkit:oni_full_chime", "preload": true}]
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:oni_full_chime",
+        "preload": true
+      }
+    ]
   },
   "oni_approach_chime": {
-    "sounds": [{"name": "skyblocktoolkit:oni_approach_chime", "preload": true}]
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:oni_approach_chime",
+        "preload": true
+      }
+    ]
+  },
+  "studio_glass": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_glass",
+        "preload": true
+      }
+    ]
+  },
+  "studio_pluck": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_pluck",
+        "preload": true
+      }
+    ]
+  },
+  "studio_coins": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_coins",
+        "preload": true
+      }
+    ]
+  },
+  "studio_click": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_click",
+        "preload": true
+      }
+    ]
+  },
+  "studio_snap": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_snap",
+        "preload": true
+      }
+    ]
+  },
+  "studio_fall": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_fall",
+        "preload": true
+      }
+    ]
+  },
+  "studio_soft": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_soft",
+        "preload": true
+      }
+    ]
+  },
+  "studio_rise": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_rise",
+        "preload": true
+      }
+    ]
+  },
+  "studio_reward": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_reward",
+        "preload": true
+      }
+    ]
+  },
+  "studio_charge_low": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_charge_low",
+        "preload": true
+      }
+    ]
+  },
+  "studio_charge_high": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_charge_high",
+        "preload": true
+      }
+    ]
+  },
+  "studio_charge_full": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:studio_charge_full",
+        "preload": true
+      }
+    ]
+  },
+  "pebble_splash": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:pebble_splash",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "ripple_tick": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:ripple_tick",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "cork_pop": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:cork_pop",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
   }
 }

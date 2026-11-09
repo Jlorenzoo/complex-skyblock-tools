@@ -8,6 +8,6 @@ public final class CoconutNotifier {
     public static void preview() {
         var mc = Minecraft.getInstance();
         if (mc != null && mc.getSoundManager() != null)
-            mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.6f, 1f, 1));
+            ToolkitAudio.play(ToolkitAudio.Cue.COCONUT, mc, SoundEvents.NOTE_BLOCK_PLING.value(), 1.6f, 1f, 1);
     }
 }

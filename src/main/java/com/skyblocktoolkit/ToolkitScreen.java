@@ -35,7 +35,7 @@ public final class ToolkitScreen extends Screen {
         case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and earnings window"),new Topic("Item prices","Sell values for fish, Vote Keys and Gold Shards"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
         case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
-        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
+        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Sound Library","Choose and preview every Toolkit alert"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
         default->List.of();
     };}
     private boolean topic(String title,int top){
@@ -580,6 +580,7 @@ public final class ToolkitScreen extends Screen {
             }
         }
     }
+    private ToolkitAudio.Cue audioCue=ToolkitAudio.Cue.BITE;
     private void utilities(){
         var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
         if(topic("Chat selection & copy",0)){
@@ -594,9 +595,20 @@ public final class ToolkitScreen extends Screen {
                 slider("Chat opacity",236,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
             }
         }
+        if(topic("Sound Library",0)){
+            var cues=ToolkitAudio.Cue.values();
+            setting("Alert event",16,()->audioCue.label,()->audioCue=cues[(audioCue.ordinal()+1)%cues.length]);
+            var fishing=ToolkitMod.FISHING.settings();
+            setting("Alert sound",40,()->audioCue==ToolkitAudio.Cue.BITE?fishing.biteSound.label:cfg.audioChoice(audioCue).label,()->{
+                if(audioCue==ToolkitAudio.Cue.BITE)fishing.biteSound=fishing.biteSound.next();
+                else cfg.cycleAudio(audioCue);
+            });
+            button("Preview alert sound",64,()->ToolkitAudio.preview(audioCue));
+            hint("Previews use your current volume settings.",94);
+        }
         if(topic("Auction notifications",0)){
             toggle("Sale alert",16,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
-            setting("Sound",40,cfg::ahSoundName,()->cfg.ahSoundType=(cfg.ahSoundType+1)%5);
+            setting("Sound",40,()->cfg.audioChoice(ToolkitAudio.Cue.AUCTION).label,()->cfg.cycleAudio(ToolkitAudio.Cue.AUCTION));
             slider("Volume",64,cfg.ahSoundVolume,1,v->cfg.ahSoundVolume=v);
             button("Preview sale sound",88,AhSaleNotifier::playPreviewSound);
             if(details("Extra volume boost",120,"Sound amplification")){

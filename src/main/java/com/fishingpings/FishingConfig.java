@@ -8,17 +8,17 @@ public final class FishingConfig {
     public float volume=0.18f;
     public float biteSoundVolume=2f;
     public enum BiteSound {
+        PEBBLE("Pebble splash"), RIPPLE("Ripple tick"), CORK("Cork pop"),
         SHORT_SPLASH("Short splash"), VANILLA_SPLASH("Vanilla splash"), WATER_DROP("Water drop");
 
         public final String label;
         BiteSound(String label){this.label=label;}
-        public BiteSound next(){return switch(this){
-            case SHORT_SPLASH -> VANILLA_SPLASH;
-            case VANILLA_SPLASH -> WATER_DROP;
-            case WATER_DROP -> SHORT_SPLASH;
-        };}
+        public BiteSound next(){
+            var choices=values();
+            return choices[(ordinal()+1)%choices.length];
+        }
     }
-    public BiteSound biteSound=BiteSound.SHORT_SPLASH;
+    public BiteSound biteSound=BiteSound.PEBBLE;
     public boolean oniEnergyAlert=true;
     public double target=30;
     public double codPrice,salmonPrice,pufferPrice,tropicalPrice;

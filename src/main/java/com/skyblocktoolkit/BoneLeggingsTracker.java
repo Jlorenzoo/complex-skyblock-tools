@@ -6,7 +6,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -172,7 +171,7 @@ public final class BoneLeggingsTracker {
         if (speed6 && !lastSpeed6) {
             var cfg = ToolkitConfig.get();
             if (cfg.boneLeggingsSpeedAlert && (isEquippedOrHeld(mc) || cfg.boneLeggingsAlwaysVisible)) {
-                mc.getSoundManager().play(new AlertSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.8f, 0.7f, 1.0));
+                ToolkitAudio.playSpeed(mc);
             }
         }
         lastSpeed6 = speed6;

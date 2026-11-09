@@ -1,8 +1,6 @@
 package com.skyblocktoolkit;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 
 import java.util.regex.Pattern;
 
@@ -42,15 +40,6 @@ public final class AhSaleNotifier {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null || mc.getSoundManager() == null) return;
         var cfg = ToolkitConfig.get();
-        SoundEvent sound;
-        float pitch = 1.0f;
-        switch (cfg.ahSoundType) {
-            case 1 -> { sound = SoundEvents.PLAYER_LEVELUP; pitch = 1.0f; }
-            case 2 -> { sound = SoundEvents.EXPERIENCE_ORB_PICKUP; pitch = 1.2f; }
-            case 3 -> { sound = SoundEvents.AMETHYST_BLOCK_CHIME; pitch = 1.4f; }
-            case 4 -> { sound = SoundEvents.BELL_BLOCK; pitch = 1.0f; }
-            default -> { sound = SoundEvents.NOTE_BLOCK_PLING.value(); pitch = 1.6f; }
-        }
-        mc.getSoundManager().play(new AlertSound(sound, pitch, (float) cfg.ahSoundVolume, cfg.ahSoundGain));
+        ToolkitAudio.playSelected(ToolkitAudio.Cue.AUCTION, mc, (float) cfg.ahSoundVolume, cfg.ahSoundGain);
     }
 }

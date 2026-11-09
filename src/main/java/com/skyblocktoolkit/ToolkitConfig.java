@@ -2,6 +2,9 @@ package com.skyblocktoolkit;
 import com.google.gson.*;
 import net.fabricmc.loader.api.FabricLoader;
 import java.nio.file.*;
+import java.util.EnumMap;
+import com.skyblocktoolkit.ToolkitAudio.Cue;
+import com.skyblocktoolkit.ToolkitAudio.Sample;
 public final class ToolkitConfig {
     private static final ToolkitConfig INSTANCE=new ToolkitConfig();
     public boolean boosterHud=true,chatEnabled=true,wordSelect=true,gcCodeClick=true;
@@ -23,7 +26,7 @@ public final class ToolkitConfig {
     public boolean clearHarvest=true;
     public int fishHudX=12,fishHudY=58;
     public boolean ahSoundEnabled=true;
-    public int ahSoundType=0; // 0=Pling, 1=Level Up, 2=Orb, 3=Amethyst, 4=Bell
+    private final EnumMap<Cue,Sample> alertSounds=new EnumMap<>(Cue.class);
     public double ahSoundVolume=1.0;
     public double readySoundGain=1.9,areaSoundGain=1.9,snapSoundGain=1.9,ahSoundGain=1.9;
     public double blackoutOpacity=1.0;
@@ -93,7 +96,7 @@ public final class ToolkitConfig {
             if(j.has("wordSelect"))wordSelect=j.get("wordSelect").getAsBoolean();
             if(j.has("gcCodeClick"))gcCodeClick=j.get("gcCodeClick").getAsBoolean();
             if(j.has("ahSoundEnabled"))ahSoundEnabled=j.get("ahSoundEnabled").getAsBoolean();
-            if(j.has("ahSoundType"))ahSoundType=Math.clamp(j.get("ahSoundType").getAsInt(),0,4);
+            readAlertSounds(j);
             if(j.has("ahSoundVolume")){double v=j.get("ahSoundVolume").getAsDouble();if(Double.isFinite(v))ahSoundVolume=Math.clamp(v,0.0,1.0);}
             readySoundGain=readGain(j,"readySoundGain");areaSoundGain=readGain(j,"areaSoundGain");
             snapSoundGain=readGain(j,"snapSoundGain");ahSoundGain=readGain(j,"ahSoundGain");
@@ -142,7 +145,28 @@ public final class ToolkitConfig {
         double value=json.get(key).getAsDouble();return Double.isFinite(value)?Math.clamp(value,0,3):1.9;
     }
     public String highlightName(){return new String[]{"Blue","Sage","White"}[highlight];}
-    public String ahSoundName(){return new String[]{"Pling","Level Up","Orb Pickup","Amethyst Chime","Bell"}[ahSoundType];}
+    private void readAlertSounds(JsonObject settings){
+        if(settings.has("ahSoundType")&&settings.get("ahSoundType").isJsonPrimitive()){
+            try{
+                int old=settings.get("ahSoundType").getAsInt();
+                if(old>=1&&old<=4)alertSounds.put(Cue.AUCTION,Cue.AUCTION.choices.get(3+old));
+            }catch(NumberFormatException ignored){}
+        }
+        if(!settings.has("alertSounds")||!settings.get("alertSounds").isJsonObject())return;
+        var saved=settings.getAsJsonObject("alertSounds");
+        for(Cue cue:Cue.values()){
+            if(!saved.has(cue.name())||!saved.get(cue.name()).isJsonPrimitive())continue;
+            try{
+                Sample sample=Sample.valueOf(saved.get(cue.name()).getAsString());
+                if(cue.choices.contains(sample))alertSounds.put(cue,sample);
+            }catch(IllegalArgumentException ignored){}
+        }
+    }
+    public Sample audioChoice(Cue cue){return alertSounds.getOrDefault(cue,cue.choices.getFirst());}
+    public void cycleAudio(Cue cue){
+        int index=cue.choices.indexOf(audioChoice(cue));
+        alertSounds.put(cue,cue.choices.get((index+1)%cue.choices.size()));
+    }
     public void save(){
         if(path==null)return;
         Path temp=null;try{
@@ -170,7 +194,10 @@ public final class ToolkitConfig {
             j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
             j.addProperty("clearHarvest",clearHarvest);
             j.addProperty("fishHudX",fishHudX);j.addProperty("fishHudY",fishHudY);
-            j.addProperty("ahSoundEnabled",ahSoundEnabled);j.addProperty("ahSoundType",ahSoundType);j.addProperty("ahSoundVolume",ahSoundVolume);
+            j.addProperty("ahSoundEnabled",ahSoundEnabled);j.addProperty("ahSoundVolume",ahSoundVolume);
+            var sounds=new JsonObject();
+            alertSounds.forEach((cue,sample)->sounds.addProperty(cue.name(),sample.name()));
+            j.add("alertSounds",sounds);
             j.addProperty("readySoundGain",readySoundGain);j.addProperty("areaSoundGain",areaSoundGain);
             j.addProperty("snapSoundGain",snapSoundGain);j.addProperty("ahSoundGain",ahSoundGain);
             j.addProperty("blackoutOpacity",blackoutOpacity);

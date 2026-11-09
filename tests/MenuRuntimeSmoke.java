@@ -975,7 +975,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             var original=fishing.biteSound;
                             float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
                             fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;
-                            for(int i=0;i<3;i++){
+                            for(int i=0;i<com.fishingpings.FishingConfig.BiteSound.values().length;i++){
                                 var next=fishing.biteSound.next();
                                 pressTopic(mc,"Bite sound");
                                 pressTopic(mc,"Preview bite sound");
@@ -983,15 +983,21 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                                 check(fishing.biteSound==next&&reloaded.biteSound==next,"Bite sound choice survives reload");
                                 check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
                             }
-                            check(fishing.biteSound==original,"Bite sound cycles through three choices");
+                            check(fishing.biteSound==original,"Bite sound cycles through every choice");
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();
-                            for(String name:new String[]{"short_splash","water_drop","oni_approach_chime","oni_full_chime"}){
+                            var soundConfig=ToolkitAudio.class.getResourceAsStream("/assets/skyblocktoolkit/sounds.json");
+                            check(soundConfig!=null,"Toolkit sound manifest is packaged");
+                            java.util.Set<String> soundNames;
+                            try(var reader=new java.io.InputStreamReader(soundConfig,java.nio.charset.StandardCharsets.UTF_8)){
+                                soundNames=com.google.gson.JsonParser.parseReader(reader).getAsJsonObject().keySet();
+                            }
+                            for(String name:soundNames){
                                 var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit",name);
                                 var sound=mc.getSoundManager().getSoundEvent(id);
-                                check(sound!=null&&sound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Fishing cue preloads: "+name);
+                                check(sound!=null&&sound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Toolkit cue preloads: "+name);
                                 var event=net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
                                 var result=mc.getSoundManager().play(new AlertSound(event,1,0.45f,2));
-                                check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Fishing cue starts through the sound engine: "+name);
+                                check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Toolkit cue starts through the sound engine: "+name);
                             }
                         }
                         pressTopic(mc,"Oni Rod settings");
@@ -999,7 +1005,39 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==291){
+                if(stage>=291&&stage<299){
+                    int sample=(stage-291)/2;
+                    if(stage%2==1){
+                        ToolkitConfig.get().lightMode=sample%2==1;
+                        mc.getWindow().setWindowed(sample>=2?1000:1280,800);
+                        mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        mc.setScreenAndShow(new ToolkitScreen(null,6));pressTopic(mc,"Sound Library");
+                        pressTopic(mc,"Alert event");
+                    }else{
+                        capture(mc,"sound-library-"+sample);assertControls(mc);
+                        if(sample==0){
+                            var cfg=ToolkitConfig.get();
+                            var ready=ToolkitAudio.Cue.READY;
+                            var snap=ToolkitAudio.Cue.SNAP;
+                            var originalReady=cfg.audioChoice(ready);
+                            var originalSnap=cfg.audioChoice(snap);
+                            pressTopic(mc,"Alert sound");
+                            check(cfg.audioChoice(ready)!=originalReady&&cfg.audioChoice(snap)==originalSnap,"Sound Library changes only the selected event");
+                            var constructor=ToolkitConfig.class.getDeclaredConstructor();
+                            constructor.setAccessible(true);
+                            check(constructor.newInstance().audioChoice(ready)==cfg.audioChoice(ready),"Alert sound choice survives reload");
+                            for(var cue:ToolkitAudio.Cue.values()){
+                                pressTopic(mc,"Preview alert sound");
+                                pressTopic(mc,"Alert event");
+                            }
+                            while(cfg.audioChoice(ready)!=originalReady)cfg.cycleAudio(ready);
+                            cfg.save();
+                        }
+                    }
+                    stage++;return;
+                }
+                if(stage==299){
+                    Files.writeString(output.resolve("AUDIO-PASS.txt"),"PASS: all bundled sound events preloaded and started through the sound engine. Fishing choices, all alert preview routes, independent selection, persistence and four Sound Library layouts.\n");
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");

@@ -9,6 +9,8 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import com.skyblocktoolkit.AlertSound;
 import com.skyblocktoolkit.ItemStatsTracker;
 import com.skyblocktoolkit.ToolkitConfig;
+import com.skyblocktoolkit.ToolkitAudio;
+import com.skyblocktoolkit.ToolkitAudio.Cue;
 import com.moneybooster.BoosterStatsManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -22,6 +24,9 @@ import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
+    private static final SoundEvent PEBBLE_SPLASH=ToolkitAudio.event("pebble_splash");
+    private static final SoundEvent RIPPLE_TICK=ToolkitAudio.event("ripple_tick");
+    private static final SoundEvent CORK_POP=ToolkitAudio.event("cork_pop");
     private static final SoundEvent SHORT_SPLASH=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","short_splash"));
     private static final SoundEvent WATER_DROP=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","water_drop"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
@@ -54,7 +59,7 @@ public final class FishingPingsMod implements ClientModInitializer {
     public void previewDepth(){readySound(Minecraft.getInstance());}
     public void previewSnap(){snapSound(Minecraft.getInstance());}
     public void previewOniCue(FishingSignals.OniCue cue){playOniCue(Minecraft.getInstance(),cue);}
-    public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis());warningPreview=true;}
+    public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis(),true);}
     public void warningChanged(){if(!config.warningEnabled&&!warningPreview)secondWarningAt=-1;}
     @Override public void onInitializeClient(){
         config=new FishingConfig();
@@ -73,7 +78,7 @@ public final class FishingPingsMod implements ClientModInitializer {
             }
             // Actionbar and system messages are supported; signed player-chat is not parsed.
             if(config.snapEnabled&&holdingVoidRod(mc)&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
-            if(config.warningEnabled&&signals.warning(text,now))warningSound(mc,now);
+            if(config.warningEnabled&&signals.warning(text,now))warningSound(mc,now,false);
             if(config.depthEnabled||config.snapEnabled)checkDepth(mc,text,now);
         });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
@@ -186,11 +191,16 @@ public final class FishingPingsMod implements ClientModInitializer {
         return sound;
     }
     private AlertSound biteSound(SoundSource source){
-        return switch(config.biteSound){
-            case SHORT_SPLASH -> new AlertSound(SHORT_SPLASH,source,1,0.30f,config.biteSoundVolume);
-            case VANILLA_SPLASH -> new AlertSound(SoundEvents.FISHING_BOBBER_SPLASH,source,1,0.25f,config.biteSoundVolume);
-            case WATER_DROP -> new AlertSound(WATER_DROP,source,1,0.30f,config.biteSoundVolume);
+        SoundEvent event=switch(config.biteSound){
+            case PEBBLE -> PEBBLE_SPLASH;
+            case RIPPLE -> RIPPLE_TICK;
+            case CORK -> CORK_POP;
+            case SHORT_SPLASH -> SHORT_SPLASH;
+            case VANILLA_SPLASH -> SoundEvents.FISHING_BOBBER_SPLASH;
+            case WATER_DROP -> WATER_DROP;
         };
+        float volume=config.biteSound==FishingConfig.BiteSound.VANILLA_SPLASH?0.25f:0.30f;
+        return new AlertSound(event,source,1,volume,config.biteSoundVolume);
     }
     private static boolean isOwnBite(SoundInstance sound){
         if(sound.isRelative()||!sound.getIdentifier().equals(SoundEvents.FISHING_BOBBER_SPLASH.location()))return false;
@@ -212,14 +222,25 @@ public final class FishingPingsMod implements ClientModInitializer {
     }
     private void playOniCue(Minecraft mc,FishingSignals.OniCue cue){
         switch(cue){
-            case TWO_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1,0.55f,1.4));
-            case ONE_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1.19f,0.65f,1.6));
-            case FULL -> mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
+            case TWO_AWAY -> ToolkitAudio.play(Cue.ONI_TWO,mc,ONI_APPROACH_CHIME,1,0.55f,1.4);
+            case ONE_AWAY -> ToolkitAudio.play(Cue.ONI_ONE,mc,ONI_APPROACH_CHIME,1.19f,0.65f,1.6);
+            case FULL -> ToolkitAudio.play(Cue.ONI_FULL,mc,ONI_FULL_CHIME,1,0.8f,1.9);
             case NONE -> {}
         }
     }
-    private void snapSound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain));}
-    private void readySound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain));}
+    private void snapSound(Minecraft mc){ToolkitAudio.play(Cue.SNAP,mc,SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain);}
+    private void readySound(Minecraft mc){ToolkitAudio.play(Cue.READY,mc,SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain);}
     private void areaNote(Minecraft mc,float pitch){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_BASS.value(),pitch,Math.min(1f,config.volume*3f),Math.max(1f,config.volume)*ToolkitConfig.get().areaSoundGain));}
-    private void warningSound(Minecraft mc,long now){warningPreview=false;areaNote(mc,1.3f);secondWarningAt=now+200;}
+    private void warningSound(Minecraft mc,long now,boolean preview){
+        float volume=Math.min(1f,config.volume*3f);
+        double gain=Math.max(1f,config.volume)*ToolkitConfig.get().areaSoundGain;
+        if(ToolkitAudio.playSelected(Cue.DEPLETED,mc,volume,gain)){
+            secondWarningAt=-1;
+            warningPreview=false;
+            return;
+        }
+        warningPreview=preview;
+        areaNote(mc,1.3f);
+        secondWarningAt=now+200;
+    }
 }
