@@ -803,7 +803,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     });stage++;return;
                 }
                 if(stage>=161&&stage<230){
-                    String[][] destinations={{"1","Booster timers"},{"1","Coconut alerts"},{"1","Earnings & statistics"},{"2","Farming"},{"2","Fishing"},{"2","Fish sell prices"},{"2","Mining & XP"},{"4","Active HUD elements"},{"4","Layout & positioning"},{"4","Treasure chests"},{"6","Keyboard shortcuts"},{"6","Chat selection & copy"},{"6","Auction notifications"},{"6","Display & visuals"},{"6","Blackout (AFK)"},{"3","Void Rod"},{"3","Bone Leggings"}};
+                    String[][] destinations={{"1","Booster timers"},{"1","Coconut alerts"},{"1","Earnings & statistics"},{"2","Farming"},{"2","Fishing"},{"2","Item prices"},{"2","Mining & XP"},{"4","Active HUD elements"},{"4","Layout & positioning"},{"4","Treasure chests"},{"6","Keyboard shortcuts"},{"6","Chat selection & copy"},{"6","Auction notifications"},{"6","Display & visuals"},{"6","Blackout (AFK)"},{"3","Void Rod"},{"3","Bone Leggings"}};
                     int index=stage-161;
                     if(index>0){capture(mc,"topic-"+(index-1));assertControls(mc);scrollBottom(mc);assertControls(mc);}
                     if(index==destinations.length*4){stage=230;return;}
@@ -861,7 +861,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }else{
                         capture(mc,"focused-seasonal-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
                         check(mc.gui.screen().children().stream().anyMatch(c->c instanceof Button b&&b.visible&&b.getMessage().getString().startsWith("< All Seasonals")),"Seasonal Back remains visible");
-                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");pressTopic(mc,"Fish sell prices");
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");pressTopic(mc,"Item prices");
                         check(mc.gui.screen().children().stream().anyMatch(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().equals("Cod · 60%")),"Fishing links directly to its price topic");
                     }
                     stage++;return;
@@ -946,20 +946,26 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         pressTopic(mc,"Preview full energy");
                         check(!fishingConfig.oniEnergyAlert,"Oni previews leave automatic cues disabled");
                         fishingConfig.oniEnergyAlert=chimeEnabled;
+                        check(mc.gui.screen().children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().endsWith("price")),"Seasonal settings have no price fields");
+                        pressTopic(mc,"Item prices");
+                        capture(mc,"item-prices-"+sample);assertControls(mc);
+                        scrollBottom(mc);capture(mc,"item-prices-scrolled-"+sample);assertControls(mc);
                         if(sample==0){
-                            var config=ToolkitMod.FISHING.settings();
-                            double keyPrice=config.oniVoteKeyPrice,shardPrice=config.oniShardPrice;
+                            var config=ToolkitConfig.get();
+                            double keyPrice=config.voteKeyPrice,shardPrice=config.goldShardPrice;
                             for(var child:mc.gui.screen().children()){
                                 if(child instanceof net.minecraft.client.gui.components.EditBox field){
-                                    if(field.getMessage().getString().equals("Oni Vote Key price"))field.setValue("500k");
-                                    if(field.getMessage().getString().equals("Oni Gold Shard price"))field.setValue("12.5k");
+                                    if(field.getMessage().getString().equals("Vote Key price"))field.setValue("500k");
+                                    if(field.getMessage().getString().equals("Gold shard value ($ each)"))field.setValue("12.5k");
                                 }
                             }
-                            check(config.oniVoteKeyPrice==500_000&&config.oniShardPrice==12_500,"Oni fields accept abbreviated prices");
+                            check(config.voteKeyPrice==500_000&&config.goldShardPrice==12_500,"Shared fields accept abbreviated prices");
                             config.save();
-                            var reloaded=new com.fishingpings.FishingConfig();
-                            check(reloaded.oniVoteKeyPrice==500_000&&reloaded.oniShardPrice==12_500,"Oni prices survive reload");
-                            config.oniVoteKeyPrice=keyPrice;config.oniShardPrice=shardPrice;config.save();
+                            var constructor=ToolkitConfig.class.getDeclaredConstructor();
+                            constructor.setAccessible(true);
+                            var reloaded=constructor.newInstance();
+                            check(reloaded.voteKeyPrice==500_000&&reloaded.goldShardPrice==12_500,"Shared prices survive reload");
+                            config.voteKeyPrice=keyPrice;config.goldShardPrice=shardPrice;config.save();
                         }
                         mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
                     }else{

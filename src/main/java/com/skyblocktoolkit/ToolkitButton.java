@@ -32,7 +32,7 @@ public final class ToolkitButton extends Button {
         ItemStack icon=new ItemStack(switch(title){
             case "Booster timers" -> Items.CLOCK;
             case "Coconut alerts" -> Items.COCOA_BEANS;
-            case "Earnings & statistics", "Fish sell prices" -> Items.GOLD_INGOT;
+            case "Earnings & statistics", "Item prices" -> Items.GOLD_INGOT;
             case "Farming" -> Items.WHEAT;
             case "Fishing" -> Items.FISHING_ROD;
             case "Mining & XP" -> Items.EXPERIENCE_BOTTLE;

@@ -17,7 +17,7 @@ public final class ToolkitConfig {
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean cropHarvestHud=true;
     public boolean includeGoldShards=false;
-    public double goldShardPrice=0;
+    public double goldShardPrice,voteKeyPrice;
     public int cropHarvestHudX=12,cropHarvestHudY=90;
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
     public boolean clearHarvest=true;
@@ -53,6 +53,7 @@ public final class ToolkitConfig {
             }
         } catch (Throwable ignored) {}
         this.path = p;
+        boolean sharedPricesSaved=false;
         if(path!=null&&Files.exists(path))try{
             var j=JsonParser.parseString(Files.readString(path)).getAsJsonObject();
             if(j.has("boosterHud"))boosterHud=j.get("boosterHud").getAsBoolean();
@@ -77,7 +78,9 @@ public final class ToolkitConfig {
             if(j.has("xpHudY"))xpHudY=Math.clamp(j.get("xpHudY").getAsInt(),0,10000);
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("includeGoldShards"))includeGoldShards=j.get("includeGoldShards").getAsBoolean();
-            if(j.has("goldShardPrice")){double v=j.get("goldShardPrice").getAsDouble();if(Double.isFinite(v)&&v>=0&&v<=1e12)goldShardPrice=v;}
+            goldShardPrice=readPrice(j,"goldShardPrice");
+            sharedPricesSaved=j.has("voteKeyPrice");
+            voteKeyPrice=readPrice(j,"voteKeyPrice");
             if(j.has("cropHarvestHud"))cropHarvestHud=j.get("cropHarvestHud").getAsBoolean();
             if(j.has("cropHarvestHudX"))cropHarvestHudX=Math.clamp(j.get("cropHarvestHudX").getAsInt(),0,10000);
             if(j.has("cropHarvestHudY"))cropHarvestHudY=Math.clamp(j.get("cropHarvestHudY").getAsInt(),0,10000);
@@ -119,6 +122,19 @@ public final class ToolkitConfig {
             if(j.has("showStatusEffects"))showStatusEffects=j.get("showStatusEffects").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be read: "+e.getMessage());}
+        if(path!=null&&!sharedPricesSaved){
+            Path legacy=path.resolveSibling("fishingpings.json");
+            if(Files.exists(legacy))try{
+                var prices=JsonParser.parseString(Files.readString(legacy)).getAsJsonObject();
+                if(goldShardPrice==0)goldShardPrice=readPrice(prices,"oniShardPrice");
+                voteKeyPrice=readPrice(prices,"oniVoteKeyPrice");
+            }catch(Exception e){System.err.println("[SkyblockToolkit] Legacy item prices could not be read: "+e.getMessage());}
+        }
+    }
+    private static double readPrice(JsonObject json,String key){
+        if(!json.has(key))return 0;
+        double value=json.get(key).getAsDouble();
+        return Double.isFinite(value)&&value>=0&&value<=1e12?value:0;
     }
     public int highlightColor(){int[] colors={0x0078D7,0x89BBA0,0xC0C8D0};return ((int)(highlightOpacity*255)<<24)|colors[highlight];}
     private static double readGain(JsonObject json,String key){
@@ -148,6 +164,7 @@ public final class ToolkitConfig {
             j.addProperty("cropEarningsHud",cropEarningsHud);
             j.addProperty("cropHarvestHud",cropHarvestHud);
             j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("goldShardPrice",goldShardPrice);
+            j.addProperty("voteKeyPrice",voteKeyPrice);
             j.addProperty("cropHarvestHudX",cropHarvestHudX);
             j.addProperty("cropHarvestHudY",cropHarvestHudY);
             j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
