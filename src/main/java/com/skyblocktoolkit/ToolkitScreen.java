@@ -32,7 +32,7 @@ public final class ToolkitScreen extends Screen {
     private record Topic(String title,String summary){}
     private List<Topic> topics(){return switch(page){
         case 1->List.of(new Topic("Booster timers","Money & XP timers, activation and ending alerts"),new Topic("Coconut alerts","Sound, banners and minimum boost"),new Topic("Earnings & statistics","History, rate tests and crop averages"));
-        case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Depleted-area warning and audio"),new Topic("Fish sell prices","Fish values and estimated earnings"),new Topic("Mining & XP","XP per hour and booster accounting"));
+        case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and Oni Rod chime"),new Topic("Fish sell prices","Fish values and estimated earnings"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
         case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
         case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
@@ -358,6 +358,13 @@ public final class ToolkitScreen extends Screen {
         var config=ToolkitConfig.get();return totals.income(base,config.includeGoldShards,config.goldShardPrice);
     }
     private String statsRate(ItemStatsHistory.Totals totals){return statsMoney(totals.hourly(statsIncome(totals,false)))+"/h";}
+    private static String statsShardRate(ItemStatsHistory.Totals totals){
+        double hourly=totals.hourly(totals.shards());
+        double perMinute=hourly/60;
+        String minute=perMinute>0&&perMinute<0.01?"<0.01":perMinute<10
+            ?String.format(java.util.Locale.ROOT,"%.2f",perMinute):CropHarvestTracker.format(perMinute);
+        return "Shards: "+totals.shards()+" · "+CropHarvestTracker.format(hourly)+"/h · "+minute+"/min";
+    }
     private void stats(){
         var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
         if(profile==null){
@@ -393,7 +400,7 @@ public final class ToolkitScreen extends Screen {
             label(()->session.status+" \u00b7 "+statsTime(session.elapsed()),100,ToolkitTheme.palette().accent(),1);
             label("Area: "+session.location.label(),116);
             label(()->"Cash: "+statsMoney(session.cash)+" \u00b7 Base: "+statsMoney(session.baseCash),140,ToolkitTheme.palette().text(),1);
-            label(()->"Gold shards: "+session.shards+" \u00b7 "+CropHarvestTracker.format(session.totals().hourly(session.shards))+"/h",156,ToolkitTheme.palette().text(),1);
+            label(()->statsShardRate(session.totals()),156,ToolkitTheme.palette().text(),1);
             label(()->"Shard value: "+statsMoney(GoldShardTracker.value(session.shards))+(ToolkitConfig.get().includeGoldShards?" included":" (excluded)"),172,ToolkitTheme.palette().text(),1);
             label(()->"Fish: "+session.fish+" \u00b7 Est. value: "+statsMoney(session.fishValue),188,ToolkitTheme.palette().text(),1);
             label("Income = cash + enabled shards at your current price.",212);
@@ -405,7 +412,7 @@ public final class ToolkitScreen extends Screen {
         label(profile.title(),28);
         label(()->"Avg money: "+statsRate(statsTotals(profile.id)),56,ToolkitTheme.palette().accent(),1);
         label(()->{var t=statsTotals(profile.id);return "Base + enabled shards: "+statsMoney(t.hourly(statsIncome(t,true)))+"/h";},72,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Shards: "+t.shards()+" · Avg: "+CropHarvestTracker.format(t.hourly(t.shards()))+"/h";},88,ToolkitTheme.palette().text(),1);
+        label(()->statsShardRate(statsTotals(profile.id)),88,ToolkitTheme.palette().text(),1);
         label(()->{var t=statsTotals(profile.id);return "Income: "+statsMoney(statsIncome(t,false))+" · Avg/session: "+statsMoney(t.sessions()>0?statsIncome(t,false)/t.sessions():0);},104,ToolkitTheme.palette().text(),1);
         label(()->{var t=statsTotals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},120,ToolkitTheme.palette().text(),1);
         label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},136,ToolkitTheme.palette().text(),1);
@@ -444,8 +451,10 @@ public final class ToolkitScreen extends Screen {
             toggle("Depleted area",16,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
             slider("Fishing volume",40,fishCfg.volume,3,v->fishCfg.volume=(float)v);
             button("Preview depleted warning",64,fishing::previewWarning);
-            link("Fish sell prices",92,2,"Fish sell prices");
-            link("Void Rod settings (Seasonal)",116,3,"Void Rod");
+            slider("Bite sound volume",92,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
+            toggle("Oni Rod full-energy chime","Chimes when the Cursed Energy bar fills.",116,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
+            link("Fish sell prices",144,2,"Fish sell prices");
+            link("Void Rod settings (Seasonal)",168,3,"Void Rod");
         }
         if(topic("Fish sell prices",0)){
             label("Sell price per fish ($ each; accepts 1.5k / 2m)",16);

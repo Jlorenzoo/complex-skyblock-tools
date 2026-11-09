@@ -75,6 +75,10 @@ public final class ItemStatsTracker {
     }
     public static void money(double cash,int percentage,long from,long to){sample(Minecraft.getInstance(),true,false);HISTORY.money(cash,percentage,from,to);}
     public static void shards(long count,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof HoeItem);HISTORY.shards(count,at,ItemStatsEligibility::farming);}
+    public static void oniShards(long count,long at){
+        sample(Minecraft.getInstance(),true,true);
+        HISTORY.shards(count,at,p->ItemStatsEligibility.fishing(p)&&com.fishingpings.FishingSignals.oniRod(p.name));
+    }
     public static void fish(long count,double value,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof FishingRodItem);HISTORY.fish(count,value,at,ItemStatsEligibility::fishing);}
     public static void shutdown(){AUTOMATION.end("Game closed");HISTORY.save(System.currentTimeMillis());}
 }

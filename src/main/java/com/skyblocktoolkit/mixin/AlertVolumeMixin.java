@@ -1,6 +1,7 @@
 package com.skyblocktoolkit.mixin;
 
 import com.skyblocktoolkit.AlertSound;
+import com.skyblocktoolkit.ToolkitMod;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.sounds.SoundSource;
@@ -21,13 +22,18 @@ public abstract class AlertVolumeMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
     private float toolkit$initialAlertVolume(SoundEngine engine, float volume, SoundSource source, SoundInstance sound) {
         float baseVolume = calculateVolume(volume, source);
-        return sound instanceof AlertSound alert ? baseVolume * alert.gain : baseVolume;
+        return baseVolume * toolkit$gain(sound);
     }
 
     // Apply after vanilla's 100% ceiling, retaining Minecraft's UI/master controls.
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F",
         at = @At("RETURN"), cancellable = true)
     private void toolkit$alertGain(SoundInstance sound, CallbackInfoReturnable<Float> result) {
-        if (sound instanceof AlertSound alert) result.setReturnValue(result.getReturnValueF() * alert.gain);
+        float gain = toolkit$gain(sound);
+        if (gain != 1) result.setReturnValue(result.getReturnValueF() * gain);
+    }
+
+    private static float toolkit$gain(SoundInstance sound) {
+        return sound instanceof AlertSound alert ? alert.gain : ToolkitMod.FISHING.biteGain(sound);
     }
 }

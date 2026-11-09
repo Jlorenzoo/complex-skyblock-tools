@@ -884,9 +884,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     if(step==0){
                         if(stage==255){
                             var history=ItemStatsTracker.history();long now=System.currentTimeMillis();
-                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Void Rod · Tier III","HAND","{\"id\":\"minecraft:fishing_rod\"}");
+                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Oni Fishing Rod","HAND","{\"id\":\"minecraft:fishing_rod\"}");
                             statsFixtureId=p.id;
-                            history.rename(p,"My Void Rod · WLB IV");
+                            history.rename(p,"My Oni Rod");
                             history.start(p,now-300000,ItemStatsLocation.REALM);history.tick(now-1000);
                             history.money(1500000,50,now-299000,now-1000);history.shards(64,now-10000);history.fish(120,240000,now-10000);history.stop(now,"Stopped");
                             history.start(p,now-600000,ItemStatsLocation.OVERWORLD);history.tick(now-400000);history.money(300000,0,now-599000,now-400000);history.stop(now-400000,"Stopped");
@@ -927,7 +927,27 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==275){
+                if(stage>=275&&stage<283){
+                    int sample=(stage-275)/2;
+                    if((stage-275)%2==0){
+                        ToolkitConfig.get().lightMode=sample%2==1;
+                        mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
+                    }else{
+                        capture(mc,"fishing-audio-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                        capture(mc,"fishing-audio-bottom-"+sample);
+                        if(sample==0){
+                            var fishing=ToolkitMod.FISHING.settings();
+                            float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
+                            fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;fishing.save();
+                            var reloaded=new com.fishingpings.FishingConfig();
+                            check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Fishing audio settings survive reload");
+                            fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();
+                        }
+                    }
+                    stage++;return;
+                }
+                if(stage==283){
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
                     Files.writeString(output.resolve("PASS.txt"),"PASS: fixed breadcrumbs, disclosure focus/state, named search groups, single-item seasonal pages, related topic links; isolated topics, category memory, Escape/back navigation, every topic in both themes and layouts; global setting search, one sell-all selector, every control destination, Ctrl+F, Escape, no-match state and non-overlapping full/compact widgets; sell all key registration, assignment, persistence, cancel/unbind and safe menu click draining; coconut toggle, threshold validation, persistence and sound preview; light/dark full/compact menus and booster notifications; XP/money rate selection, independent XP HUD, timer ledger isolation, crop visibility, HUD editing and blackout\n");

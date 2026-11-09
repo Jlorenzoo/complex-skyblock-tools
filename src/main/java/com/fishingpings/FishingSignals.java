@@ -7,8 +7,32 @@ public final class FishingSignals {
     private static final String LOW="You sense that there might not be many fish left in this area. Try fishing at least 3 blocks away.";
     private static final String EMPTY="This area is suffering from overfishing, cast your rod in a different spot for more fish. At least 3 blocks away.";
     private static final Pattern SNAP=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*What Lurks Below\\s+[IVXLCDM]+\\s*[┃|]\\s*[✘✗×]?\\s*The fishing line snapped\\.?$");
+    private static final Pattern ONI_ROD=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*Oni(?:['’]s)? (?:Fishing )?Rod[^\\p{L}\\p{N}]*$");
+    private static final Pattern CURSED_ENERGY=Pattern.compile("(?i)\\bCursed Energy\\s*:\\s*([0-9,]+)\\s*/\\s*([0-9,]+)(?![0-9,])");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
+    private boolean oniFull;
+    public enum Energy { MISSING, CHARGING, FULL }
+    public static boolean oniRod(String name){
+        return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
+    }
+    public static Energy cursedEnergy(String text){
+        if(text==null)return Energy.MISSING;
+        var match=CURSED_ENERGY.matcher(text.replaceAll("§.",""));
+        if(!match.find())return Energy.MISSING;
+        try{
+            long current=Long.parseLong(match.group(1).replace(",",""));
+            long maximum=Long.parseLong(match.group(2).replace(",",""));
+            if(maximum<=0||current>maximum)return Energy.MISSING;
+            return current==maximum?Energy.FULL:Energy.CHARGING;
+        }catch(NumberFormatException ignored){return Energy.MISSING;}
+    }
+    public boolean oniReady(Energy energy){
+        if(energy==Energy.MISSING)return false;
+        boolean ready=energy==Energy.FULL&&!oniFull;
+        oniFull=energy==Energy.FULL;
+        return ready;
+    }
     public static double depth(String text){
         if(text==null)return Double.NaN;
         Matcher m=DEPTH.matcher(text.replaceAll("§.",""));
@@ -53,5 +77,5 @@ public final class FishingSignals {
         if(!depleted(text)||(lastWarning!=Long.MIN_VALUE&&now-lastWarning<15000))return false;
         lastWarning=now;return true;
     }
-    public void reset(){cast=null;notified=false;sawBelowTarget=false;lastWarning=lastSnap=Long.MIN_VALUE;}
+    public void reset(){cast=null;notified=false;sawBelowTarget=false;oniFull=false;lastWarning=lastSnap=Long.MIN_VALUE;}
 }

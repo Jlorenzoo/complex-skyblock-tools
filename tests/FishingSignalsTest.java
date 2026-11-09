@@ -17,6 +17,13 @@ public final class FishingSignalsTest {
         for(String name:new String[]{null,"Fishing Rod","Void Rod Deluxe","Not Void Rod","Void Rod [1]","Not Void Fishing Rod","Void Fishing Rod Deluxe"})
             check(!FishingSignals.voidRod(name),"Other item names rejected");
         var s=new FishingSignals();UUID first=UUID.randomUUID(),second=UUID.randomUUID();
+        check(FishingSignals.oniRod("§c✦ Oni Fishing Rod ✦")&&!FishingSignals.oniRod("Oni Rod Deluxe"),"Oni rod name guard");
+        String energyBar="§c☠ Cursed Spirits VIII - §fCursed Energy: ";
+        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"5/170")),"Screenshot meter is charging");
+        check(s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170")),"Full meter chimes");
+        check(!s.oniReady(FishingSignals.cursedEnergy(null))&&!s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170")),"Missing or repeated bar does not rearm");
+        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"0/170"))&&s.oniReady(FishingSignals.cursedEnergy(energyBar+"200/200")),"Spent energy rearms and max can vary");
+        check(FishingSignals.cursedEnergy(energyBar+"171/170")==FishingSignals.Energy.MISSING,"Invalid fraction");
         check(!s.ready(first,30,30,0),"Stale initial bossbar");
         check(!s.ready(first,30,30,1000),"Stale value with no rising depth");
         check(!s.ready(first,1.5,30,1200),"Shallow cast");
