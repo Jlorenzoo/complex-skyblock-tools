@@ -449,13 +449,14 @@ public final class ToolkitScreen extends Screen {
         }
         if(topic("Fishing",0)){
             slider("Bite sound volume",16,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
-            toggle("Low bite ping","Swap the bite splash for a short, low tone.",40,()->fishCfg.lowBitePing,()->fishCfg.lowBitePing=!fishCfg.lowBitePing);
-            toggle("Depleted area",72,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
-            slider("Fishing volume",96,fishCfg.volume,3,v->fishCfg.volume=(float)v);
-            button("Preview depleted warning",120,fishing::previewWarning);
-            link("Oni Rod settings",148,3,"Oni Rod");
-            link("Fish sell prices",172,2,"Fish sell prices");
-            link("Void Rod settings (Seasonal)",196,3,"Void Rod");
+            setting("Bite sound",40,()->fishCfg.biteSound.label,()->fishCfg.biteSound=fishCfg.biteSound.next());
+            button("Preview bite sound",64,fishing::previewBite);
+            toggle("Depleted area",92,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
+            slider("Fishing volume",116,fishCfg.volume,3,v->fishCfg.volume=(float)v);
+            button("Preview depleted warning",140,fishing::previewWarning);
+            link("Oni Rod settings",168,3,"Oni Rod");
+            link("Fish sell prices",192,2,"Fish sell prices");
+            link("Void Rod settings (Seasonal)",216,3,"Void Rod");
         }
         if(topic("Fish sell prices",0)){
             label("Sell price per fish ($ each; accepts 1.5k / 2m)",16);

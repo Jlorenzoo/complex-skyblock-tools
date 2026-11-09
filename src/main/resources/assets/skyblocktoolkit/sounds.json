@@ -1,4 +1,8 @@
 {
+  "short_splash": {
+    "subtitle": "subtitles.entity.fishing_bobber.splash",
+    "sounds": [{"name": "skyblocktoolkit:short_splash", "preload": true}]
+  },
   "bite_ping": {
     "subtitle": "subtitles.entity.fishing_bobber.splash",
     "sounds": [{"name": "skyblocktoolkit:bite_ping", "preload": true}]

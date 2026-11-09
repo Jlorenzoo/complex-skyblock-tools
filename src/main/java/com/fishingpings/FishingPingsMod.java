@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.phys.AABB;
@@ -20,6 +21,7 @@ import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
+    private static final SoundEvent SHORT_SPLASH=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","short_splash"));
     private static final SoundEvent BITE_PING=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
     private static final SoundEvent ONI_APPROACH_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_approach_chime"));
@@ -29,6 +31,9 @@ public final class FishingPingsMod implements ClientModInitializer {
     private long secondWarningAt=-1;
     private boolean warnedAboutBossAccess, openMenu,warningPreview;
     public FishingConfig settings(){return config;}
+    public void previewBite(){
+        Minecraft.getInstance().getSoundManager().play(biteSound(SoundSource.NEUTRAL));
+    }
     public void previewDepth(){readySound(Minecraft.getInstance());}
     public void previewSnap(){snapSound(Minecraft.getInstance());}
     public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis());warningPreview=true;}
@@ -107,10 +112,17 @@ public final class FishingPingsMod implements ClientModInitializer {
         return config!=null&&config.biteSoundVolume!=1&&isOwnBite(sound)?config.biteSoundVolume:1;
     }
     public SoundInstance replaceBiteSound(SoundInstance sound){
-        if(config!=null&&config.lowBitePing&&isOwnBite(sound)){
-            return new AlertSound(BITE_PING,sound.getSource(),1,0.45f,config.biteSoundVolume);
+        if(config!=null&&config.biteSound!=FishingConfig.BiteSound.VANILLA_SPLASH&&isOwnBite(sound)){
+            return biteSound(sound.getSource());
         }
         return sound;
+    }
+    private AlertSound biteSound(SoundSource source){
+        return switch(config.biteSound){
+            case SHORT_SPLASH -> new AlertSound(SHORT_SPLASH,source,1,0.30f,config.biteSoundVolume);
+            case VANILLA_SPLASH -> new AlertSound(SoundEvents.FISHING_BOBBER_SPLASH,source,1,0.25f,config.biteSoundVolume);
+            case LOW_PING -> new AlertSound(BITE_PING,source,1,0.45f,config.biteSoundVolume);
+        };
     }
     private static boolean isOwnBite(SoundInstance sound){
         if(sound.isRelative()||!sound.getIdentifier().equals(SoundEvents.FISHING_BOBBER_SPLASH.location()))return false;

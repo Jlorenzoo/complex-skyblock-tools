@@ -940,19 +940,23 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         capture(mc,"seasonals-oni-settings-"+sample);assertControls(mc);
                         mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
                     }else{
-                        capture(mc,"fishing-low-bite-"+sample);assertControls(mc);
+                        capture(mc,"fishing-bite-sound-"+sample);assertControls(mc);
                         if(sample==0){
                             var fishing=ToolkitMod.FISHING.settings();
-                            boolean original=fishing.lowBitePing;
+                            var original=fishing.biteSound;
                             float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
                             fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;
-                            pressTopic(mc,"Low bite ping");
-                            var reloaded=new com.fishingpings.FishingConfig();
-                            check(fishing.lowBitePing!=original&&reloaded.lowBitePing==fishing.lowBitePing,"Low bite ping toggle survives reload");
-                            check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
-                            fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;
-                            pressTopic(mc,"Low bite ping");
-                            for(String name:new String[]{"bite_ping","oni_approach_chime","oni_full_chime"}){
+                            for(int i=0;i<3;i++){
+                                var next=fishing.biteSound.next();
+                                pressTopic(mc,"Bite sound");
+                                pressTopic(mc,"Preview bite sound");
+                                var reloaded=new com.fishingpings.FishingConfig();
+                                check(fishing.biteSound==next&&reloaded.biteSound==next,"Bite sound choice survives reload");
+                                check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
+                            }
+                            check(fishing.biteSound==original,"Bite sound cycles through three choices");
+                            fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();
+                            for(String name:new String[]{"short_splash","bite_ping","oni_approach_chime","oni_full_chime"}){
                                 var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit",name);
                                 var sound=mc.getSoundManager().getSoundEvent(id);
                                 check(sound!=null&&sound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Fishing cue preloads: "+name);
