@@ -23,6 +23,27 @@ public final class FishingSignalsTest {
         check(FishingSignals.oniShardReward("◆ Gold Fish V ┃ ✔ You found 1x  Gold Shard !")==1,"Observed fishing enchant reward");
         check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other Oni loot is excluded");
         check(FishingSignals.oniShardReward("[Player] 👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==0,"Prefixed chat is excluded");
+        String voteKey="👹 Cursed Spirits VIII ┃ ✔ You found 1x ♦ VOTE KEY ♦!";
+        check(FishingSignals.oniVoteKeyReward(voteKey)==1,"Vote Key reward from the current session");
+        check(FishingSignals.oniVoteKeyReward("[Member] Player: "+voteKey)==0,"Player chat cannot add a Vote Key");
+        check(FishingSignals.oniVoteKeyReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other drops do not add keys");
+        var oni=new OniEarnings();
+        oni.start(0);
+        oni.add(1_000,OniEarnings.Reward.VOTE_KEY,1);
+        java.util.function.ToDoubleFunction<OniEarnings.Reward> price=reward->switch(reward){
+            case VOTE_KEY -> 500_000;
+            case GOLD_SHARD -> 10_000;
+            case COD -> 100;
+            default -> 0;
+        };
+        check(oni.hourly(1_000,price)==6_000_000,"Sparse early drops use at least five minutes");
+        oni.add(120_000,OniEarnings.Reward.GOLD_SHARD,10);
+        oni.add(300_000,OniEarnings.Reward.COD,20);
+        check(oni.hourly(600_000,price)==3_612_000,"Fish, keys and shards use time since the first cast");
+        check(oni.hourly(3_601_000,price)==102_000,"Keys age out of the trailing hour");
+        check(oni.hourly(3_601_000,reward->price.applyAsDouble(reward)*2)==204_000,"Current prices revalue the entire sample");
+        oni.reset();
+        check(oni.hourly(3_601_000,price)==0&&oni.sampleTime(3_601_000)==0,"New level resets the sample");
         String energyBar="§c☠ Cursed Spirits VIII - §fCursed Energy: ";
         check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"5/170"),0)==NONE,"Screenshot meter is charging");
         check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"10/170"),50)==NONE,"Learn the observed charge step");

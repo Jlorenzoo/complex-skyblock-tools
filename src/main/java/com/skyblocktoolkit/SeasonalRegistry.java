@@ -17,7 +17,7 @@ public final class SeasonalRegistry {
         new SeasonalItem(
             "oni_rod",
             "Oni Rod",
-            "Seasonal Fishing Rod · Cursed Energy chime",
+            "Seasonal Fishing Rod · Cursed Energy chime & earnings",
             () -> new ItemStack(Items.FISHING_ROD),
             (screen, top) -> screen.buildOniRodSettings(top)
         ),

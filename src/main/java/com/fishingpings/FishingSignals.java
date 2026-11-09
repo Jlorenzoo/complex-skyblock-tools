@@ -13,6 +13,8 @@ public final class FishingSignals {
     private static final Pattern BAR_FORMATTING=Pattern.compile("§.|\\p{Cf}");
     private static final Pattern ONI_SHARDS=Pattern.compile(
         "(?i)^[^\\p{L}\\p{N}\\[]*(?:Cursed Spirits|Gold Fish) [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Gold Shards?[^\\p{L}\\p{N}]*$");
+    private static final Pattern ONI_KEYS=Pattern.compile(
+        "(?i)^[^\\p{L}\\p{N}\\[]*Cursed Spirits [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Vote Keys?[^\\p{L}\\p{N}]*$");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
     private Energy previousEnergy;
@@ -27,8 +29,14 @@ public final class FishingSignals {
         return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
     }
     public static long oniShardReward(String text){
+        return rewardCount(text,ONI_SHARDS);
+    }
+    public static long oniVoteKeyReward(String text){
+        return rewardCount(text,ONI_KEYS);
+    }
+    private static long rewardCount(String text,Pattern pattern){
         if(text==null)return 0;
-        var match=ONI_SHARDS.matcher(text.replaceAll("§.","").strip());
+        var match=pattern.matcher(text.replaceAll("§.","").strip());
         if(!match.matches())return 0;
         try{return Long.parseLong(match.group(1).replace(",",""));}
         catch(NumberFormatException ignored){return 0;}

@@ -499,8 +499,16 @@ public final class ToolkitScreen extends Screen {
     }
     public int buildOniRodSettings(int top){
         var fishCfg=ToolkitMod.FISHING.settings();
+        var toolkit=ToolkitConfig.get();
         toggle("Oni Rod full-energy chime","Two rising cues lead into the full-energy chime.",top,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
-        return top+28;
+        label("Reward prices ($ each, accepts 125k or 2m)",top+34);
+        priceField("Oni Vote Key price",top+54,()->fishCfg.oniVoteKeyPrice,v->fishCfg.oniVoteKeyPrice=v);
+        priceField("Oni Gold Shard price",top+78,()->fishCfg.oniShardPrice,v->fishCfg.oniShardPrice=v);
+        toggle("Fishing earnings",top+104,()->toolkit.fishEarningsHud,()->toolkit.fishEarningsHud=!toolkit.fishEarningsHud);
+        link("Fish sell prices",top+128,2,"Fish sell prices");
+        label("Fishing HUD uses up to 1 hour of Oni rewards.",top+158);
+        label("Unpriced drops contribute $0.",top+172);
+        return top+188;
     }
     public int buildBoneLeggingsSettings(int top){
         var cfg=ToolkitConfig.get();

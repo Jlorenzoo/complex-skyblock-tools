@@ -21,9 +21,21 @@ public final class FishingConfig {
     public boolean oniEnergyAlert=true;
     public double target=30;
     public double codPrice,salmonPrice,pufferPrice,tropicalPrice;
+    public double oniShardPrice,oniVoteKeyPrice;
     public int earningsWindow=60;
     public double averageFishPrice(){return FishingEarnings.weightedPrice(codPrice,salmonPrice,pufferPrice,tropicalPrice);}
     public boolean hasPrices(){return averageFishPrice()>0;}
+    public boolean hasOniPrices(){return hasPrices()||oniShardPrice>0||oniVoteKeyPrice>0;}
+    double oniPrice(OniEarnings.Reward reward){
+        return switch(reward){
+            case COD -> codPrice;
+            case SALMON -> salmonPrice;
+            case PUFFERFISH -> pufferPrice;
+            case TROPICAL_FISH -> tropicalPrice;
+            case GOLD_SHARD -> oniShardPrice;
+            case VOTE_KEY -> oniVoteKeyPrice;
+        };
+    }
     private final Path path=FabricLoader.getInstance().getConfigDir().resolve("fishingpings.json");
     public FishingConfig(){
         if(Files.exists(path))try{
@@ -42,9 +54,9 @@ public final class FishingConfig {
                 try{biteSound=BiteSound.valueOf(json.get("biteSound").getAsString());}
                 catch(IllegalArgumentException ignored){}
             }
-            for(String key:new String[]{"codPrice","salmonPrice","pufferPrice","tropicalPrice"}){
+            for(String key:new String[]{"codPrice","salmonPrice","pufferPrice","tropicalPrice","oniShardPrice","oniVoteKeyPrice"}){
                 if(!json.has(key))continue;double v=json.get(key).getAsDouble();if(!Double.isFinite(v)||v<0||v>1e12)continue;
-                switch(key){case "codPrice"->codPrice=v;case "salmonPrice"->salmonPrice=v;case "pufferPrice"->pufferPrice=v;case "tropicalPrice"->tropicalPrice=v;}
+                switch(key){case "codPrice"->codPrice=v;case "salmonPrice"->salmonPrice=v;case "pufferPrice"->pufferPrice=v;case "tropicalPrice"->tropicalPrice=v;case "oniShardPrice"->oniShardPrice=v;case "oniVoteKeyPrice"->oniVoteKeyPrice=v;}
             }
             if(json.has("earningsWindow"))earningsWindow=json.get("earningsWindow").getAsInt()==300?300:60;
             if(json.has("target")){double v=json.get("target").getAsDouble();if(Double.isFinite(v))target=Math.clamp(v,1,1000);}
@@ -58,6 +70,8 @@ public final class FishingConfig {
             json.addProperty("biteSoundVolume",biteSoundVolume);
             json.addProperty("biteSound",biteSound.name());
             json.addProperty("oniEnergyAlert",oniEnergyAlert);
+            json.addProperty("oniShardPrice",oniShardPrice);
+            json.addProperty("oniVoteKeyPrice",oniVoteKeyPrice);
             Files.writeString(temporary,new GsonBuilder().setPrettyPrinting().create().toJson(json)+"\n");
             try{Files.move(temporary,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){Files.move(temporary,path,StandardCopyOption.REPLACE_EXISTING);}
         }catch(Exception e){System.err.println("[FishingPings] Could not save settings: "+e.getMessage());}

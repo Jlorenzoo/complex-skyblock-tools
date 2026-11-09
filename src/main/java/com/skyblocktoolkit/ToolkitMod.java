@@ -56,7 +56,7 @@ public final class ToolkitMod implements ClientModInitializer {
             var mc=net.minecraft.client.Minecraft.getInstance();if(!overlay&&mc.level!=null&&mc.player!=null){
                 if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
                 String text=message.getString();
-                if(FISHING_EARNINGS.accept(text,System.currentTimeMillis())){
+                if(!com.fishingpings.FishingPingsMod.holdingOniRod(mc)&&FISHING_EARNINGS.accept(text,System.currentTimeMillis())){
                     long count=com.fishingpings.FishingEarnings.caught(text);
                     ItemStatsTracker.fish(count,count*FISHING.settings().averageFishPrice(),System.currentTimeMillis());
                 }

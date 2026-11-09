@@ -938,6 +938,21 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         pressTopic(mc,"Oni Rod");assertControls(mc);
                     }else if(step==2){
                         capture(mc,"seasonals-oni-settings-"+sample);assertControls(mc);
+                        if(sample==0){
+                            var config=ToolkitMod.FISHING.settings();
+                            double keyPrice=config.oniVoteKeyPrice,shardPrice=config.oniShardPrice;
+                            for(var child:mc.gui.screen().children()){
+                                if(child instanceof net.minecraft.client.gui.components.EditBox field){
+                                    if(field.getMessage().getString().equals("Oni Vote Key price"))field.setValue("500k");
+                                    if(field.getMessage().getString().equals("Oni Gold Shard price"))field.setValue("12.5k");
+                                }
+                            }
+                            check(config.oniVoteKeyPrice==500_000&&config.oniShardPrice==12_500,"Oni fields accept abbreviated prices");
+                            config.save();
+                            var reloaded=new com.fishingpings.FishingConfig();
+                            check(reloaded.oniVoteKeyPrice==500_000&&reloaded.oniShardPrice==12_500,"Oni prices survive reload");
+                            config.oniVoteKeyPrice=keyPrice;config.oniShardPrice=shardPrice;config.save();
+                        }
                         mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
                     }else{
                         capture(mc,"fishing-bite-sound-"+sample);assertControls(mc);

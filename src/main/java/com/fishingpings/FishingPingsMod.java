@@ -9,6 +9,7 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import com.skyblocktoolkit.AlertSound;
 import com.skyblocktoolkit.ItemStatsTracker;
 import com.skyblocktoolkit.ToolkitConfig;
+import com.moneybooster.BoosterStatsManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
@@ -26,11 +27,28 @@ public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
     private static final SoundEvent ONI_APPROACH_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_approach_chime"));
     private final FishingSignals signals=new FishingSignals();
+    private final OniEarnings oniEarnings=new OniEarnings();
+    private static final List<net.minecraft.world.item.Item> ONI_FISH=
+        List.of(Items.COD,Items.SALMON,Items.PUFFERFISH,Items.TROPICAL_FISH);
+    private static final OniEarnings.Reward[] ONI_FISH_REWARDS={
+        OniEarnings.Reward.COD,OniEarnings.Reward.SALMON,
+        OniEarnings.Reward.PUFFERFISH,OniEarnings.Reward.TROPICAL_FISH
+    };
+    private int[] previousFish;
+    private boolean oniCast;
+    private long oniReelAt=-1;
+    private Object oniLevel;
     private FishingConfig config;
     private Object lastLevel;
     private long secondWarningAt=-1;
     private boolean warnedAboutBossAccess, openMenu,warningPreview;
     public FishingConfig settings(){return config;}
+    public String oniLabel(long now){
+        if(!config.hasOniPrices())return "";
+        long minutes=oniEarnings.sampleTime(now)/60_000;
+        String sample=minutes<5?"warming up":minutes==60?"1h":minutes+"m";
+        return "Oni est. ("+sample+"): "+BoosterStatsManager.formatMoney(oniEarnings.hourly(now,config::oniPrice))+"/h";
+    }
     public void previewBite(){
         Minecraft.getInstance().getSoundManager().play(biteSound(SoundSource.NEUTRAL));
     }
@@ -44,8 +62,13 @@ public final class FishingPingsMod implements ClientModInitializer {
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
             if(!overlay&&holdingOniRod(mc)){
+                resetOniOnLevelChange(mc);
                 long shards=FishingSignals.oniShardReward(text);
-                if(shards>0)ItemStatsTracker.oniShards(shards,now);
+                if(shards>0){
+                    oniEarnings.add(now,OniEarnings.Reward.GOLD_SHARD,shards);
+                    ItemStatsTracker.oniShards(shards,now);
+                }
+                oniEarnings.add(now,OniEarnings.Reward.VOTE_KEY,FishingSignals.oniVoteKeyReward(text));
             }
             // Actionbar and system messages are supported; signed player-chat is not parsed.
             if(config.snapEnabled&&holdingVoidRod(mc)&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
@@ -54,6 +77,8 @@ public final class FishingPingsMod implements ClientModInitializer {
         });
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             long now=System.currentTimeMillis();
+            resetOniOnLevelChange(mc);
+            sampleOniFish(mc,now);
             if(mc.level!=lastLevel){signals.reset();secondWarningAt=-1;warningPreview=false;lastLevel=mc.level;}
             if(openMenu){openMenu=false;mc.setScreenAndShow(new com.skyblocktoolkit.ToolkitScreen(null,2));}
             // Positive deadline = middle note; negative deadline = final low note.
@@ -103,10 +128,57 @@ public final class FishingPingsMod implements ClientModInitializer {
         return (main.is(Items.FISHING_ROD)&&FishingSignals.voidRod(main.getHoverName().getString()))
             ||(off.is(Items.FISHING_ROD)&&FishingSignals.voidRod(off.getHoverName().getString()));
     }
-    private static boolean holdingOniRod(Minecraft mc){
+    public static boolean holdingOniRod(Minecraft mc){
         if(mc.player==null)return false;
         var rod=mc.player.getMainHandItem();
         return rod.is(Items.FISHING_ROD)&&FishingSignals.oniRod(rod.getHoverName().getString());
+    }
+    private void resetOniOnLevelChange(Minecraft mc){
+        if(mc.level==oniLevel)return;
+        oniLevel=mc.level;
+        oniEarnings.reset();
+        previousFish=null;
+        oniCast=false;
+        oniReelAt=-1;
+    }
+    private void sampleOniFish(Minecraft mc,long now){
+        if(mc.level==null||!holdingOniRod(mc)||mc.gui.screen()!=null){
+            previousFish=null;
+            oniCast=false;
+            oniReelAt=-1;
+            return;
+        }
+        boolean cast=mc.player.fishing!=null;
+        if(cast)oniEarnings.start(now);
+        if(oniCast&&!cast)oniReelAt=now;
+        oniCast=cast;
+        boolean justReeled=oniReelAt>=0&&now-oniReelAt<=2_000;
+        if(!cast&&!justReeled){
+            previousFish=null;
+            return;
+        }
+        var counts=new int[ONI_FISH.size()];
+        var inventory=mc.player.getInventory();
+        for(int slot=0;slot<inventory.getContainerSize();slot++){
+            var stack=inventory.getItem(slot);
+            if(stack.isEmpty())continue;
+            int fish=ONI_FISH.indexOf(stack.getItem());
+            if(fish>=0)counts[fish]+=stack.getCount();
+        }
+        if(justReeled&&previousFish!=null){
+            long caught=0;
+            double value=0;
+            for(int i=0;i<counts.length;i++){
+                int gained=counts[i]-previousFish[i];
+                if(gained<=0)continue;
+                var reward=ONI_FISH_REWARDS[i];
+                oniEarnings.add(now,reward,gained);
+                caught+=gained;
+                value+=gained*config.oniPrice(reward);
+            }
+            if(caught>0)ItemStatsTracker.fish(caught,value,now);
+        }
+        previousFish=counts;
     }
     public float biteGain(SoundInstance sound){
         return config!=null&&config.biteSoundVolume!=1&&isOwnBite(sound)?config.biteSoundVolume:1;

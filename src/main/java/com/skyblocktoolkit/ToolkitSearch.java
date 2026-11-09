@@ -45,6 +45,8 @@ public final class ToolkitSearch {
         new Entry(2,"Skills","Fishing","Bite sound","short splash vanilla splash low ping beep catch"),
         new Entry(2,"Skills","Fishing","Preview bite sound","listen test fishing catch splash"),
         new Entry(3,"Seasonals","Oni Rod","Oni Rod full-energy chime","cursed energy boss bar maximum ready alert"),
+        new Entry(3,"Seasonals","Oni Rod","Oni Vote Key price","fishing reward sell value votekey earnings"),
+        new Entry(3,"Seasonals","Oni Rod","Oni Gold Shard price","fishing reward sell value earnings"),
         new Entry(2,"Skills","Fish sell prices","Cod · 60%","cod sell price earnings calculate fish value fishing"),
         new Entry(2,"Skills","Fish sell prices","Salmon · 25%","salmon sell price earnings calculate fish value fishing"),
         new Entry(2,"Skills","Fish sell prices","Puffer · 13%","puffer sell price earnings calculate fish value fishing"),
