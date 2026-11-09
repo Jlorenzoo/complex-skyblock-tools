@@ -952,12 +952,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;
                             pressTopic(mc,"Low bite ping");
-                            var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping");
-                            var pingSound=mc.getSoundManager().getSoundEvent(id);
-                            check(pingSound!=null&&pingSound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Bundled bite ping preloads through the sound manager");
-                            var ping=net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
-                            var result=mc.getSoundManager().play(new AlertSound(ping,1,0.45f,2));
-                            check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Bundled bite ping starts through the production sound engine");
+                            for(String name:new String[]{"bite_ping","oni_full_chime"}){
+                                var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit",name);
+                                var sound=mc.getSoundManager().getSoundEvent(id);
+                                check(sound!=null&&sound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Fishing cue preloads: "+name);
+                                var event=net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
+                                var result=mc.getSoundManager().play(new AlertSound(event,1,0.45f,2));
+                                check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Fishing cue starts through the sound engine: "+name);
+                            }
                         }
                         pressTopic(mc,"Oni Rod settings");
                         check(mc.gui.screen().children().stream().anyMatch(c->c instanceof AbstractWidget w&&ToolkitScreen.searchTarget(w,"Oni Rod full-energy chime")),"Fishing shortcut opens Oni Rod settings");

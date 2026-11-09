@@ -21,6 +21,7 @@ import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent BITE_PING=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping"));
+    private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
     private final FishingSignals signals=new FishingSignals();
     private FishingConfig config;
     private Object lastLevel;
@@ -72,7 +73,7 @@ public final class FishingPingsMod implements ClientModInitializer {
                     }
                 }
                 if(signals.oniReady(energy,now)){
-                    mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_BELL.value(),1.2f,0.8f,1.9));
+                    mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
                 }
                 if(config.snapEnabled&&mc.player.fishing!=null
                     &&holdingVoidRod(mc)
