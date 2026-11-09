@@ -1,4 +1,5 @@
 package com.fishingpings;
+import static com.fishingpings.FishingSignals.OniCue.*;
 import java.util.UUID;
 public final class FishingSignalsTest {
     static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
@@ -23,12 +24,18 @@ public final class FishingSignalsTest {
         check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other Oni loot is excluded");
         check(FishingSignals.oniShardReward("[Player] 👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==0,"Prefixed chat is excluded");
         String energyBar="§c☠ Cursed Spirits VIII - §fCursed Energy: ";
-        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"5/170"),0),"Screenshot meter is charging");
-        check(s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170"),50),"Full meter chimes");
-        check(!s.oniReady(FishingSignals.Energy.MISSING,100)&&!s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170"),150),"Briefly missing or repeated bar does not rearm");
-        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"0/170"),200)&&s.oniReady(FishingSignals.cursedEnergy(energyBar+"200/200"),250),"Spent energy rearms and max can vary");
-        check(!s.oniReady(FishingSignals.Energy.MISSING,300)&&s.oniReady(FishingSignals.cursedEnergy("Cursed\u00a0Energy\u200b： 240／240"),1300),"Returning full bar recognizes alternate tier and formatted separators");
-        check(FishingSignals.cursedEnergy(energyBar+"171/170")==FishingSignals.Energy.MISSING,"Invalid fraction");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"5/170"),0)==NONE,"Screenshot meter is charging");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"10/170"),50)==NONE,"Learn the observed charge step");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"160/170"),100)==TWO_AWAY,"Two catches left at the learned step");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"160/170"),150)==NONE,"Repeated meter stays quiet");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"165/170"),200)==ONE_AWAY,"One catch left");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"170/170"),250)==FULL,"Full meter chimes");
+        check(s.oniCue(null,300)==NONE&&s.oniCue(FishingSignals.cursedEnergy(energyBar+"170/170"),350)==NONE,"Briefly missing or repeated bar does not rearm");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"160/170"),400)==NONE,"Draining energy is quiet");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"165/170"),450)==ONE_AWAY,"New charge skips the missed earlier cue");
+        check(s.oniCue(FishingSignals.cursedEnergy(energyBar+"240/240"),500)==FULL,"Full cue uses alternate tier cap");
+        check(s.oniCue(null,550)==NONE&&s.oniCue(FishingSignals.cursedEnergy("Cursed\u00a0Energy\u200b： 240／240"),1550)==FULL,"Returning full bar recognizes formatted separators");
+        check(FishingSignals.cursedEnergy(energyBar+"171/170")==null,"Invalid fraction");
         check(!s.ready(first,30,30,0),"Stale initial bossbar");
         check(!s.ready(first,30,30,1000),"Stale value with no rising depth");
         check(!s.ready(first,1.5,30,1200),"Shallow cast");

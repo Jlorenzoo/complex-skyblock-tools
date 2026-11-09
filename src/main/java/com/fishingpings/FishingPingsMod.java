@@ -22,6 +22,7 @@ import java.util.*;
 public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent BITE_PING=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
+    private static final SoundEvent ONI_APPROACH_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_approach_chime"));
     private final FishingSignals signals=new FishingSignals();
     private FishingConfig config;
     private Object lastLevel;
@@ -63,17 +64,20 @@ public final class FishingPingsMod implements ClientModInitializer {
                 var overlay=mc.gui.hud.getBossOverlay();
                 if(overlay==null)return;
                 var events=((BossHealthOverlayAccessor)overlay).toolkit$getEvents();
-                var energy=FishingSignals.Energy.MISSING;
+                FishingSignals.Energy energy=null;
                 for(var bar:events.values()){
                     String title=bar.getName().getString();
                     if(config.depthEnabled||config.snapEnabled)checkDepth(mc,title,now);
-                    if(config.oniEnergyAlert&&energy!=FishingSignals.Energy.FULL){
+                    if(config.oniEnergyAlert&&(energy==null||!energy.full())){
                         var observed=FishingSignals.cursedEnergy(title);
-                        if(observed!=FishingSignals.Energy.MISSING)energy=observed;
+                        if(observed!=null)energy=observed;
                     }
                 }
-                if(signals.oniReady(energy,now)){
-                    mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
+                switch(signals.oniCue(energy,now)){
+                    case TWO_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1,0.55f,1.4));
+                    case ONE_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1.19f,0.65f,1.6));
+                    case FULL -> mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
+                    case NONE -> {}
                 }
                 if(config.snapEnabled&&mc.player.fishing!=null
                     &&holdingVoidRod(mc)

@@ -952,7 +952,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;
                             pressTopic(mc,"Low bite ping");
-                            for(String name:new String[]{"bite_ping","oni_full_chime"}){
+                            for(String name:new String[]{"bite_ping","oni_approach_chime","oni_full_chime"}){
                                 var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit",name);
                                 var sound=mc.getSoundManager().getSoundEvent(id);
                                 check(sound!=null&&sound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Fishing cue preloads: "+name);

@@ -15,9 +15,14 @@ public final class FishingSignals {
         "(?i)^[^\\p{L}\\p{N}\\[]*(?:Cursed Spirits|Gold Fish) [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Gold Shards?[^\\p{L}\\p{N}]*$");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
-    private boolean oniFull;
+    private Energy previousEnergy;
+    private long chargeStep;
+    private OniCue lastOniCue=OniCue.NONE;
     private long oniBarMissingSince=-1;
-    public enum Energy { MISSING, CHARGING, FULL }
+    public record Energy(long current,long maximum) {
+        public boolean full(){return current==maximum;}
+    }
+    public enum OniCue { NONE, TWO_AWAY, ONE_AWAY, FULL }
     public static boolean oniRod(String name){
         return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
     }
@@ -29,27 +34,52 @@ public final class FishingSignals {
         catch(NumberFormatException ignored){return 0;}
     }
     public static Energy cursedEnergy(String text){
-        if(text==null)return Energy.MISSING;
+        if(text==null)return null;
         String clean=BAR_FORMATTING.matcher(text).replaceAll("");
         var match=CURSED_ENERGY.matcher(Normalizer.normalize(clean,Normalizer.Form.NFKC));
-        if(!match.find())return Energy.MISSING;
+        if(!match.find())return null;
         try{
             long current=Long.parseLong(match.group(1).replace(",",""));
             long maximum=Long.parseLong(match.group(2).replace(",",""));
-            if(maximum<=0||current>maximum)return Energy.MISSING;
-            return current==maximum?Energy.FULL:Energy.CHARGING;
-        }catch(NumberFormatException ignored){return Energy.MISSING;}
+            if(maximum<=0||current>maximum)return null;
+            return new Energy(current,maximum);
+        }catch(NumberFormatException ignored){return null;}
     }
-    public boolean oniReady(Energy energy,long now){
-        if(energy==Energy.MISSING){
+    public OniCue oniCue(Energy energy,long now){
+        if(energy==null){
             if(oniBarMissingSince<0)oniBarMissingSince=now;
-            return false;
+            return OniCue.NONE;
         }
-        if(oniBarMissingSince>=0&&now-oniBarMissingSince>=1000)oniFull=false;
+        if((oniBarMissingSince>=0&&now-oniBarMissingSince>=1000)
+            ||(previousEnergy!=null&&previousEnergy.maximum()!=energy.maximum()))resetOni();
         oniBarMissingSince=-1;
-        boolean ready=energy==Energy.FULL&&!oniFull;
-        oniFull=energy==Energy.FULL;
-        return ready;
+        Energy previous=previousEnergy;
+        previousEnergy=energy;
+        if(energy.equals(previous))return OniCue.NONE;
+        if(energy.full()){
+            lastOniCue=OniCue.FULL;
+            return lastOniCue;
+        }
+        if(previous==null)return OniCue.NONE;
+        long increase=energy.current()-previous.current();
+        if(increase<0){
+            lastOniCue=OniCue.NONE;
+            return OniCue.NONE;
+        }
+        // Ignore the final, potentially capped gain. Smaller observed steps are
+        // safer than a jump that may combine more than one bar update.
+        chargeStep=chargeStep==0?increase:Math.min(chargeStep,increase);
+        long catches=1+(energy.maximum()-energy.current()-1)/chargeStep;
+        OniCue cue=catches==1?OniCue.ONE_AWAY:catches==2?OniCue.TWO_AWAY:OniCue.NONE;
+        if(cue.ordinal()<=lastOniCue.ordinal())return OniCue.NONE;
+        lastOniCue=cue;
+        return cue;
+    }
+    private void resetOni(){
+        previousEnergy=null;
+        chargeStep=0;
+        lastOniCue=OniCue.NONE;
+        oniBarMissingSince=-1;
     }
     public static double depth(String text){
         if(text==null)return Double.NaN;
@@ -95,5 +125,5 @@ public final class FishingSignals {
         if(!depleted(text)||(lastWarning!=Long.MIN_VALUE&&now-lastWarning<15000))return false;
         lastWarning=now;return true;
     }
-    public void reset(){cast=null;notified=false;sawBelowTarget=false;oniFull=false;oniBarMissingSince=-1;lastWarning=lastSnap=Long.MIN_VALUE;}
+    public void reset(){cast=null;notified=false;sawBelowTarget=false;resetOni();lastWarning=lastSnap=Long.MIN_VALUE;}
 }

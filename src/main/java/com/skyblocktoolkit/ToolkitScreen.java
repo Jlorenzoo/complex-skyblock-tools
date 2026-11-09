@@ -498,7 +498,7 @@ public final class ToolkitScreen extends Screen {
     }
     public int buildOniRodSettings(int top){
         var fishCfg=ToolkitMod.FISHING.settings();
-        toggle("Oni Rod full-energy chime","Chimes when the Cursed Energy bar fills.",top,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
+        toggle("Oni Rod full-energy chime","Two rising cues lead into the full-energy chime.",top,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
         return top+28;
     }
     public int buildBoneLeggingsSettings(int top){

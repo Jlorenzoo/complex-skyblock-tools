@@ -5,5 +5,8 @@
   },
   "oni_full_chime": {
     "sounds": [{"name": "skyblocktoolkit:oni_full_chime", "preload": true}]
+  },
+  "oni_approach_chime": {
+    "sounds": [{"name": "skyblocktoolkit:oni_approach_chime", "preload": true}]
   }
 }
