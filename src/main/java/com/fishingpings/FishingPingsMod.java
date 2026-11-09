@@ -28,8 +28,7 @@ public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent ONI_APPROACH_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_approach_chime"));
     private final FishingSignals signals=new FishingSignals();
     private final OniEarnings oniEarnings=new OniEarnings();
-    private static final List<net.minecraft.world.item.Item> ONI_FISH=
-        List.of(Items.COD,Items.SALMON,Items.PUFFERFISH,Items.TROPICAL_FISH);
+    private List<net.minecraft.world.item.Item> oniFish;
     private static final OniEarnings.Reward[] ONI_FISH_REWARDS={
         OniEarnings.Reward.COD,OniEarnings.Reward.SALMON,
         OniEarnings.Reward.PUFFERFISH,OniEarnings.Reward.TROPICAL_FISH
@@ -58,6 +57,7 @@ public final class FishingPingsMod implements ClientModInitializer {
     public void warningChanged(){if(!config.warningEnabled&&!warningPreview)secondWarningAt=-1;}
     @Override public void onInitializeClient(){
         config=new FishingConfig();
+        oniFish=List.of(Items.COD,Items.SALMON,Items.PUFFERFISH,Items.TROPICAL_FISH);
         ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
@@ -157,12 +157,12 @@ public final class FishingPingsMod implements ClientModInitializer {
             previousFish=null;
             return;
         }
-        var counts=new int[ONI_FISH.size()];
+        var counts=new int[oniFish.size()];
         var inventory=mc.player.getInventory();
         for(int slot=0;slot<inventory.getContainerSize();slot++){
             var stack=inventory.getItem(slot);
             if(stack.isEmpty())continue;
-            int fish=ONI_FISH.indexOf(stack.getItem());
+            int fish=oniFish.indexOf(stack.getItem());
             if(fish>=0)counts[fish]+=stack.getCount();
         }
         if(justReeled&&previousFish!=null){
