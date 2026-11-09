@@ -23,10 +23,11 @@ public final class FishingSignalsTest {
         check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other Oni loot is excluded");
         check(FishingSignals.oniShardReward("[Player] 👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==0,"Prefixed chat is excluded");
         String energyBar="§c☠ Cursed Spirits VIII - §fCursed Energy: ";
-        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"5/170")),"Screenshot meter is charging");
-        check(s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170")),"Full meter chimes");
-        check(!s.oniReady(FishingSignals.cursedEnergy(null))&&!s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170")),"Missing or repeated bar does not rearm");
-        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"0/170"))&&s.oniReady(FishingSignals.cursedEnergy(energyBar+"200/200")),"Spent energy rearms and max can vary");
+        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"5/170"),0),"Screenshot meter is charging");
+        check(s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170"),50),"Full meter chimes");
+        check(!s.oniReady(FishingSignals.Energy.MISSING,100)&&!s.oniReady(FishingSignals.cursedEnergy(energyBar+"170/170"),150),"Briefly missing or repeated bar does not rearm");
+        check(!s.oniReady(FishingSignals.cursedEnergy(energyBar+"0/170"),200)&&s.oniReady(FishingSignals.cursedEnergy(energyBar+"200/200"),250),"Spent energy rearms and max can vary");
+        check(!s.oniReady(FishingSignals.Energy.MISSING,300)&&s.oniReady(FishingSignals.cursedEnergy("Cursed\u00a0Energy\u200b： 240／240"),1300),"Returning full bar recognizes alternate tier and formatted separators");
         check(FishingSignals.cursedEnergy(energyBar+"171/170")==FishingSignals.Energy.MISSING,"Invalid fraction");
         check(!s.ready(first,30,30,0),"Stale initial bossbar");
         check(!s.ready(first,30,30,1000),"Stale value with no rising depth");

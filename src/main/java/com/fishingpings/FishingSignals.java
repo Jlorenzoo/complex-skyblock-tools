@@ -1,4 +1,5 @@
 package com.fishingpings;
+import java.text.Normalizer;
 import java.util.UUID;
 import java.util.regex.*;
 /** Server text parser and per-cast/cooldown state, independent of Minecraft. */
@@ -8,12 +9,14 @@ public final class FishingSignals {
     private static final String EMPTY="This area is suffering from overfishing, cast your rod in a different spot for more fish. At least 3 blocks away.";
     private static final Pattern SNAP=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*What Lurks Below\\s+[IVXLCDM]+\\s*[┃|]\\s*[✘✗×]?\\s*The fishing line snapped\\.?$");
     private static final Pattern ONI_ROD=Pattern.compile("(?i)^[^\\p{L}\\p{N}]*Oni(?:['’]s)? (?:Fishing )?Rod[^\\p{L}\\p{N}]*$");
-    private static final Pattern CURSED_ENERGY=Pattern.compile("(?i)\\bCursed Energy\\s*:\\s*([0-9,]+)\\s*/\\s*([0-9,]+)(?![0-9,])");
+    private static final Pattern CURSED_ENERGY=Pattern.compile("(?iU)\\bCursed\\s+Energy\\s*:\\s*([0-9,]+)\\s*/\\s*([0-9,]+)(?![0-9,])");
+    private static final Pattern BAR_FORMATTING=Pattern.compile("§.|\\p{Cf}");
     private static final Pattern ONI_SHARDS=Pattern.compile(
         "(?i)^[^\\p{L}\\p{N}\\[]*(?:Cursed Spirits|Gold Fish) [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Gold Shards?[^\\p{L}\\p{N}]*$");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
     private boolean oniFull;
+    private long oniBarMissingSince=-1;
     public enum Energy { MISSING, CHARGING, FULL }
     public static boolean oniRod(String name){
         return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
@@ -27,7 +30,8 @@ public final class FishingSignals {
     }
     public static Energy cursedEnergy(String text){
         if(text==null)return Energy.MISSING;
-        var match=CURSED_ENERGY.matcher(text.replaceAll("§.",""));
+        String clean=BAR_FORMATTING.matcher(text).replaceAll("");
+        var match=CURSED_ENERGY.matcher(Normalizer.normalize(clean,Normalizer.Form.NFKC));
         if(!match.find())return Energy.MISSING;
         try{
             long current=Long.parseLong(match.group(1).replace(",",""));
@@ -36,8 +40,13 @@ public final class FishingSignals {
             return current==maximum?Energy.FULL:Energy.CHARGING;
         }catch(NumberFormatException ignored){return Energy.MISSING;}
     }
-    public boolean oniReady(Energy energy){
-        if(energy==Energy.MISSING)return false;
+    public boolean oniReady(Energy energy,long now){
+        if(energy==Energy.MISSING){
+            if(oniBarMissingSince<0)oniBarMissingSince=now;
+            return false;
+        }
+        if(oniBarMissingSince>=0&&now-oniBarMissingSince>=1000)oniFull=false;
+        oniBarMissingSince=-1;
         boolean ready=energy==Energy.FULL&&!oniFull;
         oniFull=energy==Energy.FULL;
         return ready;
@@ -86,5 +95,5 @@ public final class FishingSignals {
         if(!depleted(text)||(lastWarning!=Long.MIN_VALUE&&now-lastWarning<15000))return false;
         lastWarning=now;return true;
     }
-    public void reset(){cast=null;notified=false;sawBelowTarget=false;oniFull=false;lastWarning=lastSnap=Long.MIN_VALUE;}
+    public void reset(){cast=null;notified=false;sawBelowTarget=false;oniFull=false;oniBarMissingSince=-1;lastWarning=lastSnap=Long.MIN_VALUE;}
 }

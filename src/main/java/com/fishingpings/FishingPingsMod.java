@@ -57,8 +57,7 @@ public final class FishingPingsMod implements ClientModInitializer {
             }
             if(mc.player==null||mc.level==null)return;
             signals.cast(mc.player.fishing==null?null:mc.player.fishing.getUUID(),now);
-            boolean oni=holdingOniRod(mc);
-            if((!config.depthEnabled&&!config.snapEnabled&&!oni)||mc.gui==null||mc.gui.hud==null)return;
+            if((!config.depthEnabled&&!config.snapEnabled&&!config.oniEnergyAlert)||mc.gui==null||mc.gui.hud==null)return;
             try{
                 var overlay=mc.gui.hud.getBossOverlay();
                 if(overlay==null)return;
@@ -67,12 +66,12 @@ public final class FishingPingsMod implements ClientModInitializer {
                 for(var bar:events.values()){
                     String title=bar.getName().getString();
                     if(config.depthEnabled||config.snapEnabled)checkDepth(mc,title,now);
-                    if(oni&&energy!=FishingSignals.Energy.FULL){
+                    if(config.oniEnergyAlert&&energy!=FishingSignals.Energy.FULL){
                         var observed=FishingSignals.cursedEnergy(title);
                         if(observed!=FishingSignals.Energy.MISSING)energy=observed;
                     }
                 }
-                if(signals.oniReady(energy)&&config.oniEnergyAlert){
+                if(signals.oniReady(energy,now)){
                     mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_BELL.value(),1.2f,0.8f,1.9));
                 }
                 if(config.snapEnabled&&mc.player.fishing!=null

@@ -1,6 +1,6 @@
 {
   "bite_ping": {
     "subtitle": "subtitles.entity.fishing_bobber.splash",
-    "sounds": ["skyblocktoolkit:bite_ping"]
+    "sounds": [{"name": "skyblocktoolkit:bite_ping", "preload": true}]
   }
 }

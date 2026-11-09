@@ -953,7 +953,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;
                             pressTopic(mc,"Low bite ping");
                             var id=net.minecraft.resources.Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping");
-                            check(mc.getSoundManager().getSoundEvent(id)!=null,"Bundled bite ping loads through the sound manager");
+                            var pingSound=mc.getSoundManager().getSoundEvent(id);
+                            check(pingSound!=null&&pingSound.getSound(net.minecraft.util.RandomSource.create()).shouldPreload(),"Bundled bite ping preloads through the sound manager");
                             var ping=net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
                             var result=mc.getSoundManager().play(new AlertSound(ping,1,0.45f,2));
                             check(result==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Bundled bite ping starts through the production sound engine");
