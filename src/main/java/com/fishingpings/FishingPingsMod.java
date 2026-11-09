@@ -53,6 +53,7 @@ public final class FishingPingsMod implements ClientModInitializer {
     }
     public void previewDepth(){readySound(Minecraft.getInstance());}
     public void previewSnap(){snapSound(Minecraft.getInstance());}
+    public void previewOniCue(FishingSignals.OniCue cue){playOniCue(Minecraft.getInstance(),cue);}
     public void previewWarning(){warningSound(Minecraft.getInstance(),System.currentTimeMillis());warningPreview=true;}
     public void warningChanged(){if(!config.warningEnabled&&!warningPreview)secondWarningAt=-1;}
     @Override public void onInitializeClient(){
@@ -103,12 +104,7 @@ public final class FishingPingsMod implements ClientModInitializer {
                         if(observed!=null)energy=observed;
                     }
                 }
-                switch(signals.oniCue(energy,now)){
-                    case TWO_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1,0.55f,1.4));
-                    case ONE_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1.19f,0.65f,1.6));
-                    case FULL -> mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
-                    case NONE -> {}
-                }
+                playOniCue(mc,signals.oniCue(energy,now));
                 if(config.snapEnabled&&mc.player.fishing!=null
                     &&holdingVoidRod(mc)
                     &&signals.snapped(null,now))snapSound(mc);
@@ -213,6 +209,14 @@ public final class FishingPingsMod implements ClientModInitializer {
             if(other!=hook&&other.distanceToSqr(x,y,z)<=distance)return false;
         }
         return true;
+    }
+    private void playOniCue(Minecraft mc,FishingSignals.OniCue cue){
+        switch(cue){
+            case TWO_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1,0.55f,1.4));
+            case ONE_AWAY -> mc.getSoundManager().play(new AlertSound(ONI_APPROACH_CHIME,1.19f,0.65f,1.6));
+            case FULL -> mc.getSoundManager().play(new AlertSound(ONI_FULL_CHIME,1,0.8f,1.9));
+            case NONE -> {}
+        }
     }
     private void snapSound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.ITEM_BREAK.value(),0.9f,Math.min(1f,config.volume*1.25f),Math.max(1f,config.volume)*ToolkitConfig.get().snapSoundGain));}
     private void readySound(Minecraft mc){mc.getSoundManager().play(new AlertSound(SoundEvents.NOTE_BLOCK_HARP.value(),1.6f,Math.min(1f,config.volume),Math.max(1f,config.volume)*ToolkitConfig.get().readySoundGain));}

@@ -32,7 +32,7 @@ public final class ToolkitScreen extends Screen {
     private record Topic(String title,String summary){}
     private List<Topic> topics(){return switch(page){
         case 1->List.of(new Topic("Booster timers","Money & XP timers, activation and ending alerts"),new Topic("Coconut alerts","Sound, banners and minimum boost"),new Topic("Earnings & statistics","History, rate tests and crop averages"));
-        case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and Oni Rod chime"),new Topic("Fish sell prices","Fish values and estimated earnings"),new Topic("Mining & XP","XP per hour and booster accounting"));
+        case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and earnings window"),new Topic("Item prices","Sell values for fish, Vote Keys and Gold Shards"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
         case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
         case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
@@ -438,12 +438,11 @@ public final class ToolkitScreen extends Screen {
             toggle("Include boosters in crop average",row+48,money::includesBoostersInAverage,money::toggleAverageBoosters);
             label(CropHarvestTracker::averageLabel,row+72,ToolkitTheme.palette().accent(),1);
             int next=row+124;
-            if(details("Gold shards & income",row+96,"Include gold shards in income","Gold shard value ($ each)")){
+            if(details("Gold shards & income",row+96,"Include gold shards in income")){
                 toggle("Include gold shards in income","Silent farming drops need a held hoe.",row+124,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
-                priceField("Gold shard value ($ each)",row+156,()->toolkit.goldShardPrice,v->{if(v<=1e12)toolkit.goldShardPrice=v;});
-                hint("Accepts 1.5k / 2m. Estimated item value.",row+180);
-                label(GoldShardTracker::label,row+196,ToolkitTheme.palette().accent(),1);
-                next=row+230;
+                link("Item prices",row+156,2,"Item prices");
+                label(GoldShardTracker::label,row+184,ToolkitTheme.palette().accent(),1);
+                next=row+214;
             }
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
@@ -455,18 +454,21 @@ public final class ToolkitScreen extends Screen {
             slider("Fishing volume",116,fishCfg.volume,3,v->fishCfg.volume=(float)v);
             button("Preview depleted warning",140,fishing::previewWarning);
             link("Oni Rod settings",168,3,"Oni Rod");
-            link("Fish sell prices",192,2,"Fish sell prices");
+            link("Item prices",192,2,"Item prices");
             link("Void Rod settings (Seasonal)",216,3,"Void Rod");
+            setting("Earnings window",240,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
+            label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Set fish prices to estimate earnings.",268,ToolkitTheme.palette().text(),1);
         }
-        if(topic("Fish sell prices",0)){
-            label("Sell price per fish ($ each; accepts 1.5k / 2m)",16);
-            priceField("Cod · 60%",36,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
-            priceField("Salmon · 25%",60,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
-            priceField("Puffer · 13%",84,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
-            priceField("Tropical · 2%",108,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
-            setting("Earnings window",136,()->fishCfg.earningsWindow==60?"60 seconds":"5 minutes",()->fishCfg.earningsWindow=fishCfg.earningsWindow==60?300:60);
-            label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),164,ToolkitTheme.palette().accent(),1);
-            label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Set fish prices to estimate earnings.",180,ToolkitTheme.palette().text(),1);
+        if(topic("Item prices",0)){
+            label("Sell price per item ($ each, accepts 1.5k or 2m)",16);
+            priceField("Vote Key price",32,()->toolkit.voteKeyPrice,v->toolkit.voteKeyPrice=v);
+            priceField("Gold shard value ($ each)",56,()->toolkit.goldShardPrice,v->toolkit.goldShardPrice=v);
+            priceField("Cod · 60%",80,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
+            priceField("Salmon · 25%",104,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
+            priceField("Puffer · 13%",128,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
+            priceField("Tropical · 2%",152,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
+            label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),184,ToolkitTheme.palette().accent(),1);
+            label("Unpriced drops contribute $0.",200);
         }
         if(topic("Mining & XP",0)){
             toggle("XP per hour HUD","Appears while you collect XP.",16,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);
@@ -498,17 +500,18 @@ public final class ToolkitScreen extends Screen {
         return top;
     }
     public int buildOniRodSettings(int top){
-        var fishCfg=ToolkitMod.FISHING.settings();
+        var fishing=ToolkitMod.FISHING;
+        var fishCfg=fishing.settings();
         var toolkit=ToolkitConfig.get();
         toggle("Oni Rod full-energy chime","Two rising cues lead into the full-energy chime.",top,()->fishCfg.oniEnergyAlert,()->fishCfg.oniEnergyAlert=!fishCfg.oniEnergyAlert);
-        label("Reward prices ($ each, accepts 125k or 2m)",top+34);
-        priceField("Oni Vote Key price",top+54,()->fishCfg.oniVoteKeyPrice,v->fishCfg.oniVoteKeyPrice=v);
-        priceField("Oni Gold Shard price",top+78,()->fishCfg.oniShardPrice,v->fishCfg.oniShardPrice=v);
-        toggle("Fishing earnings",top+104,()->toolkit.fishEarningsHud,()->toolkit.fishEarningsHud=!toolkit.fishEarningsHud);
-        link("Fish sell prices",top+128,2,"Fish sell prices");
-        label("Fishing HUD uses up to 1 hour of Oni rewards.",top+158);
-        label("Unpriced drops contribute $0.",top+172);
-        return top+188;
+        pair(()->"Preview two away",()->fishing.previewOniCue(com.fishingpings.FishingSignals.OniCue.TWO_AWAY),
+            ()->"Preview one away",()->fishing.previewOniCue(com.fishingpings.FishingSignals.OniCue.ONE_AWAY),top+32);
+        button("Preview full energy",top+56,()->fishing.previewOniCue(com.fishingpings.FishingSignals.OniCue.FULL));
+        top+=56;
+        toggle("Fishing earnings",top+34,()->toolkit.fishEarningsHud,()->toolkit.fishEarningsHud=!toolkit.fishEarningsHud);
+        link("Item prices",top+58,2,"Item prices");
+        label("Fishing HUD uses up to 1 hour of Oni rewards.",top+88);
+        return top+104;
     }
     public int buildBoneLeggingsSettings(int top){
         var cfg=ToolkitConfig.get();

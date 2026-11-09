@@ -938,6 +938,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         pressTopic(mc,"Oni Rod");assertControls(mc);
                     }else if(step==2){
                         capture(mc,"seasonals-oni-settings-"+sample);assertControls(mc);
+                        var fishingConfig=ToolkitMod.FISHING.settings();
+                        boolean chimeEnabled=fishingConfig.oniEnergyAlert;
+                        fishingConfig.oniEnergyAlert=false;
+                        pressTopic(mc,"Preview two away");
+                        pressTopic(mc,"Preview one away");
+                        pressTopic(mc,"Preview full energy");
+                        check(!fishingConfig.oniEnergyAlert,"Oni previews leave automatic cues disabled");
+                        fishingConfig.oniEnergyAlert=chimeEnabled;
                         if(sample==0){
                             var config=ToolkitMod.FISHING.settings();
                             double keyPrice=config.oniVoteKeyPrice,shardPrice=config.oniShardPrice;
