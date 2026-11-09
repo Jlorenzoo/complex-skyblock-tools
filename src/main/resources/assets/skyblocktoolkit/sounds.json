@@ -3,9 +3,9 @@
     "subtitle": "subtitles.entity.fishing_bobber.splash",
     "sounds": [{"name": "skyblocktoolkit:short_splash", "preload": true}]
   },
-  "bite_ping": {
+  "water_drop": {
     "subtitle": "subtitles.entity.fishing_bobber.splash",
-    "sounds": [{"name": "skyblocktoolkit:bite_ping", "preload": true}]
+    "sounds": [{"name": "skyblocktoolkit:water_drop", "preload": true}]
   },
   "oni_full_chime": {
     "sounds": [{"name": "skyblocktoolkit:oni_full_chime", "preload": true}]

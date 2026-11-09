@@ -7,14 +7,14 @@ public final class FishingConfig {
     public float volume=0.18f;
     public float biteSoundVolume=2f;
     public enum BiteSound {
-        SHORT_SPLASH("Short splash"), VANILLA_SPLASH("Vanilla splash"), LOW_PING("Low ping");
+        SHORT_SPLASH("Short splash"), VANILLA_SPLASH("Vanilla splash"), WATER_DROP("Water drop");
 
         public final String label;
         BiteSound(String label){this.label=label;}
         public BiteSound next(){return switch(this){
             case SHORT_SPLASH -> VANILLA_SPLASH;
-            case VANILLA_SPLASH -> LOW_PING;
-            case LOW_PING -> SHORT_SPLASH;
+            case VANILLA_SPLASH -> WATER_DROP;
+            case WATER_DROP -> SHORT_SPLASH;
         };}
     }
     public BiteSound biteSound=BiteSound.SHORT_SPLASH;
@@ -51,7 +51,8 @@ public final class FishingConfig {
             if(json.has("oniEnergyAlert"))oniEnergyAlert=json.get("oniEnergyAlert").getAsBoolean();
             if(json.has("lowBitePing")&&!json.get("lowBitePing").getAsBoolean())biteSound=BiteSound.VANILLA_SPLASH;
             if(json.has("biteSound")&&json.get("biteSound").isJsonPrimitive()){
-                try{biteSound=BiteSound.valueOf(json.get("biteSound").getAsString());}
+                String choice=json.get("biteSound").getAsString();
+                try{biteSound=choice.equals("LOW_PING")?BiteSound.WATER_DROP:BiteSound.valueOf(choice);}
                 catch(IllegalArgumentException ignored){}
             }
             for(String key:new String[]{"codPrice","salmonPrice","pufferPrice","tropicalPrice","oniShardPrice","oniVoteKeyPrice"}){

@@ -42,7 +42,7 @@ public final class ToolkitSearch {
         new Entry(2,"Skills","Fishing","Fishing volume","sound audio volume fishing loudness"),
         new Entry(2,"Skills","Fishing","Preview depleted warning","warning depleted sound preview test fishing"),
         new Entry(2,"Skills","Fishing","Bite sound volume","bobber splash loudness regular rod"),
-        new Entry(2,"Skills","Fishing","Bite sound","short splash vanilla splash low ping beep catch"),
+        new Entry(2,"Skills","Fishing","Bite sound","short splash vanilla splash water drop plop low ping beep catch"),
         new Entry(2,"Skills","Fishing","Preview bite sound","listen test fishing catch splash"),
         new Entry(3,"Seasonals","Oni Rod","Oni Rod full-energy chime","cursed energy boss bar maximum ready alert"),
         new Entry(3,"Seasonals","Oni Rod","Oni Vote Key price","fishing reward sell value votekey earnings"),

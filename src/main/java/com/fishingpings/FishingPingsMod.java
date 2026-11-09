@@ -23,7 +23,7 @@ import java.util.*;
 
 public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent SHORT_SPLASH=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","short_splash"));
-    private static final SoundEvent BITE_PING=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","bite_ping"));
+    private static final SoundEvent WATER_DROP=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","water_drop"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
     private static final SoundEvent ONI_APPROACH_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_approach_chime"));
     private final FishingSignals signals=new FishingSignals();
@@ -193,7 +193,7 @@ public final class FishingPingsMod implements ClientModInitializer {
         return switch(config.biteSound){
             case SHORT_SPLASH -> new AlertSound(SHORT_SPLASH,source,1,0.30f,config.biteSoundVolume);
             case VANILLA_SPLASH -> new AlertSound(SoundEvents.FISHING_BOBBER_SPLASH,source,1,0.25f,config.biteSoundVolume);
-            case LOW_PING -> new AlertSound(BITE_PING,source,1,0.45f,config.biteSoundVolume);
+            case WATER_DROP -> new AlertSound(WATER_DROP,source,1,0.30f,config.biteSoundVolume);
         };
     }
     private static boolean isOwnBite(SoundInstance sound){
