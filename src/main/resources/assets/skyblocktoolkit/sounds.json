@@ -182,5 +182,14 @@
       }
     ],
     "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "double_knock": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:double_knock",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
   }
 }
