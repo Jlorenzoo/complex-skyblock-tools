@@ -14,6 +14,7 @@ public final class ToolkitButton extends Button {
     private final String label,description;
     private final ItemStack icon;
     private Supplier<String> value;
+    private boolean dropdown;
     private ToolkitButton(int x,int y,int w,int h,String label,OnPress press,int kind,boolean selected,BooleanSupplier state,ItemStack icon,String description){
         super(x,y,w,h,Component.literal(label),press,DEFAULT_NARRATION);this.kind=kind;this.selected=selected;this.state=state;this.icon=icon;this.description=description;this.label=label;
     }
@@ -63,6 +64,11 @@ public final class ToolkitButton extends Button {
         var button=new ToolkitButton(x,y,w,20,label+": "+value.get(),press,5,false,null,null,label);
         button.value=value;return button;
     }
+    public static ToolkitButton dropdown(String label,Supplier<String> value,OnPress press,int x,int y,int w){
+        var button=setting(label,value,press,x,y,w);
+        button.dropdown=true;
+        return button;
+    }
     @Override protected void extractContents(GuiGraphicsExtractor g,int mx,int my,float tick){
         var font=Minecraft.getInstance().font;boolean hover=isHoveredOrFocused()&&active;
         int x=getX(),y=getY(),w=getWidth(),h=getHeight();
@@ -84,11 +90,17 @@ public final class ToolkitButton extends Button {
         if(kind==5){
             var palette=ToolkitTheme.palette();String current=value.get();
             setMessage(Component.literal(description+": "+current));
-            int valueWidth=Math.min(w/2,Math.max(62,ToolkitTheme.textWidth(font,current)+16));
+            int arrowSpace=dropdown?14:0;
+            int valueWidth=Math.min(w/2,Math.max(62,ToolkitTheme.textWidth(font,current)+16+arrowSpace));
             ToolkitTheme.text(g,font,description,x+6,y+6,palette.text());
             ToolkitTheme.rounded(g,x+w-valueWidth,y+1,valueWidth,18,3,hover?palette.hover():palette.surface());
-            String clipped=ToolkitTheme.clipText(font,Component.literal(current),valueWidth-12);
-            ToolkitTheme.text(g,font,clipped,x+w-(valueWidth+ToolkitTheme.textWidth(font,clipped))/2,y+6,palette.accent());
+            String clipped=ToolkitTheme.clipText(font,Component.literal(current),valueWidth-12-arrowSpace);
+            ToolkitTheme.text(g,font,clipped,x+w-(valueWidth+arrowSpace+ToolkitTheme.textWidth(font,clipped))/2,y+6,palette.accent());
+            if(dropdown){
+                g.fill(x+w-12,y+8,x+w-5,y+9,palette.accent());
+                g.fill(x+w-11,y+9,x+w-6,y+10,palette.accent());
+                g.fill(x+w-10,y+10,x+w-7,y+11,palette.accent());
+            }
             return;
         }
         if(kind==4){

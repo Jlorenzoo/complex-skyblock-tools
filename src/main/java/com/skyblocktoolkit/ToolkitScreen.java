@@ -1,6 +1,7 @@
 package com.skyblocktoolkit;
 
 import com.moneybooster.*;
+import com.fishingpings.FishingConfig.BiteSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -18,6 +19,10 @@ import org.lwjgl.glfw.GLFW;
 public final class ToolkitScreen extends Screen {
     private static final Identifier LOGO=Identifier.fromNamespaceAndPath("skyblocktoolkit","textures/gui/logo.png");
     private final Screen parent;
+    private static final int OPTION_HEIGHT=16;
+    private record Dropdown(Button anchor,List<String> labels,int selected,IntConsumer choose){}
+    private Dropdown dropdown;
+    private int highlighted,firstOption;
     private int page,scroll,contentHeight,dragging,soundReturnPage=2,hudReturnPage=1;
     private double grabX,grabY;
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall, 4=fullbright
@@ -129,6 +134,7 @@ public final class ToolkitScreen extends Screen {
         };
     }
     @Override protected void init(){
+        dropdown=null;
         layout=ToolkitLayout.hub(width,height);topicBack=null;controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
@@ -448,7 +454,7 @@ public final class ToolkitScreen extends Screen {
         }
         if(topic("Fishing",0)){
             slider("Bite sound volume",16,fishCfg.biteSoundVolume,com.fishingpings.FishingConfig.MAX_BITE_SOUND_VOLUME,v->fishCfg.biteSoundVolume=(float)v);
-            setting("Bite sound",40,()->fishCfg.biteSound.label,()->fishCfg.biteSound=fishCfg.biteSound.next());
+            biteSoundDropdown("Bite sound",40);
             button("Preview bite sound",64,fishing::previewBite);
             toggle("Depleted area",92,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});
             slider("Fishing volume",116,fishCfg.volume,3,v->fishCfg.volume=(float)v);
@@ -596,19 +602,21 @@ public final class ToolkitScreen extends Screen {
             }
         }
         if(topic("Sound Library",0)){
-            var cues=ToolkitAudio.Cue.values();
-            setting("Alert event",16,()->audioCue.label,()->audioCue=cues[(audioCue.ordinal()+1)%cues.length]);
-            var fishing=ToolkitMod.FISHING.settings();
-            setting("Alert sound",40,()->audioCue==ToolkitAudio.Cue.BITE?fishing.biteSound.label:cfg.audioChoice(audioCue).label,()->{
-                if(audioCue==ToolkitAudio.Cue.BITE)fishing.biteSound=fishing.biteSound.next();
-                else cfg.cycleAudio(audioCue);
-            });
+            dropdown("Alert event",16,()->audioCue.label,
+                anchor->openDropdown(anchor,List.of(ToolkitAudio.Cue.values()),audioCue,cue->cue.label,cue->audioCue=cue));
+            dropdown("Alert sound",40,
+                ()->audioCue==ToolkitAudio.Cue.BITE?ToolkitMod.FISHING.settings().biteSound.label:cfg.audioChoice(audioCue).label,
+                anchor->{
+                    if(audioCue==ToolkitAudio.Cue.BITE)openBiteSounds(anchor);
+                    else openAudioSamples(anchor,audioCue);
+                });
             button("Preview alert sound",64,()->ToolkitAudio.preview(audioCue));
             hint("Previews use your current volume settings.",94);
         }
         if(topic("Auction notifications",0)){
             toggle("Sale alert",16,()->cfg.ahSoundEnabled,()->cfg.ahSoundEnabled=!cfg.ahSoundEnabled);
-            setting("Sound",40,()->cfg.audioChoice(ToolkitAudio.Cue.AUCTION).label,()->cfg.cycleAudio(ToolkitAudio.Cue.AUCTION));
+            var cue=ToolkitAudio.Cue.AUCTION;
+            dropdown("Sound",40,()->cfg.audioChoice(cue).label,anchor->openAudioSamples(anchor,cue));
             slider("Volume",64,cfg.ahSoundVolume,1,v->cfg.ahSoundVolume=v);
             button("Preview sale sound",88,AhSaleNotifier::playPreviewSound);
             if(details("Extra volume boost",120,"Sound amplification")){
@@ -656,6 +664,74 @@ public final class ToolkitScreen extends Screen {
         top-=topicOffset;
         var button=addRenderableWidget(ToolkitButton.setting(name,value,b->{action.run();persist();},layout.bodyX(),layout.bodyY()+top-scroll,layout.bodyWidth()));
         controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
+    }
+    private void biteSoundDropdown(String name,int top){
+        dropdown(name,top,()->ToolkitMod.FISHING.settings().biteSound.label,this::openBiteSounds);
+    }
+    private void openBiteSounds(Button anchor){
+        var fishing=ToolkitMod.FISHING.settings();
+        openDropdown(anchor,List.of(BiteSound.values()),fishing.biteSound,sound->sound.label,sound->fishing.biteSound=sound);
+    }
+    private void openAudioSamples(Button anchor,ToolkitAudio.Cue cue){
+        var cfg=ToolkitConfig.get();
+        openDropdown(anchor,cue.choices,cfg.audioChoice(cue),sound->sound.label,sound->cfg.selectAudio(cue,sound));
+    }
+    private void dropdown(String name,int top,Supplier<String> value,Consumer<Button> open){
+        top-=topicOffset;
+        var button=addRenderableWidget(ToolkitButton.dropdown(name,value,open::accept,layout.bodyX(),layout.bodyY()+top-scroll,layout.bodyWidth()));
+        controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
+    }
+    private <T> void openDropdown(Button anchor,List<T> choices,T current,Function<T,String> label,Consumer<T> choose){
+        int selected=choices.indexOf(current);
+        dropdown=new Dropdown(anchor,choices.stream().map(label).toList(),selected,index->choose.accept(choices.get(index)));
+        firstOption=0;
+        highlightOption(Math.max(0,selected));
+        setFocused(anchor);
+    }
+    private int visibleOptions(){return Math.min(dropdown.labels().size(),Math.max(1,(height-12)/OPTION_HEIGHT));}
+    private void highlightOption(int index){
+        highlighted=Math.clamp(index,0,dropdown.labels().size()-1);
+        firstOption=Math.clamp(firstOption,Math.max(0,highlighted-visibleOptions()+1),highlighted);
+    }
+    private int dropdownWidth(){
+        int widest=dropdown.labels().stream().mapToInt(font::width).max().orElse(0);
+        return Math.min(dropdown.anchor().getWidth(),Math.max(128,widest+32));
+    }
+    private int dropdownY(){
+        int listHeight=visibleOptions()*OPTION_HEIGHT+4;
+        int below=dropdown.anchor().getBottom()+2;
+        int above=dropdown.anchor().getY()-listHeight-2;
+        return below+listHeight<=height-4?below:Math.max(4,above);
+    }
+    private int optionAt(double mx,double my){
+        int right=dropdown.anchor().getRight(),top=dropdownY()+2;
+        if(mx<right-dropdownWidth()+2||mx>=right-2||my<top||my>=top+visibleOptions()*OPTION_HEIGHT)return -1;
+        return firstOption+(int)(my-top)/OPTION_HEIGHT;
+    }
+    private void chooseOption(int index){
+        var choice=dropdown;
+        dropdown=null;
+        choice.choose().accept(index);
+        persist();
+    }
+    private void renderDropdown(GuiGraphicsExtractor g,int mx,int my){
+        var palette=ToolkitTheme.palette();
+        int w=dropdownWidth(),x=dropdown.anchor().getRight()-w,y=dropdownY(),hover=optionAt(mx,my);
+        int rows=visibleOptions(),h=rows*OPTION_HEIGHT+4;
+        g.nextStratum();
+        ToolkitTheme.rounded(g,x,y,w,h,3,palette.border());
+        ToolkitTheme.rounded(g,x+1,y+1,w-2,h-2,3,palette.surface());
+        for(int row=0;row<rows;row++){
+            int index=firstOption+row,top=y+2+row*OPTION_HEIGHT;
+            boolean selected=index==dropdown.selected();
+            boolean pointed=index==(hover>=0?hover:highlighted);
+            if(selected||pointed){
+                ToolkitTheme.rounded(g,x+2,top,w-4,OPTION_HEIGHT,2,pointed?palette.hover():palette.accentSurface());
+            }
+            if(selected)g.fill(x+6,top+4,x+8,top+12,palette.accent());
+            String label=ToolkitTheme.clipText(font,Component.literal(dropdown.labels().get(index)),w-24);
+            ToolkitTheme.text(g,font,label,x+13,top+4,selected?palette.accent():palette.text());
+        }
     }
     private void sellAllBinding(int top){setting("Sell all key",top,()->ToolkitMod.sellAllKey.getTranslatedKeyMessage().getString(),()->bindingTarget=3);}
     private String timerStatus(BoosterTimers.Type type){
@@ -736,6 +812,7 @@ public final class ToolkitScreen extends Screen {
         if(VisualAlertOverlay.isActive()){
             VisualAlertOverlay.render(g,width,height);
         }
+        if(dropdown!=null)renderDropdown(g,mx,my);
     }
     private record HudPart(int id,String text,int x,int y,boolean visible){}
     private List<HudPart> hudParts(){
@@ -789,10 +866,27 @@ public final class ToolkitScreen extends Screen {
         super.extractRenderState(g,mx,my,tick);
     }
     @Override public boolean mouseScrolled(double mx,double my,double horizontal,double vertical){
+        if(dropdown!=null){
+            if(vertical!=0)highlightOption(highlighted+(vertical<0?1:-1));
+            return true;
+        }
         if(bindingTarget==0&&page!=5&&mx>=layout.bodyX()&&mx<=layout.bodyX()+layout.bodyWidth()&&my>=layout.bodyY()&&my<layout.footerY()){scroll+=(int)(-vertical*26);updateControls();return true;}
         return super.mouseScrolled(mx,my,horizontal,vertical);
     }
     @Override public boolean keyPressed(KeyEvent event){
+        if(dropdown!=null){
+            switch(event.key()){
+                case GLFW.GLFW_KEY_UP -> highlightOption(highlighted-1);
+                case GLFW.GLFW_KEY_DOWN -> highlightOption(highlighted+1);
+                case GLFW.GLFW_KEY_HOME -> highlightOption(0);
+                case GLFW.GLFW_KEY_END -> highlightOption(dropdown.labels().size()-1);
+                case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER, GLFW.GLFW_KEY_SPACE -> chooseOption(highlighted);
+                case GLFW.GLFW_KEY_ESCAPE -> dropdown=null;
+                case GLFW.GLFW_KEY_TAB -> {dropdown=null;return super.keyPressed(event);}
+                default -> {}
+            }
+            return true;
+        }
         if(page==13&&event.key()==GLFW.GLFW_KEY_ESCAPE&&query.isEmpty()&&statsProfileId!=null){
             if(statsSessionId!=null)statsSessionId=null;else statsProfileId=null;
             scroll=0;statsRefresh();return true;
@@ -818,6 +912,12 @@ public final class ToolkitScreen extends Screen {
         return super.keyPressed(event);
     }
     @Override public boolean mouseClicked(MouseButtonEvent event,boolean handled){
+        if(dropdown!=null){
+            int index=optionAt(event.x(),event.y());
+            if(index>=0&&event.button()==0)chooseOption(index);
+            else dropdown=null;
+            return true;
+        }
         if(bindingTarget>0)return true;
         if(page==5&&event.button()==0){
             for(var child:children())if(child instanceof AbstractWidget w&&w.visible&&w.isMouseOver(event.x(),event.y()))return super.mouseClicked(event,handled);

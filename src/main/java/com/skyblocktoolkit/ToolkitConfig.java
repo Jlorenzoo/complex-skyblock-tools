@@ -163,9 +163,8 @@ public final class ToolkitConfig {
         }
     }
     public Sample audioChoice(Cue cue){return alertSounds.getOrDefault(cue,cue.choices.getFirst());}
-    public void cycleAudio(Cue cue){
-        int index=cue.choices.indexOf(audioChoice(cue));
-        alertSounds.put(cue,cue.choices.get((index+1)%cue.choices.size()));
+    void selectAudio(Cue cue,Sample sample){
+        if(cue.choices.contains(sample))alertSounds.put(cue,sample);
     }
     public void save(){
         if(path==null)return;

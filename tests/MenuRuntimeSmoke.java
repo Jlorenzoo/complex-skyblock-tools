@@ -990,15 +990,14 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             check(mc.getSoundManager().play(cork)==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Cork pop starts at 900%");
                             fishing.biteSound=original;
                             fishing.oniEnergyAlert=false;
-                            for(int i=0;i<com.fishingpings.FishingConfig.BiteSound.values().length;i++){
-                                var next=fishing.biteSound.next();
-                                pressTopic(mc,"Bite sound");
+                            for(var next:com.fishingpings.FishingConfig.BiteSound.values()){
+                                selectDropdown(mc,"Bite sound",next.ordinal());
                                 pressTopic(mc,"Preview bite sound");
                                 var reloaded=new com.fishingpings.FishingConfig();
                                 check(fishing.biteSound==next&&reloaded.biteSound==next,"Bite sound choice survives reload");
                                 check(reloaded.biteSoundVolume==9&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
                             }
-                            check(fishing.biteSound==original,"Bite sound cycles through every choice");
+                            selectDropdown(mc,"Bite sound",original.ordinal());
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();
                             var soundConfig=ToolkitAudio.class.getResourceAsStream("/assets/skyblocktoolkit/sounds.json");
                             check(soundConfig!=null,"Toolkit sound manifest is packaged");
@@ -1027,25 +1026,41 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);
                         mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                         mc.setScreenAndShow(new ToolkitScreen(null,6));pressTopic(mc,"Sound Library");
+                        selectDropdown(mc,"Alert event",ToolkitAudio.Cue.READY.ordinal());
                         pressTopic(mc,"Alert event");
                     }else{
-                        capture(mc,"sound-library-"+sample);assertControls(mc);
+                        capture(mc,"sound-library-"+sample);
+                        mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                        assertControls(mc);
                         if(sample==0){
                             var cfg=ToolkitConfig.get();
                             var ready=ToolkitAudio.Cue.READY;
                             var snap=ToolkitAudio.Cue.SNAP;
                             var originalReady=cfg.audioChoice(ready);
                             var originalSnap=cfg.audioChoice(snap);
-                            pressTopic(mc,"Alert sound");
+                            selectDropdown(mc,"Alert sound",(ready.choices.indexOf(originalReady)+1)%ready.choices.size());
                             check(cfg.audioChoice(ready)!=originalReady&&cfg.audioChoice(snap)==originalSnap,"Sound Library changes only the selected event");
                             var constructor=ToolkitConfig.class.getDeclaredConstructor();
                             constructor.setAccessible(true);
                             check(constructor.newInstance().audioChoice(ready)==cfg.audioChoice(ready),"Alert sound choice survives reload");
                             for(var cue:ToolkitAudio.Cue.values()){
+                                selectDropdown(mc,"Alert event",cue.ordinal());
                                 pressTopic(mc,"Preview alert sound");
-                                pressTopic(mc,"Alert event");
                             }
-                            while(cfg.audioChoice(ready)!=originalReady)cfg.cycleAudio(ready);
+                            cfg.selectAudio(ready,originalReady);
+                            cfg.save();
+                            pressTopic(mc,"Utilities");pressTopic(mc,"Auction notifications");
+                            var auction=ToolkitAudio.Cue.AUCTION;
+                            var originalAuction=cfg.audioChoice(auction);
+                            selectDropdown(mc,"Sound",auction.choices.size()-1);
+                            check(cfg.audioChoice(auction)==ToolkitAudio.Sample.BELL,"Auction dropdown selects the last sound directly");
+                            var screen=mc.gui.screen();
+                            var anchor=screen.children().stream().filter(c->c instanceof Button b&&ToolkitScreen.searchTarget(b,"Sound"))
+                                .map(c->(Button)c).findFirst().orElseThrow();
+                            screen.mouseClicked(new MouseButtonEvent(anchor.getRight()-16,anchor.getY()+10,new MouseButtonInfo(0,0)),false);
+                            screen.mouseClicked(new MouseButtonEvent(anchor.getRight()-16,anchor.getBottom()+10,new MouseButtonInfo(0,0)),false);
+                            check(cfg.audioChoice(auction)==auction.choices.getFirst(),"Mouse selects the first auction option");
+                            cfg.selectAudio(auction,originalAuction);
                             cfg.save();
                         }
                     }
@@ -1096,6 +1111,13 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             screen.mouseScrolled(screen.width/2,screen.height/2,0,-1);
         }
         throw new AssertionError("topic missing: "+title);
+    }
+    void selectDropdown(net.minecraft.client.Minecraft mc,String title,int index){
+        pressTopic(mc,title);
+        var screen=mc.gui.screen();
+        screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_HOME,0,0));
+        for(int i=0;i<index;i++)screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_DOWN,0,0));
+        screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ENTER,0,0));
     }
     void press(net.minecraft.client.Minecraft mc,String text){
         for(var child:mc.gui.screen().children())if(child instanceof Button b&&b.visible&&b.active&&b.getMessage().getString().startsWith(text)){b.onPress(null);return;}
