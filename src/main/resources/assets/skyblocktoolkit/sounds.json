@@ -191,5 +191,23 @@
       }
     ],
     "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "bobber_dip": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:bobber_dip",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "water_strike": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:water_strike",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
   }
 }

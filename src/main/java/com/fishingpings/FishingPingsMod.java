@@ -31,6 +31,8 @@ public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent HOLLOW_PLOP=ToolkitAudio.event("hollow_plop");
     private static final SoundEvent WOODEN_TAP=ToolkitAudio.event("wooden_tap");
     private static final SoundEvent DOUBLE_KNOCK=ToolkitAudio.event("double_knock");
+    private static final SoundEvent BOBBER_DIP=ToolkitAudio.event("bobber_dip");
+    private static final SoundEvent WATER_STRIKE=ToolkitAudio.event("water_strike");
     private static final SoundEvent SHORT_SPLASH=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","short_splash"));
     private static final SoundEvent WATER_DROP=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","water_drop"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
@@ -228,6 +230,8 @@ public final class FishingPingsMod implements ClientModInitializer {
             case HOLLOW_PLOP -> HOLLOW_PLOP;
             case WOODEN_TAP -> WOODEN_TAP;
             case DOUBLE_KNOCK -> DOUBLE_KNOCK;
+            case BOBBER_DIP -> BOBBER_DIP;
+            case WATER_STRIKE -> WATER_STRIKE;
             case SHORT_SPLASH -> SHORT_SPLASH;
             case VANILLA_SPLASH -> SoundEvents.FISHING_BOBBER_SPLASH;
             case WATER_DROP -> WATER_DROP;
