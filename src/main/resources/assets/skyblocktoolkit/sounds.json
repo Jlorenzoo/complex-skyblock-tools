@@ -155,5 +155,32 @@
       }
     ],
     "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "muted_splash": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:muted_splash",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "hollow_plop": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:hollow_plop",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
+  },
+  "wooden_tap": {
+    "sounds": [
+      {
+        "name": "skyblocktoolkit:wooden_tap",
+        "preload": true
+      }
+    ],
+    "subtitle": "subtitles.entity.fishing_bobber.splash"
   }
 }

@@ -27,6 +27,9 @@ public final class FishingPingsMod implements ClientModInitializer {
     private static final SoundEvent PEBBLE_SPLASH=ToolkitAudio.event("pebble_splash");
     private static final SoundEvent RIPPLE_TICK=ToolkitAudio.event("ripple_tick");
     private static final SoundEvent CORK_POP=ToolkitAudio.event("cork_pop");
+    private static final SoundEvent MUTED_SPLASH=ToolkitAudio.event("muted_splash");
+    private static final SoundEvent HOLLOW_PLOP=ToolkitAudio.event("hollow_plop");
+    private static final SoundEvent WOODEN_TAP=ToolkitAudio.event("wooden_tap");
     private static final SoundEvent SHORT_SPLASH=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","short_splash"));
     private static final SoundEvent WATER_DROP=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","water_drop"));
     private static final SoundEvent ONI_FULL_CHIME=SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("skyblocktoolkit","oni_full_chime"));
@@ -41,12 +44,17 @@ public final class FishingPingsMod implements ClientModInitializer {
     private int[] previousFish;
     private boolean oniCast;
     private long oniReelAt=-1;
+    private long lastOniActivity=-1;
+    private String observedOniRod;
     private Object oniLevel;
     private FishingConfig config;
     private Object lastLevel;
     private long secondWarningAt=-1;
     private boolean warnedAboutBossAccess, openMenu,warningPreview;
     public FishingConfig settings(){return config;}
+    public boolean recentOniActivity(long now){
+        return lastOniActivity>=0&&now-lastOniActivity<5_000;
+    }
     public String oniLabel(long now){
         if(!config.hasOniPrices())return "";
         long minutes=oniEarnings.sampleTime(now)/60_000;
@@ -67,14 +75,18 @@ public final class FishingPingsMod implements ClientModInitializer {
         ClientReceiveMessageEvents.GAME.register((message,overlay)->{
             var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null)return;
             String text=message.getString();long now=System.currentTimeMillis();
-            if(!overlay&&holdingOniRod(mc)){
+            if(!overlay){
                 resetOniOnLevelChange(mc);
-                long shards=FishingSignals.oniShardReward(text);
-                if(shards>0){
-                    oniEarnings.add(now,OniEarnings.Reward.GOLD_SHARD,shards);
-                    ItemStatsTracker.oniShards(shards,now);
+                if(FishingSignals.oniActivity(text))observeOniRod(mc,now);
+                if(holdingOniRod(mc)){
+                    long shards=FishingSignals.oniShardReward(text);
+                    if(shards>0){
+                        lastOniActivity=now;
+                        oniEarnings.add(now,OniEarnings.Reward.GOLD_SHARD,shards);
+                        ItemStatsTracker.oniShards(shards,now);
+                    }
+                    oniEarnings.add(now,OniEarnings.Reward.VOTE_KEY,FishingSignals.oniVoteKeyReward(text));
                 }
-                oniEarnings.add(now,OniEarnings.Reward.VOTE_KEY,FishingSignals.oniVoteKeyReward(text));
             }
             // Actionbar and system messages are supported; signed player-chat is not parsed.
             if(config.snapEnabled&&holdingVoidRod(mc)&&signals.snapped(text,now)){signals.cast(null,now);snapSound(mc);}
@@ -95,7 +107,7 @@ public final class FishingPingsMod implements ClientModInitializer {
             }
             if(mc.player==null||mc.level==null)return;
             signals.cast(mc.player.fishing==null?null:mc.player.fishing.getUUID(),now);
-            if((!config.depthEnabled&&!config.snapEnabled&&!config.oniEnergyAlert)||mc.gui==null||mc.gui.hud==null)return;
+            if(mc.gui==null||mc.gui.hud==null)return;
             try{
                 var overlay=mc.gui.hud.getBossOverlay();
                 if(overlay==null)return;
@@ -104,12 +116,13 @@ public final class FishingPingsMod implements ClientModInitializer {
                 for(var bar:events.values()){
                     String title=bar.getName().getString();
                     if(config.depthEnabled||config.snapEnabled)checkDepth(mc,title,now);
-                    if(config.oniEnergyAlert&&(energy==null||!energy.full())){
+                    if(energy==null||!energy.full()){
                         var observed=FishingSignals.cursedEnergy(title);
                         if(observed!=null)energy=observed;
                     }
                 }
-                playOniCue(mc,signals.oniCue(energy,now));
+                if(energy!=null&&(mc.player.fishing!=null||holdingOniRod(mc)))observeOniRod(mc,now);
+                if(config.oniEnergyAlert)playOniCue(mc,signals.oniCue(energy,now));
                 if(config.snapEnabled&&mc.player.fishing!=null
                     &&holdingVoidRod(mc)
                     &&signals.snapped(null,now))snapSound(mc);
@@ -130,9 +143,22 @@ public final class FishingPingsMod implements ClientModInitializer {
             ||(off.is(Items.FISHING_ROD)&&FishingSignals.voidRod(off.getHoverName().getString()));
     }
     public static boolean holdingOniRod(Minecraft mc){
-        if(mc.player==null)return false;
+        String name=heldRodName(mc);
+        return name!=null&&(FishingSignals.oniRod(name)
+            ||(mc.level==oniLevel&&name.equals(observedOniRod)));
+    }
+    private static String heldRodName(Minecraft mc){
+        if(mc.player==null)return null;
         var rod=mc.player.getMainHandItem();
-        return rod.is(Items.FISHING_ROD)&&FishingSignals.oniRod(rod.getHoverName().getString());
+        if(!rod.is(Items.FISHING_ROD))rod=mc.player.getOffhandItem();
+        return rod.is(Items.FISHING_ROD)?rod.getHoverName().getString():null;
+    }
+    private void observeOniRod(Minecraft mc,long now){
+        String name=heldRodName(mc);
+        if(name==null)return;
+        observedOniRod=name;
+        lastOniActivity=now;
+        oniEarnings.start(now);
     }
     private void resetOniOnLevelChange(Minecraft mc){
         if(mc.level==oniLevel)return;
@@ -141,6 +167,8 @@ public final class FishingPingsMod implements ClientModInitializer {
         previousFish=null;
         oniCast=false;
         oniReelAt=-1;
+        lastOniActivity=-1;
+        observedOniRod=null;
     }
     private void sampleOniFish(Minecraft mc,long now){
         if(mc.level==null||!holdingOniRod(mc)||mc.gui.screen()!=null){
@@ -195,6 +223,9 @@ public final class FishingPingsMod implements ClientModInitializer {
             case PEBBLE -> PEBBLE_SPLASH;
             case RIPPLE -> RIPPLE_TICK;
             case CORK -> CORK_POP;
+            case MUTED_SPLASH -> MUTED_SPLASH;
+            case HOLLOW_PLOP -> HOLLOW_PLOP;
+            case WOODEN_TAP -> WOODEN_TAP;
             case SHORT_SPLASH -> SHORT_SPLASH;
             case VANILLA_SPLASH -> SoundEvents.FISHING_BOBBER_SPLASH;
             case WATER_DROP -> WATER_DROP;

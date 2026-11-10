@@ -9,6 +9,7 @@ public final class FishingConfig {
     public static final float MAX_BITE_SOUND_VOLUME=9f;
     public float biteSoundVolume=2f;
     public enum BiteSound {
+        MUTED_SPLASH("Muted splash"), HOLLOW_PLOP("Hollow plop"), WOODEN_TAP("Wooden tap"),
         PEBBLE("Pebble splash"), RIPPLE("Ripple tick"), CORK("Cork pop"),
         SHORT_SPLASH("Short splash"), VANILLA_SPLASH("Vanilla splash"), WATER_DROP("Water drop");
 
