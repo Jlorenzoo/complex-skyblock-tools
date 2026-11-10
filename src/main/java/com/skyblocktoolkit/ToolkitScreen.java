@@ -447,7 +447,7 @@ public final class ToolkitScreen extends Screen {
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
         if(topic("Fishing",0)){
-            slider("Bite sound volume",16,fishCfg.biteSoundVolume,4,v->fishCfg.biteSoundVolume=(float)v);
+            slider("Bite sound volume",16,fishCfg.biteSoundVolume,com.fishingpings.FishingConfig.MAX_BITE_SOUND_VOLUME,v->fishCfg.biteSoundVolume=(float)v);
             setting("Bite sound",40,()->fishCfg.biteSound.label,()->fishCfg.biteSound=fishCfg.biteSound.next());
             button("Preview bite sound",64,fishing::previewBite);
             toggle("Depleted area",92,()->fishCfg.warningEnabled,()->{fishCfg.warningEnabled=!fishCfg.warningEnabled;fishing.warningChanged();});

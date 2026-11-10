@@ -974,14 +974,29 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             var fishing=ToolkitMod.FISHING.settings();
                             var original=fishing.biteSound;
                             float oldVolume=fishing.biteSoundVolume;boolean oldChime=fishing.oniEnergyAlert;
-                            fishing.biteSoundVolume=3.5f;fishing.oniEnergyAlert=false;
+                            var screen=mc.gui.screen();
+                            var volumeSlider=screen.children().stream()
+                                .filter(c->c instanceof net.minecraft.client.gui.components.AbstractSliderButton slider&&ToolkitScreen.searchTarget(slider,"Bite sound volume"))
+                                .map(c->(net.minecraft.client.gui.components.AbstractSliderButton)c).findFirst().orElseThrow();
+                            var maxClick=new MouseButtonEvent(volumeSlider.getRight()-44,volumeSlider.getY()+10,new MouseButtonInfo(0,0));
+                            screen.mouseClicked(maxClick,false);
+                            screen.mouseReleased(maxClick);
+                            check(fishing.biteSoundVolume==9,"Bite slider reaches 900%");
+                            fishing.biteSound=com.fishingpings.FishingConfig.BiteSound.CORK;
+                            var biteFactory=com.fishingpings.FishingPingsMod.class.getDeclaredMethod("biteSound",net.minecraft.sounds.SoundSource.class);
+                            biteFactory.setAccessible(true);
+                            var cork=(AlertSound)biteFactory.invoke(ToolkitMod.FISHING,net.minecraft.sounds.SoundSource.NEUTRAL);
+                            check(cork.gain==9&&cork.getIdentifier().getPath().equals("cork_pop"),"Cork pop uses the full bite gain");
+                            check(mc.getSoundManager().play(cork)==net.minecraft.client.sounds.SoundEngine.PlayResult.STARTED,"Cork pop starts at 900%");
+                            fishing.biteSound=original;
+                            fishing.oniEnergyAlert=false;
                             for(int i=0;i<com.fishingpings.FishingConfig.BiteSound.values().length;i++){
                                 var next=fishing.biteSound.next();
                                 pressTopic(mc,"Bite sound");
                                 pressTopic(mc,"Preview bite sound");
                                 var reloaded=new com.fishingpings.FishingConfig();
                                 check(fishing.biteSound==next&&reloaded.biteSound==next,"Bite sound choice survives reload");
-                                check(reloaded.biteSoundVolume==3.5f&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
+                                check(reloaded.biteSoundVolume==9&&!reloaded.oniEnergyAlert,"Existing fishing audio settings survive reload");
                             }
                             check(fishing.biteSound==original,"Bite sound cycles through every choice");
                             fishing.biteSoundVolume=oldVolume;fishing.oniEnergyAlert=oldChime;fishing.save();

@@ -6,6 +6,7 @@ import java.nio.file.*;
 public final class FishingConfig {
     public boolean depthEnabled=true,warningEnabled=true,snapEnabled=true;
     public float volume=0.18f;
+    public static final float MAX_BITE_SOUND_VOLUME=9f;
     public float biteSoundVolume=2f;
     public enum BiteSound {
         PEBBLE("Pebble splash"), RIPPLE("Ripple tick"), CORK("Cork pop"),
@@ -49,7 +50,7 @@ public final class FishingConfig {
             if(json.has("volume")){float v=json.get("volume").getAsFloat();if(Float.isFinite(v))volume=Math.clamp(v,0,3);}
             if(json.has("biteSoundVolume")){
                 float value=json.get("biteSoundVolume").getAsFloat();
-                if(Float.isFinite(value))biteSoundVolume=Math.clamp(value,0,4);
+                if(Float.isFinite(value))biteSoundVolume=Math.clamp(value,0,MAX_BITE_SOUND_VOLUME);
             }
             if(json.has("oniEnergyAlert"))oniEnergyAlert=json.get("oniEnergyAlert").getAsBoolean();
             if(json.has("lowBitePing")&&!json.get("lowBitePing").getAsBoolean())biteSound=BiteSound.VANILLA_SPLASH;
