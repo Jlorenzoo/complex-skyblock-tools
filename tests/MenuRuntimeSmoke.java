@@ -1019,13 +1019,16 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage>=291&&stage<299){
-                    int sample=(stage-291)/2;
-                    if(stage%2==1){
+                if(stage>=291&&stage<303){
+                    int sample=(stage-291)/3;
+                    int step=(stage-291)%3;
+                    if(step==0){
                         ToolkitConfig.get().lightMode=sample%2==1;
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);
                         mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                         mc.setScreenAndShow(new ToolkitScreen(null,6));pressTopic(mc,"Sound Library");
+                    }else if(step==1){
+                        // The window resize can reinitialize the screen before the next frame.
                         selectDropdown(mc,"Alert event",ToolkitAudio.Cue.READY.ordinal());
                         pressTopic(mc,"Alert event");
                     }else{
@@ -1066,7 +1069,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==299){
+                if(stage==303){
                     Files.writeString(output.resolve("AUDIO-PASS.txt"),"PASS: all bundled sound events preloaded and started through the sound engine. Fishing choices, all alert preview routes, independent selection, persistence and four Sound Library layouts.\n");
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
