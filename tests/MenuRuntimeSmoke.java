@@ -884,12 +884,18 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     if(step==0){
                         if(stage==255){
                             var history=ItemStatsTracker.history();long now=System.currentTimeMillis();
-                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Oni Fishing Rod","HAND","{\"id\":\"minecraft:fishing_rod\"}");
+                            var rod=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.FISHING_ROD);
+                            rod.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Oni Fishing Rod"));
+                            rod.set(net.minecraft.core.component.DataComponents.LORE,new net.minecraft.world.item.component.ItemLore(java.util.List.of(
+                                net.minecraft.network.chat.Component.literal("Seasonal · Cursed Energy"),
+                                net.minecraft.network.chat.Component.literal("Lucky Catch V"))));
+                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Oni Fishing Rod","HAND",ItemStatsTracker.encode(rod));
                             statsFixtureId=p.id;
                             history.rename(p,"My Oni Rod");
                             history.start(p,now-300000,ItemStatsLocation.REALM);history.tick(now-1000);
                             history.money(1500000,50,now-299000,now-1000);history.shards(64,now-10000);history.fish(120,240000,now-10000);history.stop(now,"Stopped");
                             history.start(p,now-600000,ItemStatsLocation.OVERWORLD);history.tick(now-400000);history.money(300000,0,now-599000,now-400000);history.stop(now-400000,"Stopped");
+                            check(history.sessions(p.id).getFirst().location==ItemStatsLocation.REALM,"Session dates determine order even if stored out of order");
                             history.register(ItemStatsTracker.scope(),"fedcba9876543210","Unused fishing rod","HAND","{\"id\":\"minecraft:fishing_rod\"}");
                             history.register(ItemStatsTracker.scope(),"0123456789unused","Yellow Shulker Box","Inventory","{\"id\":\"minecraft:yellow_shulker_box\"}");
                             var armor=history.register(ItemStatsTracker.scope(),"0123456789armor","Bone Leggings","LEGS","{\"id\":\"minecraft:netherite_leggings\"}");
@@ -904,6 +910,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                         ToolkitConfig.get().includeGoldShards=true;ToolkitConfig.get().goldShardPrice=125000;
                         mc.setScreenAndShow(new ToolkitScreen(null,13));
+                        hoverStatsRow(mc,ItemStatsTracker.history().profile(statsFixtureId).title());
                     }else if(step==1){
                         capture(mc,"stats-library-"+sample);assertControls(mc);
                         check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&(b.getMessage().getString().contains("Unused fishing rod")||b.getMessage().getString().contains("Yellow Shulker Box")||b.getMessage().getString().contains("Bone Leggings"))),"Stats excludes unused tools, storage and legacy armor rewards");
@@ -913,6 +920,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         press(mc,"Area: Overworld");check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).count()==1,"Realm filter selects only Realm sessions");
                     }else if(step==2){
                         capture(mc,"stats-item-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
+                        hoverStatsRow(mc,"$114.00M/h");
                     }else if(step==3){
                         capture(mc,"stats-history-"+sample);
                         String sessionTitle=mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).map(c->((Button)c).getMessage().getString()).findFirst().orElseThrow();
@@ -1099,6 +1107,13 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     }
     void capture(net.minecraft.client.Minecraft mc,String name){
         Screenshot.grab(output.toFile(),name+".png",mc.gameRenderer.mainRenderTarget(),1,msg->{});
+    }
+    void hoverStatsRow(net.minecraft.client.Minecraft mc,String title){
+        var row=mc.gui.screen().children().stream()
+            .filter(c->c instanceof Button b&&b.visible&&b.getMessage().getString().startsWith(title))
+            .map(c->(Button)c).findFirst().orElseThrow();
+        double scale=mc.getWindow().getGuiScale();
+        GLFW.glfwSetCursorPos(mc.getWindow().handle(),(row.getX()+12)*scale,(row.getY()+10)*scale);
     }
     void scrollBottom(net.minecraft.client.Minecraft mc){
         var screen=mc.gui.screen();screen.mouseScrolled(screen.width/2,screen.height/2,0,-100);

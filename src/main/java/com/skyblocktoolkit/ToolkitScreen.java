@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.*;
 import java.util.function.*;
@@ -28,6 +29,7 @@ public final class ToolkitScreen extends Screen {
     private int bindingTarget; // 0=none, 1=menu, 2=blackout, 3=sellall, 4=fullbright
     private boolean fishEarnings;
     private String statsProfileId,statsSessionId;
+    private final Map<ToolkitButton,ItemStack> statsItemTooltips=new LinkedHashMap<>();
     private long statsUpdated;
     private ItemStatsLocation statsArea;
     private final Set<String> expandedDetails=new HashSet<>();
@@ -135,7 +137,7 @@ public final class ToolkitScreen extends Screen {
     }
     @Override protected void init(){
         dropdown=null;
-        layout=ToolkitLayout.hub(width,height);topicBack=null;controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        layout=ToolkitLayout.hub(width,height);topicBack=null;controls.clear();statsItemTooltips.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
         if(page==5){initLayout();return;}
         int x=layout.x(),y=layout.y(),w=layout.width();
         addThemeButton(x,y,w);
@@ -193,7 +195,7 @@ public final class ToolkitScreen extends Screen {
     private void clearBody(){
         if(topicBack!=null){removeWidget(topicBack);topicBack=null;}
         for(var control:controls)removeWidget(control.widget());
-        controls.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
+        controls.clear();statsItemTooltips.clear();labels.clear();priceFields.clear();settingFields.clear();contentHeight=0;
     }
     private void buildBody(){
         layout=ToolkitLayout.hub(width,height);
@@ -389,9 +391,11 @@ public final class ToolkitScreen extends Screen {
                 var totals=statsTotals(p.id);
                 String drops=totals.shards()>0||totals.fish()==0?totals.shards()+" shards":totals.fish()+" catches";
                 String subtitle=totals.sessions()+" sessions · "+statsRate(totals)+" · "+drops;
-                var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,ItemStatsTracker.icon(p),history.recording(p.id),b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
-                row.setTooltip(Tooltip.create(Component.literal(p.name+" · "+p.slot+"\n"+(p.physicalId!=null&&!p.physicalId.startsWith("local:")?"Recognized by server item ID.":"Recognized by item data and inventory continuity. Identical items without server IDs can be ambiguous."))));
-                controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=30;
+                var stack=ItemStatsTracker.icon(p);
+                var row=addRenderableWidget(ToolkitButton.seasonalCard(p.title(),subtitle,stack,history.recording(p.id),b->{statsProfileId=p.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+                if(!stack.isEmpty())statsItemTooltips.put(row,stack);
+                else row.setTooltip(Tooltip.create(Component.literal(p.name+" · Saved item details unavailable")));
+                controls.add(new Control(row,top,32));contentHeight=Math.max(contentHeight,top+32);top+=36;
             }
             return;
         }
@@ -426,10 +430,13 @@ public final class ToolkitScreen extends Screen {
         label("Average = total income / total time, including idle grace.",176);
         label("Past sessions · money per hour",200);
         int top=216;
-        if(history.sessions(profile.id,statsArea).isEmpty())label("No sessions in this area yet. Tracking starts automatically.",top);
-        for(var s:history.sessions(profile.id,statsArea)){
+        var sessions=history.sessions(profile.id,statsArea);
+        var stack=ItemStatsTracker.icon(profile);
+        if(sessions.isEmpty())label("No sessions in this area yet. Tracking starts automatically.",top);
+        for(var s:sessions){
             var row=addRenderableWidget(ToolkitButton.topic(statsRate(s.totals())+" \u00b7 "+s.status,
                 statsDate(s.started)+" \u00b7 "+s.location.label()+" \u00b7 "+statsTime(s.elapsed()),b->{statsSessionId=s.id;scroll=0;statsRefresh();},layout.bodyX(),layout.bodyY(),layout.bodyWidth()));
+            if(!stack.isEmpty())statsItemTooltips.put(row,stack);
             controls.add(new Control(row,top,40));contentHeight=Math.max(contentHeight,top+40);top+=44;
         }
     }
@@ -803,6 +810,15 @@ public final class ToolkitScreen extends Screen {
         g.disableScissor();
         if(layout.maxScroll(contentHeight)>0){int track=layout.viewport(),thumb=Math.max(12,track*track/contentHeight),ty=layout.bodyY()+scroll*(track-thumb)/layout.maxScroll(contentHeight);g.fill(x+w-5,ty,x+w-3,ty+thumb,com.skyblocktoolkit.ToolkitTheme.palette().muted());}
         super.extractRenderState(g,mx,my,tick);
+
+        if(bindingTarget==0&&dropdown==null){
+            for(var entry:statsItemTooltips.entrySet()){
+                if(entry.getKey().visible&&entry.getKey().isMouseOver(mx,my)){
+                    g.setTooltipForNextFrame(font,entry.getValue(),mx,my);
+                    break;
+                }
+            }
+        }
 
         if(bindingTarget>0){
             ToolkitTheme.rounded(g,x,y,w,h,6,ToolkitTheme.palette().panel());

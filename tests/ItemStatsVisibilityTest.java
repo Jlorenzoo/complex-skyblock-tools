@@ -31,6 +31,12 @@ public final class ItemStatsVisibilityTest {
             var rod=loaded.register("s/p","fish-fingerprint","Void Rod","HAND","{\"id\":\"minecraft:fishing_rod\"}");
             loaded.start(rod,9000);loaded.tick(10000);loaded.fish(2,0,9500);loaded.stop(10000,"Stopped");
             check(loaded.visibleProfiles("s/p",null).size()==3,"positive cash and confirmed catches also qualify tools, including unpriced fish");
+            loaded.start(loaded.profile(hoeId),10500,ItemStatsLocation.REALM);loaded.tick(10800);
+            loaded.shards(1,10600);loaded.stop(10800,"Stopped");
+            check(loaded.visibleProfiles("s/p",null).stream().map(p->p.id).toList().equals(List.of(hoeId,rod.id,cash.id)),
+                "items sort by latest earning session, even when the oldest profile earns again");
+            check(loaded.visibleProfiles("s/p",ItemStatsLocation.UNKNOWN).stream().map(p->p.id).toList().equals(List.of(rod.id,cash.id)),
+                "area filters use only matching earning sessions");
             // Legacy broad-scan history must disappear from the list, even if old code copied rewards to armor.
             var armor=loaded.register("s/p","armor-fingerprint","Bone Leggings","LEGS","{\"id\":\"minecraft:netherite_leggings\"}");
             loaded.start(armor,11000);loaded.tick(12000);loaded.shards(1,11500);loaded.stop(12000,"Stopped");

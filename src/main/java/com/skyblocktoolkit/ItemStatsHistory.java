@@ -65,11 +65,25 @@ public final class ItemStatsHistory {
     public List<Profile> profiles(String scope){return data.profiles.stream().filter(p->p.scope.equals(scope)).toList();}
     public boolean hasData(String profileId,ItemStatsLocation location){return data.sessions.stream().anyMatch(s->s.profileId.equals(profileId)&&(location==null||s.location==location)&&s.hasData());}
     /** Recognition candidates stay internal until a relevant, positive result has been observed. */
-    public List<Profile> visibleProfiles(String scope,ItemStatsLocation location){return profiles(scope).stream().filter(p->ItemStatsEligibility.profile(p)&&hasData(p.id,location)).toList();}
+    public List<Profile> visibleProfiles(String scope,ItemStatsLocation location){
+        Map<String,Long> latestEarnings=new HashMap<>();
+        for(var s:data.sessions)
+            if((location==null||s.location==location)&&s.hasData())
+                latestEarnings.merge(s.profileId,s.started,Math::max);
+        return profiles(scope).stream()
+            .filter(p->latestEarnings.containsKey(p.id)&&ItemStatsEligibility.profile(p))
+            .sorted(Comparator.comparingLong((Profile p)->latestEarnings.get(p.id)).reversed())
+            .toList();
+    }
     public long earningSessions(){return active.stream().filter(s->s.hasData()&&ItemStatsEligibility.profile(profile(s.profileId))).count();}
     public Profile profile(String id){return data.profiles.stream().filter(p->p.id.equals(id)).findFirst().orElse(null);}
     public List<Session> sessions(String profileId){return sessions(profileId,null);}
-    public List<Session> sessions(String profileId,ItemStatsLocation location){var result=new ArrayList<>(data.sessions.stream().filter(s->s.profileId.equals(profileId)&&(location==null||s.location==location)).toList());Collections.reverse(result);return result;}
+    public List<Session> sessions(String profileId,ItemStatsLocation location){
+        return data.sessions.reversed().stream()
+            .filter(s->s.profileId.equals(profileId)&&(location==null||s.location==location))
+            .sorted(Comparator.comparingLong((Session s)->s.started).reversed())
+            .toList();
+    }
     public Session active(){return active.isEmpty()?null:active.getFirst();}
     public List<Session> activeSessions(){return List.copyOf(active);}
     public boolean recording(String profileId){return active.stream().anyMatch(s->s.profileId.equals(profileId));}
