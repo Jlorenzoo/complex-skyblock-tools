@@ -24,6 +24,10 @@ public final class FishingSignalsTest {
         check(FishingSignals.oniShardReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other Oni loot is excluded");
         check(FishingSignals.oniShardReward("[Player] 👹 Cursed Spirits VIII ┃ ✔ You found 13x  Gold Shard !")==0,"Prefixed chat is excluded");
         String voteKey="👹 Cursed Spirits VIII ┃ ✔ You found 1x ♦ VOTE KEY ♦!";
+        check(FishingSignals.oniActivity(voteKey),"Current-session Vote Key reward identifies Oni activity");
+        check(FishingSignals.oniActivity("👹 Cursed Spirits VIII ┃ ✔ Consuming cursed energy."),"Activation identifies Oni activity");
+        check(!FishingSignals.oniActivity("[Member] Player: "+voteKey),"Player chat cannot identify the held rod");
+        check(!FishingSignals.oniActivity("◆ Gold Fish V ┃ ✔ You found 1x Gold Shard!"),"Gold Fish also appears on other rods");
         check(FishingSignals.oniVoteKeyReward(voteKey)==1,"Vote Key reward from the current session");
         check(FishingSignals.oniVoteKeyReward("[Member] Player: "+voteKey)==0,"Player chat cannot add a Vote Key");
         check(FishingSignals.oniVoteKeyReward("👹 Cursed Spirits VIII ┃ ✔ You found 1x Present!")==0,"Other drops do not add keys");

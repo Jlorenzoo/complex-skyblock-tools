@@ -15,6 +15,8 @@ public final class FishingSignals {
         "(?i)^[^\\p{L}\\p{N}\\[]*(?:Cursed Spirits|Gold Fish) [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Gold Shards?[^\\p{L}\\p{N}]*$");
     private static final Pattern ONI_KEYS=Pattern.compile(
         "(?i)^[^\\p{L}\\p{N}\\[]*Cursed Spirits [IVXLCDM]+\\s*┃\\s*✔\\s*You found ([0-9,]+)x\\s*[^\\p{L}\\p{N}]*Vote Keys?[^\\p{L}\\p{N}]*$");
+    private static final Pattern ONI_ACTIVITY=Pattern.compile(
+        "(?i)^[^\\p{L}\\p{N}\\[]*Cursed Spirits [IVXLCDM]+\\s*┃\\s*✔\\s*(?:Consuming cursed energy\\.|You found [0-9,]+x\\s+.+!)$");
     private long lastSnap=Long.MIN_VALUE;
     private UUID cast;private boolean notified,sawBelowTarget;private long castSince,lastWarning=Long.MIN_VALUE;
     private Energy previousEnergy;
@@ -27,6 +29,9 @@ public final class FishingSignals {
     public enum OniCue { NONE, TWO_AWAY, ONE_AWAY, FULL }
     public static boolean oniRod(String name){
         return name!=null&&ONI_ROD.matcher(name.replaceAll("§.","")).matches();
+    }
+    public static boolean oniActivity(String text){
+        return text!=null&&ONI_ACTIVITY.matcher(BAR_FORMATTING.matcher(text).replaceAll("").strip()).matches();
     }
     public static long oniShardReward(String text){
         return rewardCount(text,ONI_SHARDS);

@@ -83,7 +83,7 @@ public final class FishingPingsMod implements ClientModInitializer {
                     if(shards>0){
                         lastOniActivity=now;
                         oniEarnings.add(now,OniEarnings.Reward.GOLD_SHARD,shards);
-                        ItemStatsTracker.oniShards(shards,now);
+                        ItemStatsTracker.oniShards(shards,now,heldRodName(mc));
                     }
                     oniEarnings.add(now,OniEarnings.Reward.VOTE_KEY,FishingSignals.oniVoteKeyReward(text));
                 }
@@ -142,7 +142,7 @@ public final class FishingPingsMod implements ClientModInitializer {
         return (main.is(Items.FISHING_ROD)&&FishingSignals.voidRod(main.getHoverName().getString()))
             ||(off.is(Items.FISHING_ROD)&&FishingSignals.voidRod(off.getHoverName().getString()));
     }
-    public static boolean holdingOniRod(Minecraft mc){
+    public boolean holdingOniRod(Minecraft mc){
         String name=heldRodName(mc);
         return name!=null&&(FishingSignals.oniRod(name)
             ||(mc.level==oniLevel&&name.equals(observedOniRod)));
