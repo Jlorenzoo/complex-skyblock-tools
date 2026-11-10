@@ -41,8 +41,12 @@ public final class ItemStatsTracker {
         return ItemStack.CODEC.encodeStart(mc.level.registryAccess().createSerializationContext(JsonOps.INSTANCE),stack.copyWithCount(1)).result().map(Object::toString).orElse(null);
     }
     public static ItemStack icon(ItemStatsHistory.Profile p){
-        try{var mc=Minecraft.getInstance();if(mc.level!=null&&p.icon!=null)return ItemStack.CODEC.parse(mc.level.registryAccess().createSerializationContext(JsonOps.INSTANCE),JsonParser.parseString(p.icon)).result().orElse(ItemStack.EMPTY);}catch(Exception ignored){}
-        return ItemStack.EMPTY;
+        if(p.icon==null)return ItemStack.EMPTY;
+        try{
+            var level=Minecraft.getInstance().level;
+            var ops=level==null?JsonOps.INSTANCE:level.registryAccess().createSerializationContext(JsonOps.INSTANCE);
+            return ItemStack.CODEC.parse(ops,JsonParser.parseString(p.icon)).result().orElse(ItemStack.EMPTY);
+        }catch(Exception ignored){return ItemStack.EMPTY;}
     }
     public static boolean trackable(ItemStack stack){
         return !stack.isEmpty()&&(stack.is(ItemTags.HOES)||stack.is(ItemTags.PICKAXES)||stack.is(ItemTags.AXES)||stack.is(ItemTags.SHOVELS)||stack.is(ItemTags.SWORDS)||stack.getItem() instanceof FishingRodItem

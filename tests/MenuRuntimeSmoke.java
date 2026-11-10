@@ -17,6 +17,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
     int ticks,stage=Boolean.getBoolean("toolkit.voicePreviewOnly")?600:Boolean.getBoolean("toolkit.roundedPreviewOnly")?400:Boolean.getBoolean("toolkit.alertPreviewOnly")?129:(Boolean.getBoolean("toolkit.testVoicechat")?-2:0);
     Path output=Path.of(System.getProperty("toolkit.preview"));
     String statsFixtureId;
+    boolean statsLibraryHovered;
     private void checkVoidRod() throws Exception {
         var rod=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.FISHING_ROD);
         rod.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
@@ -889,7 +890,12 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             rod.set(net.minecraft.core.component.DataComponents.LORE,new net.minecraft.world.item.component.ItemLore(java.util.List.of(
                                 net.minecraft.network.chat.Component.literal("Seasonal · Cursed Energy"),
                                 net.minecraft.network.chat.Component.literal("Lucky Catch V"))));
-                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Oni Fishing Rod","HAND",ItemStatsTracker.encode(rod));
+                            String saved=net.minecraft.world.item.ItemStack.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,rod)
+                                .result().orElseThrow().toString();
+                            var p=history.register(ItemStatsTracker.scope(),"0123456789abcdef","Oni Fishing Rod","HAND",saved);
+                            var tooltip=net.minecraft.client.gui.screens.Screen.getTooltipFromItem(mc,ItemStatsTracker.icon(p)).stream()
+                                .map(net.minecraft.network.chat.Component::getString).toList();
+                            check(tooltip.containsAll(java.util.List.of("Seasonal · Cursed Energy","Lucky Catch V")),"Saved rod tooltip includes seasonal lore and custom enchant");
                             statsFixtureId=p.id;
                             history.rename(p,"My Oni Rod");
                             history.start(p,now-300000,ItemStatsLocation.REALM);history.tick(now-1000);
@@ -910,8 +916,13 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         mc.getWindow().setWindowed(sample>=2?1000:1280,800);mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
                         ToolkitConfig.get().includeGoldShards=true;ToolkitConfig.get().goldShardPrice=125000;
                         mc.setScreenAndShow(new ToolkitScreen(null,13));
-                        hoverStatsRow(mc,ItemStatsTracker.history().profile(statsFixtureId).title());
+                        statsLibraryHovered=false;
                     }else if(step==1){
+                        if(!statsLibraryHovered){
+                            hoverStatsRow(mc,ItemStatsTracker.history().profile(statsFixtureId).title());
+                            statsLibraryHovered=true;
+                            return;
+                        }
                         capture(mc,"stats-library-"+sample);assertControls(mc);
                         check(mc.gui.screen().children().stream().noneMatch(c->c instanceof Button b&&(b.getMessage().getString().contains("Unused fishing rod")||b.getMessage().getString().contains("Yellow Shulker Box")||b.getMessage().getString().contains("Bone Leggings"))),"Stats excludes unused tools, storage and legacy armor rewards");
                         pressTopic(mc,ItemStatsTracker.history().profile(statsFixtureId).title());assertControls(mc);
