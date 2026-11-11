@@ -214,6 +214,12 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         BlackoutManager.updateKey(false, false, false);
         BlackoutManager.updateKey(false, false, true);
         check(BlackoutManager.isActive(), "Opening a menu cancels a pending tap");
+        check(ToolkitMod.menuKey.matches(new KeyEvent(GLFW.GLFW_KEY_RIGHT_SHIFT, 0, 0)),
+                "Right Shift is the default menu shortcut");
+        net.minecraft.client.KeyMapping.click(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_RIGHT_SHIFT));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.invoker().onEndTick(mc);
+        check(mc.gui.screen() instanceof ToolkitScreen && BlackoutManager.isActive(),
+                "Right Shift opens Toolkit while keeping blackout enabled for gameplay");
         cfg.blackoutOpacity = opacity;cfg.blackoutHint = hint;cfg.save();
         BlackoutManager.setActive(false);
         mc.setScreenAndShow(previous);

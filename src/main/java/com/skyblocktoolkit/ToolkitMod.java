@@ -124,7 +124,6 @@ public final class ToolkitMod implements ClientModInitializer {
             if(requested||clicked){
                 if(clicked&&!requested)requestedPage=0;
                 requested=false;
-                if(BlackoutManager.isActive())return;
                 if(mc.gui.screen() instanceof ToolkitScreen)mc.gui.screen().onClose();
                 else mc.setScreenAndShow(new ToolkitScreen(mc.gui.screen(),requestedPage));
             }
