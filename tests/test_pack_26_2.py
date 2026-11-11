@@ -52,6 +52,11 @@ class PackTest(unittest.TestCase):
         with zipfile.ZipFile(next(out.glob('*.zip'))) as prism, zipfile.ZipFile(next(out.glob('*.mrpack'))) as mrpack:
             self.assertEqual(len([n for n in prism.namelist() if n.startswith('.minecraft/mods/')]), 7)
             self.assertEqual(prism.read('.minecraft/mods/' + package_26_2.JAR_NAME), self.jar.read_bytes())
+            config = prism.read('.minecraft/config/skyblocktoolkit.json')
+            self.assertEqual(json.loads(config), {
+                'startupServer': 'skyblock.mc-complex.com', 'startupServerPacks': True,
+            })
+            self.assertEqual(mrpack.read('overrides/config/skyblocktoolkit.json'), config)
             components = json.loads(prism.read('mmc-pack.json'))['components']
             self.assertEqual(components[0]['version'], '26.2')
             index = json.loads(mrpack.read('modrinth.index.json'))

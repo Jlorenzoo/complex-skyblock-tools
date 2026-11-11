@@ -13,6 +13,7 @@ public final class ToolkitConfig {
     public boolean voiceMusicHud=false;
     public int voiceHudX=12,voiceHudY=110;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
+    public boolean startupServerPacks=true; // Accept packs only when auto-joining Complex Skyblock.
     public boolean coconutSoundEnabled=true,coconutVisualAlert=true,coconutFlash=false,moneyVisualAlert=true,xpVisualAlert=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;
@@ -124,6 +125,7 @@ public final class ToolkitConfig {
             if(j.has("fullBright"))fullBright=j.get("fullBright").getAsBoolean();
             if(j.has("showStatusEffects"))showStatusEffects=j.get("showStatusEffects").getAsBoolean();
             if(j.has("startupServer")&&!j.get("startupServer").isJsonNull())startupServer=j.get("startupServer").getAsString().trim();
+            if(j.has("startupServerPacks"))startupServerPacks=j.get("startupServerPacks").getAsBoolean();
         }catch(Exception e){System.err.println("[SkyblockToolkit] Settings could not be read: "+e.getMessage());}
         if(path!=null&&!sharedPricesSaved){
             Path legacy=path.resolveSibling("fishingpings.json");
@@ -177,7 +179,7 @@ public final class ToolkitConfig {
             j.addProperty("expiringFlash",expiringFlash);
             j.addProperty("lightMode",lightMode);
             j.addProperty("voiceMusicHud",voiceMusicHud);j.addProperty("voiceHudX",voiceHudX);j.addProperty("voiceHudY",voiceHudY);
-            j.addProperty("startupServer",startupServer);
+            j.addProperty("startupServer",startupServer);j.addProperty("startupServerPacks",startupServerPacks);
             j.addProperty("coconutSoundEnabled",coconutSoundEnabled);j.addProperty("coconutVisualAlert",coconutVisualAlert);
             j.addProperty("coconutFlash",coconutFlash);
             j.addProperty("moneyVisualAlert",moneyVisualAlert);j.addProperty("xpVisualAlert",xpVisualAlert);

@@ -26,7 +26,9 @@ In the Modrinth App, update Fabric Loader in the instance settings if needed.
 
 Right Shift opens Toolkit. M opens Litematica. V sets up voice chat.
 Hold Caps Lock to talk; F8 mutes your microphone.
-Add skyblock.mc-complex.com in Multiplayer to play on Complex Skyblock.
+The full pack joins skyblock.mc-complex.com at startup and accepts its resource pack.
+To stop auto-join, set startupServer to "" in config/skyblocktoolkit.json.
+For a manual join, set Server Resource Packs to Enabled on the Multiplayer entry.
 
 The full pack includes the required mods. No personal player data is included.
 Credits are in THIRD-PARTY.md; source code is in toolkit-source.
@@ -61,7 +63,8 @@ def package(output, toolkit, sources=None):
     common = {'READ-ME.txt': README.encode(), 'THIRD-PARTY.md': (ROOT / 'THIRD-PARTY.md').read_bytes()}
     common.update({'toolkit-source/' + name: path.read_bytes() for name, path in sources.items()})
     options = control_options('resourcePacks:["vanilla","skyblocktoolkit:clear_harvest"]\n', minecraft='26.2').encode()
-    files = {'mods/' + JAR_NAME: toolkit.read_bytes(), 'options.txt': options}
+    files = {'mods/' + JAR_NAME: toolkit.read_bytes(), 'options.txt': options,
+             'config/skyblocktoolkit.json': (ROOT / 'modpack/skyblocktoolkit.json').read_bytes()}
 
     prism = output / 'Full-Pack-Prism-26.2.zip'
     prism_files = {**common, **{'.minecraft/' + name: data for name, data in files.items()},

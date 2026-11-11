@@ -65,7 +65,9 @@ Required: Fabric Loader {loader} or newer, Fabric API for {minecraft}, and Java 
 
 Right Shift opens Toolkit. M opens Litematica. V sets up voice chat.
 Hold Caps Lock to talk; F8 mutes your microphone.
-Add skyblock.mc-complex.com in Multiplayer to play on Complex Skyblock.
+The full pack joins skyblock.mc-complex.com at startup and accepts its resource pack.
+To stop auto-join, set startupServer to "" in config/skyblocktoolkit.json.
+For a manual join, set Server Resource Packs to Enabled on the Multiplayer entry.
 
 The full pack includes the required mods. No personal player data is included.
 Credits are in THIRD-PARTY.md; source code is in toolkit-source.
@@ -144,6 +146,7 @@ def package(minecraft, toolkit_jar=None, output_dir=None):
     files = {'options.txt': options}
     if public_jar.is_file():
         files['mods/' + jar_name] = public_jar.read_bytes()
+        files['config/skyblocktoolkit.json'] = (ROOT / 'modpack/skyblocktoolkit.json').read_bytes()
 
     # 1. Prism ZIP
     prism_zip = out / f'Full-Pack-Prism-{minecraft}.zip'

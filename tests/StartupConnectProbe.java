@@ -19,6 +19,7 @@ public abstract class StartupConnectProbe {
             boolean quickPlay,TransferState transfer,CallbackInfo ci){
         if(!Boolean.getBoolean("toolkit.testStartupConnect"))return;
         System.setProperty("toolkit.startupProbeAddress",address.getHost()+":"+address.getPort());
+        System.setProperty("toolkit.startupProbePackStatus",server.getResourcePackStatus().name());
         int count=Integer.parseInt(System.getProperty("toolkit.startupProbeCount","0"));
         System.setProperty("toolkit.startupProbeCount",Integer.toString(count+1));
         ci.cancel();

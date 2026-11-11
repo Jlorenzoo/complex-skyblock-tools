@@ -14,7 +14,25 @@ public final class StartupJoinTest {
         var manual=new StartupJoin("example.invalid");
         check(manual.poll(false,false,true)==null,"Existing/manual/quick-play connection wins");
         for(int i=0;i<40;i++)check(manual.poll(false,true,false)==null,"No retry after disconnect or failed manual connection");
-        System.out.println("PASS: startup join is optional, waits for title/loading, respects existing connections and attempts only once");
+        var complex=new StartupJoin("Skyblock.MC-Complex.com:25565");
+        for(int i=0;i<20;i++)complex.poll(false,true,false);
+        complex.onSystemMessage("Redirect timed out");
+        check(!complex.takeRedirectRetry(true),"Unrelated messages cannot trigger a retry");
+        complex.onSystemMessage(StartupJoin.REDIRECT_TIMEOUT);
+        check(complex.takeRedirectRetry(true),"Retry the initial Complex proxy timeout");
+        for(int i=0;i<19;i++)check(complex.poll(false,true,false)==null,"Retry waits for stable title");
+        check(complex.poll(false,true,false)!=null,"Retry connects to Complex");
+        complex.onSystemMessage(StartupJoin.REDIRECT_TIMEOUT);
+        check(!complex.takeRedirectRetry(true),"Never retry twice");
+        var expired=new StartupJoin(StartupJoin.COMPLEX_SKYBLOCK);
+        for(int i=0;i<420;i++)expired.poll(false,true,false);
+        expired.onSystemMessage(StartupJoin.REDIRECT_TIMEOUT);
+        check(!expired.takeRedirectRetry(true),"Ignore errors outside the initial startup window");
+        var cancelled=new StartupJoin(StartupJoin.COMPLEX_SKYBLOCK);
+        for(int i=0;i<20;i++)cancelled.poll(false,true,false);
+        cancelled.onSystemMessage(StartupJoin.REDIRECT_TIMEOUT);
+        check(!cancelled.takeRedirectRetry(false)&&!cancelled.takeRedirectRetry(true),"Never replace a different world or interrupt an open screen");
+        System.out.println("PASS: startup join is optional, waits for title/loading, respects existing connections and bounds Complex redirect retries");
     }
     static void check(boolean ok,String label){if(!ok)throw new AssertionError(label);}
 }

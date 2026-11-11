@@ -103,7 +103,8 @@ def main():
         # disposable offline client; never contact its configured real server.
         check_startup = cli.startup or bool(values.get('startupServer'))
         if check_startup:
-            values['startupServer'] = 'startup-test.invalid:25566'
+            values['startupServer'] = 'skyblock.mc-complex.com:25565'
+            values['startupServerPacks'] = True
             config.parent.mkdir(parents=True, exist_ok=True)
             config.write_text(json.dumps(values), encoding='utf-8')
             migration_args.append('-Dtoolkit.testStartupConnect=true')

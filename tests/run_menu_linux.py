@@ -99,7 +99,8 @@ def main():
         config = game / 'config/skyblocktoolkit.json'
         values = json.loads(config.read_text(encoding='utf-8')) if config.exists() else {}
         # The smoke-only connection mixin intercepts this before any network access.
-        values['startupServer'] = 'startup-test.invalid:25566'
+        values['startupServer'] = 'skyblock.mc-complex.com:25565'
+        values['startupServerPacks'] = True
         config.parent.mkdir(parents=True, exist_ok=True)
         config.write_text(json.dumps(values), encoding='utf-8')
         (game / "options.txt").write_text("onboardAccessibility:false\nshowMusicToast:false\nmaxFps:30\nrenderDistance:2\npauseOnLostFocus:false\n")

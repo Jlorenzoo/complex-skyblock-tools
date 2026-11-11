@@ -202,15 +202,15 @@ Wayland exclusion, missing-backend rejection and timeout cleanup.
 disposable offline Linux client. The test never joins a server or modifies the
 source profile. Screenshots and assertions still come from the real Fabric runtime.
 
-An optional `startupServer` address in `config/skyblocktoolkit.json` makes a
-profile join that server once after the title screen finishes loading. It defaults
-to an empty string. Existing connections, vanilla quick-play and disconnect screens
-cancel the startup attempt; returning to the menu never reconnects automatically.
-This does not depend on CurseForge forwarding custom game arguments. The configured
-Complex workstation profile uses `skyblock.mc-complex.com`. Settings saves retain
-the address. The offline runtime's `--startup` check intercepts the real vanilla
-connection entry point and verifies host/port and one attempt, without network
-access to a game server. Copied profiles with startup enabled are intercepted too.
+The full Prism and Modrinth packs ship `config/skyblocktoolkit.json` with
+`"startupServer": "skyblock.mc-complex.com"` and `"startupServerPacks": true`.
+The standalone jar leaves auto-join off unless the instance sets an address.
+Startup waits for the title screen; existing connections and vanilla Quick Play
+take priority. Auto-joining Complex accepts the pack through Minecraft's normal
+server pack flow. Only the exact early Complex redirect timeout allows one
+reconnect; later failures and manual joins do not trigger retries. The isolated
+runtime smoke intercepts the vanilla connection to check the address and pack
+policy without network access.
 
 Run `python tests/test_profile_migration.py`, `python tests/test_installer.py`,
 `python tests/test_voicechat.py` and `python tests/test_updater.py`. The Gradle build

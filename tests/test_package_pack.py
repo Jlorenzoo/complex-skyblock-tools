@@ -27,6 +27,11 @@ class PackagePackTest(unittest.TestCase):
                 'depends': {'minecraft': f'~{mc_version}'}
             }))
 
+    def assert_startup(self, archive, prefix):
+        config = json.loads(archive.read(prefix + 'config/skyblocktoolkit.json'))
+        self.assertEqual(config['startupServer'], 'skyblock.mc-complex.com')
+        self.assertIs(config['startupServerPacks'], True)
+
     def test_package_pack_generates_valid_prism_and_modrinth(self):
         for mc in ['1.21.11', '26.2']:
             spec = package_pack.manifest(mc)
@@ -53,11 +58,13 @@ class PackagePackTest(unittest.TestCase):
 
             with zipfile.ZipFile(prism_zip) as z:
                 self.assertIsNone(z.testzip())
+                self.assert_startup(z, ".minecraft/")
                 components = json.loads(z.read('mmc-pack.json'))['components']
                 self.assertEqual(components[0]['version'], mc)
 
             with zipfile.ZipFile(mrpack) as z:
                 self.assertIsNone(z.testzip())
+                self.assert_startup(z, "overrides/")
                 index = json.loads(z.read('modrinth.index.json'))
                 self.assertEqual(index['dependencies']['minecraft'], mc)
 

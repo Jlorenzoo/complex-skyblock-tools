@@ -314,7 +314,8 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 if(stage==0){
                     checkShardSettings(mc);checkTreasureSettings(mc);checkPassiveIncome(mc);checkRoundedIncome();checkVoidRod();
                     if(Boolean.getBoolean("toolkit.testStartupConnect")){
-                        check("startup-test.invalid:25566".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
+                        check("skyblock.mc-complex.com:25565".equals(System.getProperty("toolkit.startupProbeAddress")),"Startup reaches vanilla connection with the configured host and port");
+                        check("ENABLED".equals(System.getProperty("toolkit.startupProbePackStatus")),"Complex startup accepts the server resource pack");
                         check("1".equals(System.getProperty("toolkit.startupProbeCount")),"Startup makes exactly one connection attempt");
                         Files.writeString(output.resolve("startup-connection.txt"),"PASS: one configured startup connection reached the real vanilla entry point; network intercepted by smoke mod\n");
                     }
