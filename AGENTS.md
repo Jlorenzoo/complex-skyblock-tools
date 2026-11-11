@@ -1,4 +1,4 @@
-# Skyblock Toolkit
+# Complexify
 
 This repository is `Jlorenzoo/complex-skyblock-tools`, the Fabric client mod. It is separate from the `mc-afk-oracle` server-control project. Read `DEVELOPMENT.md` for build, test and installation guidance. When present, `.local/WORKSTATION.md` records ignored workstation-specific paths and deployment state.
 

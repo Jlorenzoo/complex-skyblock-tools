@@ -1,4 +1,4 @@
-# Developing Skyblock Toolkit
+# Developing Complexify
 
 This is the source repository for the Minecraft 1.21.11 Fabric client mod, `skyblocktoolkit`. Open the repository folder as the coding project's root so its source, Git branch and `AGENTS.md` are available together.
 
