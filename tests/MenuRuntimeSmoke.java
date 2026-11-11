@@ -1113,7 +1113,23 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                     }
                     stage++;return;
                 }
-                if(stage==303){
+                if(stage>=303&&stage<311){
+                    int sample=(stage-303)/2;
+                    if((stage-303)%2==0){
+                        ToolkitConfig.get().lightMode=sample%2==1;
+                        mc.getWindow().setWindowed(sample>=2?1000:1280,800);
+                        mc.options.guiScale().set(sample>=2?3:2);mc.resizeGui();
+                        mc.setScreenAndShow(new ToolkitScreen(null,6));pressTopic(mc,"Startup");
+                    }else{
+                        assertControls(mc);
+                        pressTopic(mc,"Auto-join");
+                        capture(mc,"startup-settings-"+sample);
+                        mc.gui.screen().keyPressed(new KeyEvent(GLFW.GLFW_KEY_ESCAPE,0,0));
+                        if(sample==0)checkStartupSettings(mc);
+                    }
+                    stage++;return;
+                }
+                if(stage==311){
                     Files.writeString(output.resolve("AUDIO-PASS.txt"),"PASS: all bundled sound events preloaded and started through the sound engine. Fishing choices, all alert preview routes, independent selection, persistence and four Sound Library layouts.\n");
                     Files.writeString(output.resolve("STATS-PASS.txt"),"PASS: reward-gated automatic Stats; no unused tools, storage or legacy armor rows; real named-stack eligibility; no registration/start controls; Overworld/Realm filters, session history and details in both themes and compact/full layouts\n");
                     for(int sample=0;sample<16;sample++)check(Files.exists(output.resolve("screenshots/booster-toast-"+sample+".png")),"Booster toast rendered: "+sample);
@@ -1165,6 +1181,29 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             screen.mouseScrolled(screen.width/2,screen.height/2,0,-1);
         }
         throw new AssertionError("topic missing: "+title);
+    }
+    void checkStartupSettings(net.minecraft.client.Minecraft mc) throws Exception {
+        var cfg=ToolkitConfig.get();
+        String originalServer=cfg.startupServer;
+        boolean originalPacks=cfg.startupServerPacks;
+        var constructor=ToolkitConfig.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        try{
+            cfg.startupServer="custom.invalid:25566";
+            selectDropdown(mc,"Auto-join",1);
+            check(constructor.newInstance().startupServer.equals(StartupJoin.COMPLEX_HUB),"Hub choice persists");
+            selectDropdown(mc,"Auto-join",2);
+            check(constructor.newInstance().startupServer.equals(StartupJoin.COMPLEX_SKYBLOCK),"Skyblock choice persists");
+            selectDropdown(mc,"Auto-join",0);
+            check(constructor.newInstance().startupServer.isEmpty(),"Off clears the startup destination");
+            pressTopic(mc,"Auto-download resource pack");
+            check(constructor.newInstance().startupServerPacks!=originalPacks,"Pack preference persists independently");
+        }finally{
+            cfg.startupServer=originalServer;
+            cfg.startupServerPacks=originalPacks;
+            cfg.save();
+        }
+        Files.writeString(output.resolve("startup-settings.txt"),"PASS: Hub, Skyblock, Off and the independent pack toggle save through the in-game menu\n");
     }
     void selectDropdown(net.minecraft.client.Minecraft mc,String title,int index){
         pressTopic(mc,title);

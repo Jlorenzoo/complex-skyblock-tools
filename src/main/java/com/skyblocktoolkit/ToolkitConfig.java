@@ -13,7 +13,7 @@ public final class ToolkitConfig {
     public boolean voiceMusicHud=false;
     public int voiceHudX=12,voiceHudY=110;
     public String startupServer=""; // Optional profile-specific auto-join; empty keeps the title screen.
-    public boolean startupServerPacks=true; // Accept packs only when auto-joining Complex Skyblock.
+    public boolean startupServerPacks=true; // Accept packs only when auto-joining Complex.
     public boolean coconutSoundEnabled=true,coconutVisualAlert=true,coconutFlash=false,moneyVisualAlert=true,xpVisualAlert=true;
     public int coconutSoundThreshold=0;
     public boolean xpEarningsHud=false,xpIncludesBoosters=true,rateTestXp=false;

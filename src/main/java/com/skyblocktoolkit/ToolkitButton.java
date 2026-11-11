@@ -40,6 +40,7 @@ public final class ToolkitButton extends Button {
             case "Active HUD elements" -> Items.SPYGLASS;
             case "Layout & positioning" -> Items.COMPASS;
             case "Treasure chests" -> Items.CHEST;
+            case "Startup" -> Items.COMPASS;
             case "Keyboard shortcuts" -> Items.REPEATER;
             case "Chat selection & copy" -> Items.WRITABLE_BOOK;
             case "Auction notifications" -> Items.BELL;

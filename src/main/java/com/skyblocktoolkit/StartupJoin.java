@@ -2,19 +2,52 @@ package com.skyblocktoolkit;
 
 /** Optional launch connection with one retry for Complex's initial proxy timeout. */
 public final class StartupJoin {
+    public static final String COMPLEX_HUB="hub.mc-complex.com";
     public static final String COMPLEX_SKYBLOCK="skyblock.mc-complex.com";
     static final String REDIRECT_TIMEOUT="! Failed to go to server Skyblock: Redirect timed out";
+    enum Destination {
+        OFF("Off", ""),
+        HUB("Complex Hub", COMPLEX_HUB),
+        SKYBLOCK("Complex Skyblock", COMPLEX_SKYBLOCK);
+
+        final String label;
+        final String address;
+
+        Destination(String label, String address) {
+            this.label = label;
+            this.address = address;
+        }
+
+        static Destination fromAddress(String address) {
+            if (address == null || address.isBlank()) return OFF;
+            String host = address.strip();
+            for (Destination destination : values()) {
+                if (destination == OFF) continue;
+                if (host.equalsIgnoreCase(destination.address) || host.equalsIgnoreCase(destination.address + ":25565")) {
+                    return destination;
+                }
+            }
+            return null;
+        }
+    }
+
     private final String address;
+    private final Destination destination;
     private boolean finished,redirectTimeout,retryUsed;
     private int titleTicks,retryWindow;
 
     public StartupJoin(String address) {
         this.address=address==null?"":address.trim();
+        destination=Destination.fromAddress(this.address);
         finished=this.address.isEmpty();
     }
 
     public boolean isComplexSkyblock() {
-        return address.equalsIgnoreCase(COMPLEX_SKYBLOCK)||address.equalsIgnoreCase(COMPLEX_SKYBLOCK+":25565");
+        return destination==Destination.SKYBLOCK;
+    }
+
+    boolean isComplexServer() {
+        return destination==Destination.HUB||destination==Destination.SKYBLOCK;
     }
 
     public String poll(boolean loading,boolean titleScreen,boolean otherConnection) {

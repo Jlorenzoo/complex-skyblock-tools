@@ -204,9 +204,11 @@ source profile. Screenshots and assertions still come from the real Fabric runti
 
 The full Prism and Modrinth packs ship `config/skyblocktoolkit.json` with
 `"startupServer": "skyblock.mc-complex.com"` and `"startupServerPacks": true`.
-The standalone jar leaves auto-join off unless the instance sets an address.
+The standalone jar leaves auto-join off by default. **Utilities → Startup**
+writes the existing address and resource pack settings. A custom address already
+in the config stays active until the player selects a destination in the menu.
 Startup waits for the title screen; existing connections and vanilla Quick Play
-take priority. Auto-joining Complex accepts the pack through Minecraft's normal
+take priority. Auto-joining the Complex Hub or Skyblock can accept the pack through Minecraft's normal
 server pack flow. Only the exact early Complex redirect timeout allows one
 reconnect; later failures and manual joins do not trigger retries. The isolated
 runtime smoke intercepts the vanilla connection to check the address and pack

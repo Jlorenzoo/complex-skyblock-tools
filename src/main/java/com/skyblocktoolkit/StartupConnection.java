@@ -18,7 +18,7 @@ public final class StartupConnection {
         // Use the same ServerData instance to distinguish our startup attempt from
         // manual joins, including manual connections to the same host.
         var attempt=new ServerData("Startup server",config.startupServer,ServerData.Type.OTHER);
-        if(startup.isComplexSkyblock()&&config.startupServerPacks)
+        if(startup.isComplexServer()&&config.startupServerPacks)
             attempt.setResourcePackStatus(ServerData.ServerPackStatus.ENABLED);
 
         ClientReceiveMessageEvents.GAME.register((message,overlay)->{

@@ -106,6 +106,8 @@ public final class ToolkitSearch {
         new Entry(6,"Utilities","Blackout (AFK)","Opacity","dim screen opacity darkness transparency blackout"),
         new Entry(6,"Utilities","Blackout (AFK)","Wake hint","wake hint screen exit blackout instruction toggle key text"),
         new Entry(6,"Utilities","Blackout (AFK)","Overlay chat","overlay chat typing chatbox blackscreen blackout typing text input"),
+        new Entry(6,"Utilities","Startup","Auto-join","automatically connect server at launch complex hub skyblock off"),
+        new Entry(6,"Utilities","Startup","Auto-download resource pack","automatically accept download server textures complex skyblock hub"),
         new Entry(6,"Utilities","Display & visuals","Fullbright","fullbright gamma brightness lighting night vision dark light caves"),
         new Entry(6,"Utilities","Keyboard shortcuts","Menu key","binding shortcut toolkit menu open gui key general"),
         new Entry(6,"Utilities","Keyboard shortcuts","Sell all key","sellall command binding shortcut farming boosters general"),

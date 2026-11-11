@@ -35,17 +35,7 @@ Every release automatically provides 1-click modpack bundles and standalone mod 
 
 Minecraft **1.21.11 uses Java 21**; Minecraft **26.2 uses Java 25** and **Fabric Loader 0.19.5 or newer**. Both versions connect directly to Complex Skyblock (`skyblock.mc-complex.com`).
 
-New full-pack imports auto-join Complex Skyblock and accept its current resource pack when the server offers it. If Complex reports an initial redirect timeout, Toolkit retries once. To enable this on an existing instance, close Minecraft and set these keys in the instance's `config/skyblocktoolkit.json`:
-
-```json
-{
-  "startupServer": "skyblock.mc-complex.com",
-  "startupServerPacks": true
-}
-```
-
-Keep the other settings in that file. Set `startupServer` to `""` to stay at the title screen, or `startupServerPacks` to `false` to restore the normal pack prompt during auto-join. For manual joins, enable **Server Resource Packs** on the Multiplayer entry. If Complex doesn't offer the pack on login, run `/resourcepack` in Skyblock. If the redirect still fails, join `hub.mc-complex.com` and select Skyblock from the hub.
-
+In Complexify, open **Utilities → Startup → Auto-join** and choose **Off**, **Complex Hub**, or **Complex Skyblock**. **Auto-download resource pack** controls whether Minecraft automatically accepts the pack offered by Complex during auto-join. Changes apply the next time Minecraft starts. New full-pack imports start with **Complex Skyblock** and automatic pack downloads enabled. Skyblock startup retries once if Complex reports an initial redirect timeout.
 
 
 ### ⚡ Automatic Updates

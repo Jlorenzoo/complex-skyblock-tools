@@ -14,6 +14,12 @@ public final class StartupJoinTest {
         var manual=new StartupJoin("example.invalid");
         check(manual.poll(false,false,true)==null,"Existing/manual/quick-play connection wins");
         for(int i=0;i<40;i++)check(manual.poll(false,true,false)==null,"No retry after disconnect or failed manual connection");
+        var hub=new StartupJoin("  HUB.MC-COMPLEX.COM:25565  ");
+        check(hub.isComplexServer()&&!hub.isComplexSkyblock(),"Hub accepts packs without Skyblock redirect retries");
+        for(int i=0;i<20;i++)hub.poll(false,true,false);
+        hub.onSystemMessage(StartupJoin.REDIRECT_TIMEOUT);
+        check(!hub.takeRedirectRetry(true),"Hub never retries a Skyblock redirect");
+        check(!startup.isComplexServer(),"Custom startup servers keep their normal pack policy");
         var complex=new StartupJoin("Skyblock.MC-Complex.com:25565");
         for(int i=0;i<20;i++)complex.poll(false,true,false);
         complex.onSystemMessage("Redirect timed out");

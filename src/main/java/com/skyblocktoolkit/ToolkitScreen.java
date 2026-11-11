@@ -42,7 +42,7 @@ public final class ToolkitScreen extends Screen {
         case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and earnings window"),new Topic("Item prices","Sell values for fish, Vote Keys and Gold Shards"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
         case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
-        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Sound Library","Choose and preview every Toolkit alert"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
+        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Startup","Auto-join and server resource packs"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Sound Library","Choose and preview every Toolkit alert"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
         default->List.of();
     };}
     private boolean topic(String title,int top){
@@ -596,6 +596,17 @@ public final class ToolkitScreen extends Screen {
     private ToolkitAudio.Cue audioCue=ToolkitAudio.Cue.BITE;
     private void utilities(){
         var cfg=ToolkitConfig.get();var options=Minecraft.getInstance().options;
+        if(topic("Startup",0)){
+            dropdown("Auto-join",16,()->{
+                var current=StartupJoin.Destination.fromAddress(cfg.startupServer);
+                return current==null?"Custom server":current.label;
+            },anchor->openDropdown(anchor,List.of(StartupJoin.Destination.values()),
+                StartupJoin.Destination.fromAddress(cfg.startupServer),
+                choice->choice.label,choice->cfg.startupServer=choice.address));
+            toggle("Auto-download resource pack","Accept packs when auto-joining Complex.",44,
+                ()->cfg.startupServerPacks,()->cfg.startupServerPacks=!cfg.startupServerPacks);
+            hint("Applies the next time Minecraft starts.",80);
+        }
         if(topic("Chat selection & copy",0)){
             toggle("Chat selection","Drag to select · Ctrl+C / Cmd+C to copy",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
             toggle("Select word",48,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
@@ -689,7 +700,7 @@ public final class ToolkitScreen extends Screen {
         controls.add(new Control(button,top,20));contentHeight=Math.max(contentHeight,top+20);
     }
     private <T> void openDropdown(Button anchor,List<T> choices,T current,Function<T,String> label,Consumer<T> choose){
-        int selected=choices.indexOf(current);
+        int selected=current==null?-1:choices.indexOf(current);
         dropdown=new Dropdown(anchor,choices.stream().map(label).toList(),selected,index->choose.accept(choices.get(index)));
         firstOption=0;
         highlightOption(Math.max(0,selected));

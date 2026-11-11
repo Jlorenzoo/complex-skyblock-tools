@@ -27,7 +27,7 @@ In the Modrinth App, update Fabric Loader in the instance settings if needed.
 Right Shift opens Toolkit. M opens Litematica. V sets up voice chat.
 Hold Caps Lock to talk; F8 mutes your microphone.
 The full pack joins skyblock.mc-complex.com at startup and accepts its resource pack.
-To stop auto-join, set startupServer to "" in config/skyblocktoolkit.json.
+Use Complexify > Utilities > Startup to pick Off, Complex Hub, or Complex Skyblock.
 For a manual join, set Server Resource Packs to Enabled on the Multiplayer entry.
 
 The full pack includes the required mods. No personal player data is included.
