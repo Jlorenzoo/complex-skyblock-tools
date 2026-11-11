@@ -473,7 +473,7 @@ public final class ToolkitScreen extends Screen {
             label(()->fishCfg.hasPrices()?ToolkitMod.fishingLabel():"Set fish prices to estimate earnings.",268,ToolkitTheme.palette().text(),1);
         }
         if(topic("Item prices",0)){
-            label("Sell price per item ($ each, accepts 1.5k or 2m)",16);
+            label("Sell price per item ($ each, accepts K, M or B)",16);
             priceField("Vote Key price",32,()->toolkit.voteKeyPrice,v->toolkit.voteKeyPrice=v);
             priceField("Gold shard value ($ each)",56,()->toolkit.goldShardPrice,v->toolkit.goldShardPrice=v);
             priceField("Cod · 60%",80,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
@@ -748,8 +748,18 @@ public final class ToolkitScreen extends Screen {
     private void priceField(String name,int top,DoubleSupplier read,DoubleConsumer write){
         top-=topicOffset;
         labels.add(new Label(()->name,top+5,ToolkitTheme.palette().text(),1,6));
-        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name)));
-        field.setBordered(false);field.setTextShadow(false);field.setMaxLength(24);field.setValue(String.format(java.util.Locale.ROOT,"%.2f",read.getAsDouble()));
+        int maxLength=24;
+        EditBox field=addRenderableWidget(new EditBox(font,layout.bodyX()+layout.bodyWidth()-94,layout.bodyY()+top+5-scroll,88,14,Component.literal(name)){
+            @Override public void setFocused(boolean focused){
+                boolean lostFocus=isFocused()&&!focused;
+                super.setFocused(focused);
+                if(lostFocus&&Double.isFinite(com.fishingpings.FishingEarnings.price(getValue()))){
+                    String compact=CompactMoney.price(read.getAsDouble());
+                    if(compact.length()<=maxLength&&!compact.equals(getValue()))setValue(compact);
+                }
+            }
+        });
+        field.setBordered(false);field.setTextShadow(false);field.setMaxLength(maxLength);field.setValue(CompactMoney.price(read.getAsDouble()));
         field.setTextColor(ToolkitTheme.palette().text());
         field.setResponder(text->{double value=com.fishingpings.FishingEarnings.price(text);field.setTextColor(Double.isFinite(value)?com.skyblocktoolkit.ToolkitTheme.palette().text():com.skyblocktoolkit.ToolkitTheme.palette().error());if(Double.isFinite(value))write.accept(value);});
         priceFields.add(field);controls.add(new Control(field,top+5,14));contentHeight=Math.max(contentHeight,top+22);

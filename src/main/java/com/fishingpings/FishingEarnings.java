@@ -1,4 +1,5 @@
 package com.fishingpings;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.*;
 /** Actual caught-item counts, valued using an expected fish mix; never bank income. */
@@ -22,9 +23,9 @@ public final class FishingEarnings {
     public static double price(String text){
         if(text==null)return Double.NaN;String s=text.strip().replace("$","").replace(",","");
         if(!s.matches("(?i)(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*[kmb]?"))return Double.NaN;
-        double multiplier=1;char end=s.charAt(s.length()-1);
-        if(Character.isLetter(end)){multiplier=switch(Character.toLowerCase(end)){case 'k'->1e3;case 'm'->1e6;case 'b'->1e9;default->1;};s=s.substring(0,s.length()-1).strip();}
-        try{double v=Double.parseDouble(s)*multiplier;return Double.isFinite(v)&&v>=0&&v<=1e12?v:Double.NaN;}catch(NumberFormatException e){return Double.NaN;}
+        int scale=0;char end=s.charAt(s.length()-1);
+        if(Character.isLetter(end)){scale=switch(Character.toLowerCase(end)){case 'k'->3;case 'm'->6;case 'b'->9;default->0;};s=s.substring(0,s.length()-1).strip();}
+        try{double v=new BigDecimal(s).scaleByPowerOfTen(scale).doubleValue();return Double.isFinite(v)&&v>=0&&v<=1e12?v:Double.NaN;}catch(NumberFormatException e){return Double.NaN;}
     }
     public void observe(long now){if(observedSince<0)observedSince=now;}
     public boolean accept(String text,long now){

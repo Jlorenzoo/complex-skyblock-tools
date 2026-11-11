@@ -112,7 +112,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 var field=GoldShardTracker.class.getDeclaredField("earnings");field.setAccessible(true);
                 var earnings=(GoldShardEarnings)field.get(null);earnings.reset(now-20000);
                 earnings.chat(1,now-10000,-1);
-                check(BoosterStatsManager.averageLabel().startsWith("Shards ~$7.50M/h")
+                check(BoosterStatsManager.averageLabel().startsWith("Shards ~$7.5M/h")
                         &&BoosterStatsManager.averageLabel().contains("cash --"),
                         "Shard value cannot make unmeasured cash appear ready");
             }
@@ -938,11 +938,11 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         press(mc,"Area: Overworld");check(mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).count()==1,"Realm filter selects only Realm sessions");
                     }else if(step==2){
                         capture(mc,"stats-item-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);
-                        hoverStatsRow(mc,"$114.00M/h");
+                        hoverStatsRow(mc,"$114M/h");
                     }else if(step==3){
                         capture(mc,"stats-history-"+sample);
                         String sessionTitle=mc.gui.screen().children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().endsWith(" · Stopped")).map(c->((Button)c).getMessage().getString()).findFirst().orElseThrow();
-                        check(sessionTitle.startsWith("$114.00M/h"),"Session headline includes cash plus configured shard value over five minutes");
+                        check(sessionTitle.startsWith("$114M/h"),"Session headline includes cash plus configured shard value over five minutes");
                         pressTopic(mc,sessionTitle);assertControls(mc);
                     }else{
                         capture(mc,"stats-session-"+sample);assertControls(mc);scrollBottom(mc);assertControls(mc);capture(mc,"stats-session-breakdown-"+sample);
@@ -973,15 +973,32 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         check(!fishingConfig.oniEnergyAlert,"Oni previews leave automatic cues disabled");
                         fishingConfig.oniEnergyAlert=chimeEnabled;
                         check(mc.gui.screen().children().stream().noneMatch(c->c instanceof net.minecraft.client.gui.components.EditBox e&&e.getMessage().getString().endsWith("price")),"Seasonal settings have no price fields");
+                        var config=ToolkitConfig.get();
+                        double keyPrice=config.voteKeyPrice,shardPrice=config.goldShardPrice,codPrice=fishingConfig.codPrice;
+                        config.voteKeyPrice=2_000_000_000;
+                        config.goldShardPrice=125_000;
+                        fishingConfig.codPrice=1_250_000.25;
                         pressTopic(mc,"Item prices");
+                        for(var child:mc.gui.screen().children()){
+                            if(child instanceof net.minecraft.client.gui.components.EditBox field){
+                                switch(field.getMessage().getString()){
+                                    case "Vote Key price" -> check(field.getValue().equals("2B"),"Billions display without trailing zeros");
+                                    case "Gold shard value ($ each)" -> check(field.getValue().equals("125K"),"Thousands display as K");
+                                    case "Cod · 60%" -> check(field.getValue().equals("1.25000025M"),"Compact price preserves fractional coins");
+                                }
+                            }
+                        }
                         capture(mc,"item-prices-"+sample);assertControls(mc);
                         scrollBottom(mc);capture(mc,"item-prices-scrolled-"+sample);assertControls(mc);
                         if(sample==0){
-                            var config=ToolkitConfig.get();
-                            double keyPrice=config.voteKeyPrice,shardPrice=config.goldShardPrice;
                             for(var child:mc.gui.screen().children()){
                                 if(child instanceof net.minecraft.client.gui.components.EditBox field){
-                                    if(field.getMessage().getString().equals("Vote Key price"))field.setValue("500k");
+                                    if(field.getMessage().getString().equals("Vote Key price")){
+                                        field.setFocused(true);
+                                        field.setValue("500000");
+                                        field.setFocused(false);
+                                        check(field.getValue().equals("500K"),"Price reformats when editing finishes");
+                                    }
                                     if(field.getMessage().getString().equals("Gold shard value ($ each)"))field.setValue("12.5k");
                                 }
                             }
@@ -991,8 +1008,9 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             constructor.setAccessible(true);
                             var reloaded=constructor.newInstance();
                             check(reloaded.voteKeyPrice==500_000&&reloaded.goldShardPrice==12_500,"Shared prices survive reload");
-                            config.voteKeyPrice=keyPrice;config.goldShardPrice=shardPrice;config.save();
                         }
+                        config.voteKeyPrice=keyPrice;config.goldShardPrice=shardPrice;config.save();
+                        fishingConfig.codPrice=codPrice;
                         mc.setScreenAndShow(new ToolkitScreen(null,2));pressTopic(mc,"Fishing");
                     }else{
                         capture(mc,"fishing-bite-sound-"+sample);assertControls(mc);

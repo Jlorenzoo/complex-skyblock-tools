@@ -1,11 +1,11 @@
 package com.moneybooster;
 
+import com.skyblocktoolkit.CompactMoney;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -233,15 +233,7 @@ public class BoosterStatsManager {
     }
 
     public static String formatMoney(double amount) {
-        if (amount >= 1_000_000_000) {
-            return String.format(Locale.ROOT, "$%.2fB", amount / 1_000_000_000.0);
-        } else if (amount >= 1_000_000) {
-            return String.format(Locale.ROOT, "$%.2fM", amount / 1_000_000.0);
-        } else if (amount >= 1_000) {
-            return String.format(Locale.ROOT, "$%.1fK", amount / 1_000.0);
-        } else {
-            return String.format(Locale.ROOT, "$%.0f", amount);
-        }
+        return "$" + CompactMoney.display(amount);
     }
 
     public static double parseCost(String input) {
