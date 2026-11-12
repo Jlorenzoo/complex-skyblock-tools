@@ -120,7 +120,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                         "Only a confirmed personal Vote Key reward enters the earnings window");
             }
             mc.getWindow().setWindowed(compact?1000:1280,800);mc.options.guiScale().set(compact?3:2);mc.resizeGui();
-            ModConfig.getInstance().setAveragePosition(12,90);
+            ModConfig.getInstance().setAveragePosition(12,152);
             mc.setScreenAndShow(kind==2?new BoosterStatsScreen(null,true):new ToolkitScreen(null,5));
         }else{
             capture(mc,"rounded-"+kind+"-"+(light?"light":"dark")+"-"+(compact?"compact":"full"));

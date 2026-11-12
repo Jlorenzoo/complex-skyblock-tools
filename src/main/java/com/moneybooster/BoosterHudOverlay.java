@@ -154,7 +154,7 @@ public class BoosterHudOverlay implements HudElement {
     }
 
     private static final Identifier SHARD_ICON = Identifier.withDefaultNamespace("textures/item/gold_nugget.png");
-    private static final Identifier KEY_ICON = Identifier.withDefaultNamespace("textures/item/tripwire_hook.png");
+    private static final Identifier KEY_ICON = Identifier.withDefaultNamespace("textures/block/tripwire_hook.png");
     private static final int EARNINGS_ICON_STEP = 10;
 
     public static int averageWidth(Minecraft mc, String label) {
