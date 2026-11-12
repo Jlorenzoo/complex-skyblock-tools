@@ -14,12 +14,14 @@ public class BoosterStatsManager {
             "(?i)^(?:[✔✓]\\s*)?You have gained (?:the effect of )?(?:a )?([^!]+) for (\\d+) second"
     );
 
-    private static final RollingEarnings average = new RollingEarnings(), baseAverage = new RollingEarnings();
+    private static final RollingEarnings baseAverage = new RollingEarnings();
     public static final EarningsActivity earningsActivity = new EarningsActivity();
     private static long averageUpdated;
     private static double averageRate, baseAverageRate;
-    private static final SmoothedRate cashDisplay = new SmoothedRate(), baseDisplay = new SmoothedRate(), shardDisplay = new SmoothedRate();
-    public static void resetAverage() { average.reset(System.currentTimeMillis());baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0;cashDisplay.reset();baseDisplay.reset();shardDisplay.reset(); }
+    private static final SmoothedRate cashDisplay = new SmoothedRate(SmoothedRate.RESPONSIVE_TAU_MS);
+    private static final SmoothedRate baseDisplay = new SmoothedRate(SmoothedRate.RESPONSIVE_TAU_MS);
+    private static final SmoothedRate shardDisplay = new SmoothedRate();
+    public static void resetAverage() { baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0;cashDisplay.reset();baseDisplay.reset();shardDisplay.reset(); }
     public static String averageLabel() {
         boolean boosted=ModConfig.getInstance().includesBoostersInAverage();
         boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
@@ -27,13 +29,13 @@ public class BoosterStatsManager {
         if(!shards)shardDisplay.reset();
         double shardRate=shards?shardDisplay.update(com.skyblocktoolkit.GoldShardTracker.hourlyValue(),now):0;
         double rate=(boosted?averageRate:baseAverageRate)+shardRate;
-        boolean cashReady=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
+        boolean cashReady=isBalanceRounded()?baseAverage.estimatedReady(now):baseAverage.ready(now);
         boolean shardReady=shards&&com.skyblocktoolkit.GoldShardTracker.ready();
         if(isBalanceRounded()&&!cashReady&&shardReady)
             return "Shards ~"+formatMoney(shardRate)+"/h (cash --)";
         boolean ready=cashReady||shardReady;
-        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+(isBalanceRounded()?" (avg): ":" (60s): ")
-                + (ready?(isBalanceRounded()?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
+        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+(isBalanceRounded()?" (avg): ":" (recent): ")
+                + (ready?(isBalanceRounded()||boosted?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
     }
     private static double lastKnownBalance = -1;
     private static double balanceResolution = 0.01;
@@ -163,11 +165,16 @@ public class BoosterStatsManager {
         }
         ledger.tick(now); history.tick(now);
         if (now-averageUpdated>=1000) {
-            boolean ready=isBalanceRounded()?average.estimatedReady(now):average.ready(now);
+            boolean ready=isBalanceRounded()?baseAverage.estimatedReady(now):baseAverage.ready(now);
             if(!ready){cashDisplay.reset();baseDisplay.reset();averageRate=baseAverageRate=0;}
             else {
-                averageRate=cashDisplay.update(isBalanceRounded()?average.estimatedPerHour(now):average.perHour(now),now);
-                baseAverageRate=baseDisplay.update(isBalanceRounded()?baseAverage.estimatedPerHour(now):baseAverage.perHour(now),now);
+                double baseTarget = isBalanceRounded() ? baseAverage.responsiveEstimatedPerHour(now) : baseAverage.responsivePerHour(now);
+                // Project the observed base pace at the current money boost. Historical
+                // receipts still carry the multiplier at the time they were earned.
+                double currentMultiplier = 1.0 + (BoosterManager.isActive() ? BoosterManager.getPercentage() / 100.0 : 0.0);
+                double boostedTarget = baseTarget * currentMultiplier;
+                baseAverageRate = baseDisplay.update(baseTarget, now);
+                averageRate = cashDisplay.update(boostedTarget, now);
             }
             averageUpdated=now;
         }
@@ -216,10 +223,8 @@ public class BoosterStatsManager {
         com.skyblocktoolkit.ItemStatsTracker.money(receipt.earned(),receipt.percentage(),receipt.fromMs(),receipt.toMs());
         earningsActivity.cropIncome(receipt.toMs());
         if(receipt.estimated()) {
-            average.addEstimated(receipt.earned(),receipt.fromMs(),receipt.toMs());
             baseAverage.addEstimated(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
         } else {
-            average.add(receipt.earned(),receipt.fromMs(),receipt.toMs());
             baseAverage.add(receipt.earned()/(1+receipt.percentage()/100.0),receipt.fromMs(),receipt.toMs());
         }
         RateTracker.onSettledDelta(receipt.earned(), receipt.percentage(), receipt.testId(), receipt.estimated());

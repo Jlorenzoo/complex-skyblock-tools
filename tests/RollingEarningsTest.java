@@ -46,6 +46,34 @@ public class RollingEarningsTest {
   expect(smooth.update(200,20000),frequent.update(200,20000));
   smooth.reset();expect(smooth.update(50,30000),50);
   expect(smooth.update(Double.NaN,31000),50);
+  var resp = new RollingEarnings();
+  resp.reset(0);
+  resp.add(10000, 0, 10000);
+  expect(resp.responsivePerHour(12000), 3600000);
+  resp.add(15000, 10000, 15000);
+  double boostedRate = resp.responsivePerHour(17000);
+  if (boostedRate <= 5_000_000 || boostedRate >= 10_000_000)
+      throw new AssertionError("Responsive proc rate expected between 5M and 10M, got: " + boostedRate);
+  // Continue farming at base pace (1 $/ms) for 10 seconds after procs
+  resp.add(10000, 15000, 25000);
+  double postProcRate = resp.responsivePerHour(27000);
+  if (postProcRate >= boostedRate || postProcRate <= 3_600_000)
+      throw new AssertionError("Post-proc rate expected between 3.6M and boostedRate, got: " + postProcRate);
+  var respBuckets = new RollingEarnings();
+  respBuckets.reset(0);
+  respBuckets.addEstimated(10_000_000, 0, 10000);
+  respBuckets.addEstimated(10_000_000, 10000, 20000);
+  respBuckets.addEstimated(10_000_000, 20000, 25000);
+  double respEst = respBuckets.responsiveEstimatedPerHour(27000);
+  if (respEst <= 4_000_000_000d || respEst >= 7_200_000_000d)
+      throw new AssertionError("Responsive estimated rate expected between 4B and 7.2B, got: " + respEst);
+  expect(respBuckets.responsiveEstimatedPerHour(30000), respEst);
+  expect(respBuckets.responsiveEstimatedPerHour(85000), 0);
+  var responsiveSmooth = new SmoothedRate(SmoothedRate.RESPONSIVE_TAU_MS);
+  expect(responsiveSmooth.update(100, 0), 100);
+  double respEased = responsiveSmooth.update(200, 1000);
+  if (respEased <= 125 || respEased >= 140)
+      throw new AssertionError("Responsive 1s smoothing step expected ~133, got: " + respEased);
   System.out.println("PASS: rolling expiry, overlap, warmup, idle, reset, finite values, trade exclusion and stable rounded estimates");
  }
 }

@@ -84,10 +84,6 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
             var cfg=ToolkitConfig.get();cfg.lightMode=light;cfg.cropEarningsHud=true;cfg.includeGoldShards=false;cfg.rateTestXp=false;
             long now=System.currentTimeMillis();
             if(kind>0&&kind<3){
-                for(String name:new String[]{"average","baseAverage"}){
-                    var f=BoosterStatsManager.class.getDeclaredField(name);f.setAccessible(true);
-                    ((RollingEarnings)f.get(null)).reset(now-10000);
-                }
                 var settled=BoosterStatsManager.class.getDeclaredMethod("onSettled",MoneyLedger.Receipt.class);
                 settled.setAccessible(true);
                 settled.invoke(null,new MoneyLedger.Receipt(1000000,0,-1,-1,now-20000,now-10000,true));

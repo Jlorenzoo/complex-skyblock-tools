@@ -58,6 +58,45 @@ public final class RollingEarnings {
     public double perHour(long now) {
         return rate(now, false);
     }
+    /** Recency-weighted rate giving higher weight to recent samples (e.g. crop procs)
+     * over the active window while smoothly decaying older samples without abrupt cliffs. */
+    public double responsivePerHour(long now) {
+        long end = now - delayMs;
+        long start = Math.max(started, end - windowMs);
+        if (end <= start) return 0;
+        samples.removeIf(s -> s.end <= end - windowMs);
+        if (samples.isEmpty()) return 0;
+        double totalWeighted = 0;
+        double tau = 15000.0;
+        for (Sample s : samples) {
+            long s0 = Math.max(start, s.start);
+            long s1 = Math.min(end, s.end);
+            if (s1 <= s0) continue;
+            double age0 = Math.max(0, end - s1);
+            double age1 = Math.max(0, end - s0);
+            double weight = tau * (Math.exp(-age0 / tau) - Math.exp(-age1 / tau));
+            double sampleRate = s.amount / (s.end - s.start);
+            totalWeighted += sampleRate * weight;
+        }
+        double maxAge = end - start;
+        double totalWeight = tau * (1.0 - Math.exp(-maxAge / tau));
+        return totalWeight > 0 ? (totalWeighted / totalWeight) * 3600000.0 : 0;
+    }
+    /** Recency-weighted rate for rounded estimates giving higher weight to recent buckets. */
+    public double responsiveEstimatedPerHour(long now) {
+        if (!estimatedReady(now) || estimatedSamples.isEmpty()) return 0;
+        double weightedAmount = 0;
+        double weightedDuration = 0;
+        long latestEnd = estimatedEnd;
+        for (Sample s : estimatedSamples) {
+            long duration = s.end - s.start;
+            double age = Math.max(0, latestEnd - s.end);
+            double weight = Math.exp(-age / 20000.0);
+            weightedAmount += s.amount * weight;
+            weightedDuration += duration * weight;
+        }
+        return weightedDuration > 0 ? weightedAmount * 3600000.0 / weightedDuration : 0;
+    }
     /** Sparse random drops use a full window so a single early reward is not
      * extrapolated from milliseconds into an enormous hourly estimate. */
     public double perHourWindow(long now) { return rate(now, true); }
