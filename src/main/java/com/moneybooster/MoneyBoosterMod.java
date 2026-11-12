@@ -39,6 +39,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
             if (!overlay) {
                 BoosterManager.onChatMessage(message.getString());
                 com.skyblocktoolkit.GoldShardTracker.chat(message.getString());
+                com.skyblocktoolkit.VoteKeyTracker.chat(message.getString());
             }
         });
 
@@ -50,6 +51,7 @@ public class MoneyBoosterMod implements ClientModInitializer {
                 PassiveIncomeCapture.reset();
                 com.skyblocktoolkit.CropHarvestTracker.reset();
                 com.skyblocktoolkit.GoldShardTracker.reset();
+                com.skyblocktoolkit.VoteKeyTracker.reset();
                 com.skyblocktoolkit.VisualAlertOverlay.reset();
                 previousLevel = client.level;
             }

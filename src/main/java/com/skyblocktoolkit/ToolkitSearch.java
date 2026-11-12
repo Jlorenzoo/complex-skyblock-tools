@@ -34,6 +34,7 @@ public final class ToolkitSearch {
         new Entry(1,"Boosters","Coconut alerts","Preview coconut","coconut visual flash banner test preview"),
         new Entry(2,"Skills","Farming","Clear Harvest textures","crop visibility immature dim desaturate farm farming clear harvest textures"),
         new Entry(2,"Skills","Farming","Crop earnings HUD","money average visibility farm farming crop earnings hud"),
+        new Entry(2,"Skills","Farming","Include Vote Keys in earnings HUD","votekey income crop earnings tripwire"),
         new Entry(2,"Skills","Farming","Include gold shards in income","gold shards farming realm holy cultivation money income toggle"),
         new Entry(2,"Skills","Farming","Harvest per hour HUD","crops harvested crop/h harvest per hour hud farm farming rate"),
         new Entry(2,"Skills","Farming","Include boosters in crop average","farming money base earnings crop average booster"),

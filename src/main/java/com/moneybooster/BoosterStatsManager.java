@@ -23,19 +23,22 @@ public class BoosterStatsManager {
     private static final SmoothedRate shardDisplay = new SmoothedRate();
     public static void resetAverage() { baseAverage.reset(System.currentTimeMillis()); earningsActivity.reset();averageUpdated=0;averageRate=baseAverageRate=0;cashDisplay.reset();baseDisplay.reset();shardDisplay.reset(); }
     public static String averageLabel() {
-        boolean boosted=ModConfig.getInstance().includesBoostersInAverage();
-        boolean shards=com.skyblocktoolkit.ToolkitConfig.get().includeGoldShards;
-        long now=System.currentTimeMillis();
-        if(!shards)shardDisplay.reset();
-        double shardRate=shards?shardDisplay.update(com.skyblocktoolkit.GoldShardTracker.hourlyValue(),now):0;
-        double rate=(boosted?averageRate:baseAverageRate)+shardRate;
-        boolean cashReady=isBalanceRounded()?baseAverage.estimatedReady(now):baseAverage.ready(now);
-        boolean shardReady=shards&&com.skyblocktoolkit.GoldShardTracker.ready();
-        if(isBalanceRounded()&&!cashReady&&shardReady)
-            return "Shards ~"+formatMoney(shardRate)+"/h (cash --)";
-        boolean ready=cashReady||shardReady;
-        return (boosted?"Crops":"Crops base")+(shards?" + shards":"")+(isBalanceRounded()?" (avg): ":" (recent): ")
-                + (ready?(isBalanceRounded()||boosted?"~":"")+formatMoney(rate)+"/h":isBalanceRounded()?"waiting":"--/h");
+        var config = com.skyblocktoolkit.ToolkitConfig.get();
+        long now = System.currentTimeMillis();
+        boolean rounded = isBalanceRounded();
+        boolean cashReady = rounded ? baseAverage.estimatedReady(now) : baseAverage.ready(now);
+        boolean boosted = ModConfig.getInstance().includesBoostersInAverage();
+        boolean shardsReady = config.includeGoldShards && com.skyblocktoolkit.GoldShardTracker.ready();
+        double keyRate = config.includeVoteKeys ? com.skyblocktoolkit.VoteKeyTracker.hourlyValue(now) : 0;
+        boolean keysReady = keyRate > 0;
+        if (!shardsReady) shardDisplay.reset();
+        if (!cashReady && !shardsReady && !keysReady) return "Earning: " + (rounded ? "waiting" : "--/h");
+
+        double rate = cashReady ? (boosted ? averageRate : baseAverageRate) : 0;
+        if (shardsReady) rate += shardDisplay.update(com.skyblocktoolkit.GoldShardTracker.hourlyValue(), now);
+        rate += keyRate;
+        String estimate = rounded || boosted || shardsReady || keysReady ? "~" : "";
+        return "Earning: " + estimate + formatMoney(rate) + "/h" + (cashReady ? "" : " (cash --)");
     }
     private static double lastKnownBalance = -1;
     private static double balanceResolution = 0.01;

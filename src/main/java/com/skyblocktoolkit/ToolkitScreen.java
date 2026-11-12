@@ -451,11 +451,12 @@ public final class ToolkitScreen extends Screen {
             toggle("Include boosters in crop average",row+48,money::includesBoostersInAverage,money::toggleAverageBoosters);
             label(CropHarvestTracker::averageLabel,row+72,ToolkitTheme.palette().accent(),1);
             int next=row+124;
-            if(details("Gold shards & income",row+96,"Include gold shards in income")){
+            if(details("Gold shards & income",row+96,"Include gold shards in income","Include Vote Keys in earnings HUD")){
                 toggle("Include gold shards in income","Silent farming drops need a held hoe.",row+124,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
-                link("Item prices",row+156,2,"Item prices");
-                label(GoldShardTracker::label,row+184,ToolkitTheme.palette().accent(),1);
-                next=row+214;
+                toggle("Include Vote Keys in earnings HUD",row+156,()->toolkit.includeVoteKeys,()->toolkit.includeVoteKeys=!toolkit.includeVoteKeys);
+                link("Item prices",row+180,2,"Item prices");
+                label(GoldShardTracker::label,row+208,ToolkitTheme.palette().accent(),1);
+                next=row+238;
             }
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
@@ -894,9 +895,11 @@ public final class ToolkitScreen extends Screen {
                 g.outline(part.x()-2,part.y()-2,pw+4,ph+4,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
                 eye(g,eyeX(part.x(),pw),part.y()-2,part.visible());
             }else{
-                g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
-                g.outline(part.x()-3,part.y()-3,font.width(part.text())+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
-                eye(g,eyeX(part.x(),font.width(part.text())),part.y()-3,part.visible());
+                int pw = part.id() == 2 ? BoosterHudOverlay.averageWidth(mc, part.text()) : font.width(part.text());
+                if (part.id() == 2) BoosterHudOverlay.renderAverage(g, mc, part.text(), part.x(), part.y());
+                else g.text(font,part.text(),part.x(),part.y(),ToolkitPalette.DARK.text(),true);
+                g.outline(part.x()-3,part.y()-3,pw+6,15,part.visible()?ToolkitTheme.palette().accent():ToolkitTheme.palette().muted());
+                eye(g,eyeX(part.x(),pw),part.y()-3,part.visible());
             }
         }
         if(dragging==0)g.centeredText(font,Component.literal("Drag to move · Eye to show / hide · Esc to return"),width/2,height-14,ToolkitPalette.DARK.muted());
@@ -961,7 +964,7 @@ public final class ToolkitScreen extends Screen {
             var mc=Minecraft.getInstance();var cfg=ToolkitConfig.get();
             int bx=BoosterHudOverlay.getBarX(width),by=BoosterHudOverlay.getBarY(mc),tx=eyeX(bx,BoosterHudOverlay.BAR_WIDTH);
             for(var part:hudParts()){
-                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):part.id()==2?BoosterHudOverlay.averageWidth(mc,part.text()):font.width(part.text());
                 int ex=eyeX(part.x(),pw);
                 if(event.x()>=ex&&event.x()<ex+10&&event.y()>=part.y()-3&&event.y()<part.y()+7){
                     if(part.id()==2)cfg.cropEarningsHud=!cfg.cropEarningsHud;
@@ -982,7 +985,7 @@ public final class ToolkitScreen extends Screen {
                 }
             }
             for(var part:hudParts()){
-                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):font.width(part.text());
+                int pw=part.id()==8?VoiceMusicHud.width(mc,true):part.id()==7?TreasureChestTracker.width(mc,true):part.id()==6?BoneLeggingsTracker.getWidth(mc):part.id()==2?BoosterHudOverlay.averageWidth(mc,part.text()):font.width(part.text());
                 int ph=part.id()==8?VoiceMusicHud.height():part.id()==7?TreasureChestTracker.height(true):part.id()==6?BoneLeggingsTracker.getHeight():11;
                 if(event.x()>=part.x()-3&&event.x()<=part.x()+pw+3&&event.y()>=part.y()-3&&event.y()<=part.y()+ph+3){
                     dragging=part.id();grabX=event.x()-part.x();grabY=event.y()-part.y();return true;
@@ -1014,7 +1017,7 @@ public final class ToolkitScreen extends Screen {
         if(dragging==5){var c=ToolkitConfig.get();c.cropHarvestHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(CropHarvestTracker.averageLabel())-2));c.cropHarvestHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==4){var c=ToolkitConfig.get();c.xpHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(XpTracker.averageLabel())-2));c.xpHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
         if(dragging==3){var c=ToolkitConfig.get();String fish=ToolkitMod.fishingLabel();if(fish.isEmpty())fish="Fishing est. ("+(ToolkitMod.FISHING.settings().earningsWindow==300?"5m":"60s")+"): $0/h";c.fishHudX=Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(fish)-2));c.fishHudY=Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11));return true;}
-        if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-font.width(BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
+        if(dragging==2){cfg.setAveragePosition(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.averageWidth(Minecraft.getInstance(),BoosterStatsManager.averageLabel())-2)),Math.clamp((int)(event.y()-grabY),2,Math.max(2,height-11)));return true;}
         if(dragging==1){cfg.setOffset(Math.clamp((int)(event.x()-grabX),2,Math.max(2,width-BoosterHudOverlay.BAR_WIDTH-2))-10,Math.clamp((int)(event.y()-grabY),14,Math.max(14,height-24-BoosterHudOverlay.TIMER_SPACING))-16);return true;}
         return super.mouseDragged(event,dx,dy);
     }

@@ -148,7 +148,7 @@ public class BoosterStatsScreen extends Screen {
     }
     private boolean averageOutsidePanel(Minecraft mc){
         String label=BoosterStatsManager.averageLabel();int x=BoosterHudOverlay.averageX(mc,label),y=BoosterHudOverlay.averageY(mc);
-        return x+font.width(label)+3<cardX||x-3>cardX+cardW||y+12<cardY||y-3>cardY+cardH;
+        return x+BoosterHudOverlay.averageWidth(mc,label)+3<cardX||x-3>cardX+cardW||y+12<cardY||y-3>cardY+cardH;
     }
     private void row(GuiGraphicsExtractor g, int y, String label, String value, int color) {
         g.text(font, label, cardX + 12, y, com.skyblocktoolkit.ToolkitTheme.palette().muted(), false);
@@ -168,7 +168,7 @@ public class BoosterStatsScreen extends Screen {
 
         if(!showTest&&com.skyblocktoolkit.ToolkitConfig.get().cropEarningsHud&&averageOutsidePanel(mc)&&event.button()==0){
             String label=BoosterStatsManager.averageLabel();int ax=BoosterHudOverlay.averageX(mc,label),ay=BoosterHudOverlay.averageY(mc);
-            if(event.x()>=ax-3&&event.x()<=ax+font.width(label)+3&&event.y()>=ay-3&&event.y()<=ay+12){draggingAverage=true;averageDragX=event.x()-ax;averageDragY=event.y()-ay;return true;}
+            if(event.x()>=ax-3&&event.x()<=ax+BoosterHudOverlay.averageWidth(mc,label)+3&&event.y()>=ay-3&&event.y()<=ay+12){draggingAverage=true;averageDragX=event.x()-ax;averageDragY=event.y()-ay;return true;}
         }
         if (event.x() >= cardX && event.x() <= cardX + cardW && event.y() >= cardY && event.y() <= cardY + cardH) return super.mouseClicked(event, wasHandled);
         if (event.button() == 0 && isMouseOverBar(event.x(), event.y(), barX, barY)) {
@@ -197,7 +197,7 @@ public class BoosterStatsScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
         if(draggingAverage){
-            ModConfig.getInstance().setAveragePosition(Math.max(2,Math.min(width-font.width(BoosterStatsManager.averageLabel())-2,(int)(event.x()-averageDragX))),Math.max(2,Math.min(height-11,(int)(event.y()-averageDragY))));return true;
+            ModConfig.getInstance().setAveragePosition(Math.max(2,Math.min(width-BoosterHudOverlay.averageWidth(Minecraft.getInstance(),BoosterStatsManager.averageLabel())-2,(int)(event.x()-averageDragX))),Math.max(2,Math.min(height-11,(int)(event.y()-averageDragY))));return true;
         }
         if (isDraggingBar) {
             double deltaX = event.x() - dragStartMouseX;

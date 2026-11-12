@@ -20,7 +20,7 @@ public final class ToolkitConfig {
     public int xpHudX=12,xpHudY=74;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean cropHarvestHud=true;
-    public boolean includeGoldShards=false;
+    public boolean includeGoldShards=false,includeVoteKeys=false;
     public double goldShardPrice,voteKeyPrice;
     public int cropHarvestHudX=12,cropHarvestHudY=90;
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
@@ -82,6 +82,7 @@ public final class ToolkitConfig {
             if(j.has("xpHudY"))xpHudY=Math.clamp(j.get("xpHudY").getAsInt(),0,10000);
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("includeGoldShards"))includeGoldShards=j.get("includeGoldShards").getAsBoolean();
+            if(j.has("includeVoteKeys"))includeVoteKeys=j.get("includeVoteKeys").getAsBoolean();
             goldShardPrice=readPrice(j,"goldShardPrice");
             sharedPricesSaved=j.has("voteKeyPrice");
             voteKeyPrice=readPrice(j,"voteKeyPrice");
@@ -188,7 +189,7 @@ public final class ToolkitConfig {
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);
             j.addProperty("cropHarvestHud",cropHarvestHud);
-            j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("goldShardPrice",goldShardPrice);
+            j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("includeVoteKeys",includeVoteKeys);j.addProperty("goldShardPrice",goldShardPrice);
             j.addProperty("voteKeyPrice",voteKeyPrice);
             j.addProperty("cropHarvestHudX",cropHarvestHudX);
             j.addProperty("cropHarvestHudY",cropHarvestHudY);

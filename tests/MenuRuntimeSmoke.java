@@ -81,7 +81,7 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
         boolean light=sample%2==1, compact=sample%4>=2;
         if(stage%2==0){
             checkRoundedIncome();
-            var cfg=ToolkitConfig.get();cfg.lightMode=light;cfg.cropEarningsHud=true;cfg.includeGoldShards=false;cfg.rateTestXp=false;
+            var cfg=ToolkitConfig.get();cfg.lightMode=light;cfg.cropEarningsHud=true;cfg.includeGoldShards=false;cfg.includeVoteKeys=false;cfg.rateTestXp=false;
             long now=System.currentTimeMillis();
             if(kind>0&&kind<3){
                 var settled=BoosterStatsManager.class.getDeclaredMethod("onSettled",MoneyLedger.Receipt.class);
@@ -108,9 +108,16 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                 var field=GoldShardTracker.class.getDeclaredField("earnings");field.setAccessible(true);
                 var earnings=(GoldShardEarnings)field.get(null);earnings.reset(now-20000);
                 earnings.chat(1,now-10000,-1);
-                check(BoosterStatsManager.averageLabel().startsWith("Shards ~$7.5M/h")
+                check(BoosterStatsManager.averageLabel().startsWith("Earning: ~$7.5M/h")
                         &&BoosterStatsManager.averageLabel().contains("cash --"),
                         "Shard value cannot make unmeasured cash appear ready");
+                cfg.includeVoteKeys=true;cfg.voteKeyPrice=100000;
+                var keysField=VoteKeyTracker.class.getDeclaredField("earnings");keysField.setAccessible(true);
+                var keys=(RollingEarnings)keysField.get(null);keys.reset(now-10000);
+                VoteKeyTracker.chat("Cursed Spirits III ┃ ✔ You found 2x Vote Keys!");
+                VoteKeyTracker.chat("[Trade] You received 3 Vote Keys!");
+                check(keys.perHourWindow(now+3000)==120,
+                        "Only a confirmed personal Vote Key reward enters the earnings window");
             }
             mc.getWindow().setWindowed(compact?1000:1280,800);mc.options.guiScale().set(compact?3:2);mc.resizeGui();
             ModConfig.getInstance().setAveragePosition(12,90);

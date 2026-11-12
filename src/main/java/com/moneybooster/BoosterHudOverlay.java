@@ -7,7 +7,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.world.item.Items;
+import com.skyblocktoolkit.ToolkitConfig;
 import com.skyblocktoolkit.ToolkitTheme;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 import com.skyblocktoolkit.mixin.BossHealthOverlayAccessor;
 
@@ -150,7 +153,17 @@ public class BoosterHudOverlay implements HudElement {
         extractor.pose().popMatrix();
     }
 
-    public static int averageX(Minecraft mc,String label) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,ModConfig.getInstance().averageX())); }
+    private static final Identifier SHARD_ICON = Identifier.withDefaultNamespace("textures/item/gold_nugget.png");
+    private static final Identifier KEY_ICON = Identifier.withDefaultNamespace("textures/item/tripwire_hook.png");
+    private static final int EARNINGS_ICON_STEP = 10;
+
+    public static int averageWidth(Minecraft mc, String label) {
+        var config = ToolkitConfig.get();
+        return mc.font.width(label) + (config.includeGoldShards ? EARNINGS_ICON_STEP : 0)
+                + (config.includeVoteKeys ? EARNINGS_ICON_STEP : 0);
+    }
+
+    public static int averageX(Minecraft mc,String label) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-averageWidth(mc,label)-2,ModConfig.getInstance().averageX())); }
     public static int averageY(Minecraft mc) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,ModConfig.getInstance().averageY())); }
     public static int fishX(Minecraft mc,String label){return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-mc.font.width(label)-2,com.skyblocktoolkit.ToolkitConfig.get().fishHudX));}
     public static int fishY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-11,com.skyblocktoolkit.ToolkitConfig.get().fishHudY));}
@@ -167,7 +180,26 @@ public class BoosterHudOverlay implements HudElement {
     public static int boneLeggingsY(Minecraft mc){return Math.max(2,Math.min(mc.getWindow().getGuiScaledHeight()-com.skyblocktoolkit.BoneLeggingsTracker.getHeight()-2,com.skyblocktoolkit.ToolkitConfig.get().boneLeggingsHudY));}
     public static void renderAverage(GuiGraphicsExtractor g,Minecraft mc) {
         String label=BoosterStatsManager.averageLabel();
-        g.text(mc.font,label,averageX(mc,label),averageY(mc),0xFFFFFFFF,true);
+        renderAverage(g, mc, label, averageX(mc, label), averageY(mc));
+    }
+
+    public static void renderAverage(GuiGraphicsExtractor g, Minecraft mc, String label, int x, int y) {
+        g.text(mc.font, label, x, y, 0xFFFFFFFF, true);
+        var config = ToolkitConfig.get();
+        int iconX = x + mc.font.width(label) + 2;
+        if (config.includeGoldShards) {
+            renderEarningsIcon(g, SHARD_ICON, iconX, y);
+            iconX += EARNINGS_ICON_STEP;
+        }
+        if (config.includeVoteKeys) renderEarningsIcon(g, KEY_ICON, iconX, y);
+    }
+
+    private static void renderEarningsIcon(GuiGraphicsExtractor g, Identifier texture, int x, int y) {
+        g.pose().pushMatrix();
+        g.pose().translate(x, y);
+        g.pose().scale(0.5f, 0.5f);
+        g.blit(RenderPipelines.GUI_TEXTURED, texture, 0, 0, 0f, 0f, 16, 16, 16, 16, 16, 16, 0xA0D6DAE2);
+        g.pose().popMatrix();
     }
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker) {
