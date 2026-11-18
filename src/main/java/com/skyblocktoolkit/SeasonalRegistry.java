@@ -24,7 +24,7 @@ public final class SeasonalRegistry {
         new SeasonalItem(
             "bone_pants",
             "Bone Leggings",
-            "Seasonal Armor Piece · Burning Rush Rune (Speed VI)",
+            "Seasonal Armor Piece · Burning Rush Rune (all tiers)",
             () -> BoneLeggingsTracker.getItemStack(net.minecraft.client.Minecraft.getInstance()),
             (screen, top) -> screen.buildBoneLeggingsSettings(top)
         )

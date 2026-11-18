@@ -6,6 +6,7 @@ public final class BoneLeggingsTrackerTest {
                 !BoneLeggingsTracker.matchesItemText("Burning Rush Rune") ||
                 BoneLeggingsTracker.matchesItemText("Diamond Leggings"))
             throw new AssertionError("Server item matching must ignore legacy formatting and reject ordinary leggings");
+        testAllTiers();
         testPreviewLabel();
         testStylesAndLabels();
         testSeasonalRegistryLookup();
@@ -13,6 +14,33 @@ public final class BoneLeggingsTrackerTest {
         testPotionIconsSearch();
         testNullSafety();
         System.out.println("PASS: BoneLeggingsTracker preview label, styles, null safety, seasonal registry lookup, and search discovery");
+    }
+
+    private static void testAllTiers() {
+        for (String tier : new String[]{"I", "II", "III", "IV", "V", "VI", "IX", "X", "XV"}) {
+            BoneLeggingsTracker.reset();
+            String text = "\uD83E\uDDB4 Burning Rush " + tier + " \u2503 \u2714 Your bones ignite!";
+            if (!BoneLeggingsTracker.matchesActivation(text) ||
+                    !BoneLeggingsTracker.matchesActivation("\u00a7d" + text))
+                throw new AssertionError("Activation rejected for " + tier);
+            BoneLeggingsTracker.activation(text, 1000);
+            if (!BoneLeggingsTracker.speedMode(-1, true, 1000) ||
+                    BoneLeggingsTracker.speedMode(-1, true, 3000) ||
+                    BoneLeggingsTracker.speedMode(-1, false, 1000))
+                throw new AssertionError("Chat bridge must expire and require the item");
+        }
+        for (int amplifier = 0; amplifier < 10; amplifier++) {
+            if (!BoneLeggingsTracker.speedMode(amplifier, true, 4000))
+                throw new AssertionError("Speed level " + (amplifier + 1) + " rejected");
+        }
+        for (String text : new String[]{"Player: Burning Rush IV \u2503 \u2714 Your bones ignite!",
+                "Burning Rush IV", "Burning Rush IV \u2503 Your bones cool down!",
+                "Burning Rush Rune \u2503 \u2714 Your bones ignite!"}) {
+            if (BoneLeggingsTracker.matchesActivation(text)) throw new AssertionError("False activation: " + text);
+        }
+        BoneLeggingsTracker.reset();
+        if (BoneLeggingsTracker.speedMode(-1, true, 1000) || BoneLeggingsTracker.speedMode(3, false, 1000))
+            throw new AssertionError("Reset and ordinary unrelated Speed must remain inactive");
     }
 
     private static void testPotionIconsSearch() {

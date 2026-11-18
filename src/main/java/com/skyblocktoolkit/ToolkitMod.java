@@ -61,6 +61,7 @@ public final class ToolkitMod implements ClientModInitializer {
                     ItemStatsTracker.fish(count,count*FISHING.settings().averageFishPrice(),System.currentTimeMillis());
                 }
                 AhSaleNotifier.onChatMessage(text);
+                BoneLeggingsTracker.chat(mc,text);
                 TreasureChestTracker.connection(mc.getConnection());TreasureChestTracker.chat(text);
             }
         });
@@ -101,6 +102,7 @@ public final class ToolkitMod implements ClientModInitializer {
             optimizeOptions(mc);
             VoiceMusicHud.tick();
             TreasureChestTracker.tick(mc);
+            BoneLeggingsTracker.connection(mc.getConnection());
             UpdateManager.tick();
             if(mc.level!=previousLevel){FISHING_EARNINGS.reset();previousLevel=mc.level;}
             if(mc!=null&&mc.player!=null){

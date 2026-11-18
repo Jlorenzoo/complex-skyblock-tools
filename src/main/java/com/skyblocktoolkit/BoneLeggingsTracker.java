@@ -23,7 +23,11 @@ public final class BoneLeggingsTracker {
     private static final int MODE_BADGE_X = 10, MODE_BADGE_Y = 8;
     private static final int EFFECT_ICON_SIZE = 16;
 
-    private static boolean lastSpeed6 = false;
+    private static boolean lastSpeedMode = false;
+    private static long activationAt = Long.MIN_VALUE;
+    private static Object connection;
+    private static final java.util.regex.Pattern ACTIVATION = java.util.regex.Pattern.compile(
+            "^[^a-z0-9]*burning rush [ivxlcdm]+\\s*[┃│|]\\s*✔\\s*your bones ignite!\\s*$");
     private static ItemStack lastServerStack = null;
 
     public static String styleName(int style) {
@@ -90,22 +94,54 @@ public final class BoneLeggingsTracker {
         return isBoneLeggings(mc.player.getMainHandItem()) || isBoneLeggings(mc.player.getOffhandItem());
     }
 
-    public static boolean hasSpeed6(Minecraft mc) {
+    static boolean matchesActivation(String text) {
+        return text != null && ACTIVATION.matcher(text.replaceAll("§.", "").toLowerCase(Locale.ROOT).strip()).matches();
+    }
+
+    static boolean speedMode(int amplifier, boolean equipped, long now) {
+        // All tiers may grant different Speed levels. Retain the legacy high-level fallback.
+        return amplifier >= 5 || equipped && (amplifier >= 0 ||
+                activationAt != Long.MIN_VALUE && now >= activationAt && now - activationAt < 2000);
+    }
+
+    static void activation(String text, long now) {
+        if (matchesActivation(text)) activationAt = now;
+    }
+
+    static void reset() {
+        activationAt = Long.MIN_VALUE;
+        lastSpeedMode = false;
+        lastServerStack = null;
+    }
+
+    public static void connection(Object current) {
+        if (connection != current) {
+            reset();
+            connection = current;
+        }
+    }
+
+    public static void chat(Minecraft mc, String text) {
+        connection(mc.getConnection());
+        if (isWearingBoneLeggings(mc)) activation(text, System.currentTimeMillis());
+    }
+
+    public static boolean hasSpeedMode(Minecraft mc) {
         if (mc == null || mc.player == null) return false;
         var effect = mc.player.getEffect(MobEffects.SPEED);
-        return effect != null && effect.getAmplifier() >= 5;
+        return speedMode(effect == null ? -1 : effect.getAmplifier(), isEquippedOrHeld(mc), System.currentTimeMillis());
     }
 
     public static boolean shouldShow(Minecraft mc) {
         if (mc == null || mc.player == null) return false;
         var cfg = ToolkitConfig.get();
         if (cfg.boneLeggingsAlwaysVisible) return true;
-        return hasSpeed6(mc) || isEquippedOrHeld(mc);
+        return hasSpeedMode(mc) || isEquippedOrHeld(mc);
     }
 
     public static String currentLabel(Minecraft mc) {
         var cfg = ToolkitConfig.get();
-        return formatLabel(cfg.boneLeggingsHudStyle, hasSpeed6(mc));
+        return formatLabel(cfg.boneLeggingsHudStyle, hasSpeedMode(mc));
     }
 
     public static ItemStack getItemStack(Minecraft mc) {
@@ -167,14 +203,16 @@ public final class BoneLeggingsTracker {
     public static void tick(Minecraft mc) {
         if (mc == null || mc.player == null) return;
         getItemStack(mc); // Capture the server appearance even while the HUD is hidden.
-        boolean speed6 = hasSpeed6(mc);
-        if (speed6 && !lastSpeed6) {
+        boolean speed = hasSpeedMode(mc);
+        // Once the effect arrives, its removal is authoritative; never invent a duration.
+        if (mc.player.getEffect(MobEffects.SPEED) != null) activationAt = Long.MIN_VALUE;
+        if (speed && !lastSpeedMode) {
             var cfg = ToolkitConfig.get();
             if (cfg.boneLeggingsSpeedAlert && (isEquippedOrHeld(mc) || cfg.boneLeggingsAlwaysVisible)) {
                 ToolkitAudio.playSpeed(mc);
             }
         }
-        lastSpeed6 = speed6;
+        lastSpeedMode = speed;
     }
 
     public static void render(GuiGraphicsExtractor extractor, Minecraft mc) {
@@ -191,7 +229,7 @@ public final class BoneLeggingsTracker {
     public static void renderWidget(GuiGraphicsExtractor extractor, Minecraft mc, int x, int y, boolean isPreview) {
         var cfg = ToolkitConfig.get();
         int style = cfg.boneLeggingsHudStyle;
-        boolean speed = isPreview || hasSpeed6(mc);
+        boolean speed = isPreview || hasSpeedMode(mc);
         if (style == STYLE_EFFECT_ICONS) {
             renderEffectIcon(extractor, getItemStack(mc), x, y, speed, cfg.boneLeggingsBackground);
             return;
