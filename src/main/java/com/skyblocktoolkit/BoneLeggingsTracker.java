@@ -25,6 +25,8 @@ public final class BoneLeggingsTracker {
 
     private static boolean lastSpeedMode = false;
     private static long activationAt = Long.MIN_VALUE;
+    private static int rushAmplifier = -1;
+    private static long rushDeadline = Long.MIN_VALUE;
     private static Object connection;
     private static final java.util.regex.Pattern ACTIVATION = java.util.regex.Pattern.compile(
             "^[^a-z0-9]*burning rush [ivxlcdm]+\\s*[┃│|]\\s*✔\\s*your bones ignite!\\s*$");
@@ -98,18 +100,58 @@ public final class BoneLeggingsTracker {
         return text != null && ACTIVATION.matcher(text.replaceAll("§.", "").toLowerCase(Locale.ROOT).strip()).matches();
     }
 
-    static boolean speedMode(int amplifier, boolean equipped, long now) {
-        // All tiers may grant different Speed levels. Retain the legacy high-level fallback.
-        return amplifier >= 5 || equipped && (amplifier >= 0 ||
-                activationAt != Long.MIN_VALUE && now >= activationAt && now - activationAt < 2000);
+    static boolean speedMode(int amplifier, int durationTicks, boolean equipped, long now) {
+        // Potions, beacons and other gear can supply Speed even in regeneration mode.
+        // Only a personal Burning Rush message arms this state, at every item tier.
+        if (!equipped || activationAt == Long.MIN_VALUE || now < activationAt) {
+            clearRush();
+            return false;
+        }
+        if (rushDeadline != Long.MIN_VALUE && now >= rushDeadline) {
+            clearRush();
+            return false;
+        }
+        if (amplifier >= 0 && durationTicks > 0) {
+            long deadline = now + durationTicks * 50L;
+            if (rushAmplifier < 0) {
+                rushAmplifier = amplifier;
+                rushDeadline = deadline;
+            } else if (amplifier != rushAmplifier) {
+                // A lower level is the underlying ordinary Speed returning.
+                if (amplifier < rushAmplifier || now - activationAt >= 2000) {
+                    clearRush();
+                    return false;
+                }
+                rushAmplifier = amplifier;
+                rushDeadline = deadline;
+            } else {
+                // Refreshes from unrelated sources must never keep a rush alive.
+                rushDeadline = Math.min(rushDeadline, deadline);
+            }
+            return true;
+        }
+        if (rushAmplifier >= 0 || now - activationAt >= 2000) {
+            clearRush();
+            return false;
+        }
+        return true; // Briefly bridge chat/effect packet ordering.
+    }
+
+    private static void clearRush() {
+        activationAt = Long.MIN_VALUE;
+        rushAmplifier = -1;
+        rushDeadline = Long.MIN_VALUE;
     }
 
     static void activation(String text, long now) {
-        if (matchesActivation(text)) activationAt = now;
+        if (matchesActivation(text)) {
+            clearRush();
+            activationAt = now;
+        }
     }
 
     static void reset() {
-        activationAt = Long.MIN_VALUE;
+        clearRush();
         lastSpeedMode = false;
         lastServerStack = null;
     }
@@ -129,7 +171,8 @@ public final class BoneLeggingsTracker {
     public static boolean hasSpeedMode(Minecraft mc) {
         if (mc == null || mc.player == null) return false;
         var effect = mc.player.getEffect(MobEffects.SPEED);
-        return speedMode(effect == null ? -1 : effect.getAmplifier(), isEquippedOrHeld(mc), System.currentTimeMillis());
+        return speedMode(effect == null ? -1 : effect.getAmplifier(),
+                effect == null ? 0 : effect.getDuration(), isWearingBoneLeggings(mc), System.currentTimeMillis());
     }
 
     public static boolean shouldShow(Minecraft mc) {
@@ -204,8 +247,6 @@ public final class BoneLeggingsTracker {
         if (mc == null || mc.player == null) return;
         getItemStack(mc); // Capture the server appearance even while the HUD is hidden.
         boolean speed = hasSpeedMode(mc);
-        // Once the effect arrives, its removal is authoritative; never invent a duration.
-        if (mc.player.getEffect(MobEffects.SPEED) != null) activationAt = Long.MIN_VALUE;
         if (speed && !lastSpeedMode) {
             var cfg = ToolkitConfig.get();
             if (cfg.boneLeggingsSpeedAlert && (isEquippedOrHeld(mc) || cfg.boneLeggingsAlwaysVisible)) {

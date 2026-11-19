@@ -709,13 +709,20 @@ public final class MenuRuntimeSmoke implements ClientModInitializer {
                             String activation="🦴 Burning Rush "+tier+" ┃ ✔ Your bones ignite!";
                             check(BoneLeggingsTracker.matchesActivation(activation),"Burning Rush tier "+tier);
                             BoneLeggingsTracker.activation(activation,1000);
-                            check(BoneLeggingsTracker.speedMode(-1,true,1000),"Chat activation bridges effect arrival");
-                            check(!BoneLeggingsTracker.speedMode(-1,true,3000),"Chat does not invent effect duration");
+                            check(BoneLeggingsTracker.speedMode(-1,0,true,1000),"Chat activation bridges effect arrival");
+                            check(!BoneLeggingsTracker.speedMode(-1,0,true,3000),"Chat does not invent effect duration");
                         }
                         BoneLeggingsTracker.reset();
-                        for(int amp=0;amp<10;amp++) check(BoneLeggingsTracker.speedMode(amp,true,4000),"All Speed levels work with Bone Leggings");
-                        check(!BoneLeggingsTracker.speedMode(3,false,4000),"Unrelated lower Speed does not show leggings");
-                        Files.writeString(output.resolve("bone-all-tiers.txt"),"PASS: Burning Rush I/II/III/IV/V/VI/X, all Speed levels, bounded chat bridge and unrelated Speed rejection in configured-pack Fabric runtime\n");
+                        for(int amp=0;amp<10;amp++) {
+                            BoneLeggingsTracker.reset();
+                            check(!BoneLeggingsTracker.speedMode(amp,1200,true,4000),"Existing Speed starts in Regen at every level");
+                            BoneLeggingsTracker.activation("Burning Rush IV \u2503 \u2714 Your bones ignite!",4000);
+                            check(BoneLeggingsTracker.speedMode(amp,100,true,4000),"Confirmed rush supports every Speed level");
+                            check(!BoneLeggingsTracker.speedMode(amp,1200,true,9000),"Unrelated Speed cannot extend the rush");
+                        }
+                        BoneLeggingsTracker.reset();
+                        check(!BoneLeggingsTracker.speedMode(3,100,false,4000),"Unrelated lower Speed does not show leggings");
+                        Files.writeString(output.resolve("bone-all-tiers.txt"),"PASS: Burning Rush I/II/III/IV/V/VI/X, all Speed levels require confirmed activation, startup Regen with ordinary Speed, bounded chat bridge and unrelated refresh rejection in configured-pack Fabric runtime\n");
                         var sample = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_LEGGINGS);
                         sample.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("§dBone §lLeggings"));
                         sample.set(net.minecraft.core.component.DataComponents.DYED_COLOR,new net.minecraft.world.item.component.DyedItemColor(0xB143C9));
