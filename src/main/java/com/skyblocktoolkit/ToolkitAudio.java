@@ -50,8 +50,7 @@ public final class ToolkitAudio {
         COCONUT("Coconut booster", Sample.REWARD, Sample.RISE, Sample.GLASS, Sample.CLASSIC),
         AUCTION("Auction sale", Sample.COINS, Sample.REWARD, Sample.GLASS,
             Sample.PLING, Sample.LEVEL_UP, Sample.ORB, Sample.AMETHYST, Sample.BELL),
-        SPEED("Bone Leggings speed", Sample.RISE, Sample.GLASS, Sample.SOFT, Sample.CLASSIC),
-        COPY("Gift code copied", Sample.CLICK, Sample.PLUCK, Sample.GLASS, Sample.CLASSIC);
+        SPEED("Bone Leggings speed", Sample.RISE, Sample.GLASS, Sample.SOFT, Sample.CLASSIC);
 
         public final String label;
         final List<Sample> choices;
@@ -102,10 +101,6 @@ public final class ToolkitAudio {
         play(Cue.SPEED, mc, SoundEvents.AMETHYST_BLOCK_CHIME, 1.8f, 0.7f, 1);
     }
 
-    public static void playCopy(Minecraft mc) {
-        play(Cue.COPY, mc, SoundEvents.NOTE_BLOCK_PLING.value(), 1.8f, 1, 1);
-    }
-
     public static void preview(Cue cue) {
         var fishing = ToolkitMod.FISHING;
         switch (cue) {
@@ -119,7 +114,6 @@ public final class ToolkitAudio {
             case COCONUT -> CoconutNotifier.preview();
             case AUCTION -> AhSaleNotifier.playPreviewSound();
             case SPEED -> playSpeed(Minecraft.getInstance());
-            case COPY -> playCopy(Minecraft.getInstance());
         }
     }
 }

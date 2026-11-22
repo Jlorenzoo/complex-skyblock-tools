@@ -42,7 +42,7 @@ public final class ToolkitScreen extends Screen {
         case 2->List.of(new Topic("Farming","Crop visibility, earnings and gold shards"),new Topic("Fishing","Bite volume, depleted areas and earnings window"),new Topic("Item prices","Sell values for fish, Vote Keys and Gold Shards"),new Topic("Mining & XP","XP per hour and booster accounting"));
         case 3->SeasonalRegistry.ITEMS.stream().map(item->new Topic(item.name(),item.subtitle())).toList();
         case 4->List.of(new Topic("Active HUD elements","Choose which displays appear in-game"),new Topic("Layout & positioning","Move displays or restore their positions"),new Topic("Treasure chests","Discovery details, estimates and appearance"),new Topic("Voice & music","See your microphone and music broadcast state"));
-        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Startup","Auto-join and server resource packs"),new Topic("Chat selection & copy","Copy text, gift codes and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Sound Library","Choose and preview every Toolkit alert"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
+        case 6->List.of(new Topic("Keyboard shortcuts","Menu, sell all, blackout and fullbright keys"),new Topic("Startup","Auto-join and server resource packs"),new Topic("Chat selection & copy","Text selection and chat appearance"),new Topic("Auction notifications","Sale sounds, volume and previews"),new Topic("Sound Library","Choose and preview every Toolkit alert"),new Topic("Display & visuals","Fullbright and lighting"),new Topic("Blackout (AFK)","Screen dimming and wake controls"));
         default->List.of();
     };}
     private boolean topic(String title,int top){
@@ -611,13 +611,12 @@ public final class ToolkitScreen extends Screen {
         if(topic("Chat selection & copy",0)){
             toggle("Chat selection","Drag to select · Ctrl+C / Cmd+C to copy",16,()->cfg.chatEnabled,()->cfg.chatEnabled=!cfg.chatEnabled);
             toggle("Select word",48,()->cfg.wordSelect,()->cfg.wordSelect=!cfg.wordSelect);
-            toggle("Quick /gc code click","Click a 16-digit gift code to copy & open /gc",72,()->cfg.gcCodeClick,()->cfg.gcCodeClick=!cfg.gcCodeClick);
-            if(details("Chat appearance",112,"Highlight color","Highlight strength","Chat size","Chat width","Chat opacity")){
-                setting("Highlight color",140,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
-                slider("Highlight strength",164,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
-                slider("Chat size",188,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
-                slider("Chat width",212,options.chatWidth().get(),1,v->options.chatWidth().set(v));
-                slider("Chat opacity",236,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
+            if(details("Chat appearance",84,"Highlight color","Highlight strength","Chat size","Chat width","Chat opacity")){
+                setting("Highlight color",112,cfg::highlightName,()->cfg.highlight=(cfg.highlight+1)%3);
+                slider("Highlight strength",136,(cfg.highlightOpacity-.1)/.7,1,v->cfg.highlightOpacity=.1+v*.7);
+                slider("Chat size",160,options.chatScale().get(),1,v->options.chatScale().set(Math.max(.1,v)));
+                slider("Chat width",184,options.chatWidth().get(),1,v->options.chatWidth().set(v));
+                slider("Chat opacity",208,options.chatOpacity().get(),1,v->options.chatOpacity().set(v));
             }
         }
         if(topic("Sound Library",0)){

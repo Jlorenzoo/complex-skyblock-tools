@@ -13,53 +13,39 @@ public final class BoneLeggingsTrackerTest {
         testSearchDiscovery();
         testPotionIconsSearch();
         testNullSafety();
-        System.out.println("PASS: BoneLeggingsTracker preview label, styles, null safety, seasonal registry lookup, and search discovery");
+        System.out.println("PASS: Bone Leggings ignition and cooldown for all tiers, HUD styles, seasonal registry, and search");
     }
 
     private static void testAllTiers() {
-        String iv = "\uD83E\uDDB4 Burning Rush IV \u2503 \u2714 Your bones ignite!";
-        for (int amplifier = 0; amplifier < 10; amplifier++) {
-            BoneLeggingsTracker.reset();
-            if (BoneLeggingsTracker.speedMode(amplifier, 1200, true, 1000) ||
-                    BoneLeggingsTracker.speedMode(amplifier, 1200, false, 1000))
-                throw new AssertionError("Existing Speed must start in Regen, including Speed VI+");
-            BoneLeggingsTracker.activation(iv, 1000);
-            if (!BoneLeggingsTracker.speedMode(amplifier, 100, true, 1000) ||
-                    !BoneLeggingsTracker.speedMode(amplifier, 60, true, 3000) ||
-                    BoneLeggingsTracker.speedMode(amplifier, 1200, true, 6000))
-                throw new AssertionError("Confirmed rush works at every level and unrelated refresh cannot extend it");
-        }
         for (String tier : new String[]{"I", "II", "III", "IV", "V", "VI", "IX", "X", "XV"}) {
             BoneLeggingsTracker.reset();
-            String text = "\uD83E\uDDB4 Burning Rush " + tier + " \u2503 \u2714 Your bones ignite!";
-            if (!BoneLeggingsTracker.matchesActivation(text) ||
-                    !BoneLeggingsTracker.matchesActivation("\u00a7d" + text))
-                throw new AssertionError("Activation rejected for " + tier);
-            BoneLeggingsTracker.activation(text, 1000);
-            if (!BoneLeggingsTracker.speedMode(-1, 0, true, 1000) ||
-                    BoneLeggingsTracker.speedMode(-1, 0, true, 3000))
-                throw new AssertionError("Chat bridge must expire without an effect");
+            String prefix = "🦴 Burning Rush " + tier + " ┃ ✔ Your bones ";
+            if (BoneLeggingsTracker.speedMode(true))
+                throw new AssertionError("Regen is the initial mode");
+            BoneLeggingsTracker.updateModeFromChat("§d" + prefix + "ignite!", true);
+            // An idle interval or unrelated message does not change the last reported mode.
+            BoneLeggingsTracker.updateModeFromChat("Your Speed effect has expired.", true);
+            if (!BoneLeggingsTracker.speedMode(true))
+                throw new AssertionError("Expected Speed until server cooldown for tier " + tier);
+            BoneLeggingsTracker.updateModeFromChat(prefix + "cool down.", true);
+            if (BoneLeggingsTracker.speedMode(true))
+                throw new AssertionError("Expected Regen after server cooldown for tier " + tier);
         }
-        for (String text : new String[]{"Player: " + iv, "Burning Rush IV",
-                "Burning Rush IV \u2503 Your bones cool down!", "Burning Rush Rune \u2503 \u2714 Your bones ignite!"}) {
-            if (BoneLeggingsTracker.matchesActivation(text)) throw new AssertionError("False activation: " + text);
+
+        String ignite = "Burning Rush IV ┃ ✔ Your bones ignite!";
+        for (String spoof : new String[]{"[Global] Alex: " + ignite, ignite + " (test)", "Burning Rush IV is active"}) {
+            BoneLeggingsTracker.updateModeFromChat(spoof, true);
+            if (BoneLeggingsTracker.speedMode(true))
+                throw new AssertionError("False activation: " + spoof);
         }
-        BoneLeggingsTracker.activation(iv, 1000);
-        BoneLeggingsTracker.speedMode(3, 100, true, 1000);
-        if (BoneLeggingsTracker.speedMode(1, 1200, true, 2000))
-            throw new AssertionError("Returning to ordinary lower Speed ends the rush");
-        BoneLeggingsTracker.activation(iv, 3000);
-        BoneLeggingsTracker.speedMode(3, 100, true, 3000);
-        if (BoneLeggingsTracker.speedMode(-1, 0, true, 3100))
-            throw new AssertionError("Effect removal ends the rush immediately");
-        BoneLeggingsTracker.activation(iv, 4000);
-        if (BoneLeggingsTracker.speedMode(3, 100, false, 4000) ||
-                BoneLeggingsTracker.speedMode(3, 100, true, 4100))
-            throw new AssertionError("Unequipping clears the rush, re-equipping does not reactivate");
-        BoneLeggingsTracker.activation(iv, 5000);
+        BoneLeggingsTracker.updateModeFromChat(ignite, false);
+        if (BoneLeggingsTracker.speedMode(true)) throw new AssertionError("Ignition requires equipped leggings");
+        BoneLeggingsTracker.updateModeFromChat(ignite, true);
+        if (BoneLeggingsTracker.speedMode(false) || BoneLeggingsTracker.speedMode(true))
+            throw new AssertionError("Unequipping must clear Speed mode");
+        BoneLeggingsTracker.updateModeFromChat(ignite, true);
         BoneLeggingsTracker.connection(new Object());
-        if (BoneLeggingsTracker.speedMode(5, 1200, true, 5000))
-            throw new AssertionError("Reconnecting with Speed must start in Regen");
+        if (BoneLeggingsTracker.speedMode(true)) throw new AssertionError("Connection changes must clear Speed mode");
         BoneLeggingsTracker.reset();
     }
 

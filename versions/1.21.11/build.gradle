@@ -106,7 +106,7 @@ def regressionClasses = [
     'ToolkitPaletteTest', 'com.skyblocktoolkit.AhSaleNotifierTest',
     'com.skyblocktoolkit.UpdateChannelTest', 'com.skyblocktoolkit.StartupJoinTest',
     'LevelRendererResizeTest', 'com.skyblocktoolkit.CropHarvestTrackerTest',
-    'com.skyblocktoolkit.VisualAlertTest', 'com.skyblocktoolkit.GcCodeTest',
+    'com.skyblocktoolkit.VisualAlertTest',
     'com.skyblocktoolkit.BoneLeggingsTrackerTest', 'com.skyblocktoolkit.GoldShardEarningsTest', 'com.skyblocktoolkit.TreasureChestStateTest',
     'com.skyblocktoolkit.ItemStatsHistoryTest', 'com.skyblocktoolkit.ItemStatsAutomationTest', 'com.skyblocktoolkit.ItemStatsLocationTest',
     'com.skyblocktoolkit.ItemStatsVisibilityTest', 'com.skyblocktoolkit.VoiceMusicStateTest'

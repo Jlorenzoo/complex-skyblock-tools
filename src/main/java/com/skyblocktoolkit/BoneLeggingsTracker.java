@@ -6,11 +6,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /** Tracks Bone Leggings / Burning Rush status and renders an item HUD overlay. */
 public final class BoneLeggingsTracker {
@@ -24,12 +24,10 @@ public final class BoneLeggingsTracker {
     private static final int EFFECT_ICON_SIZE = 16;
 
     private static boolean lastSpeedMode = false;
-    private static long activationAt = Long.MIN_VALUE;
-    private static int rushAmplifier = -1;
-    private static long rushDeadline = Long.MIN_VALUE;
+    private static boolean rushActive;
     private static Object connection;
-    private static final java.util.regex.Pattern ACTIVATION = java.util.regex.Pattern.compile(
-            "^[^a-z0-9]*burning rush [ivxlcdm]+\\s*[┃│|]\\s*✔\\s*your bones ignite!\\s*$");
+    private static final Pattern MODE_MESSAGE = Pattern.compile(
+            "^[^a-z0-9]*burning rush [ivxlcdm]+\\s*[┃│|]\\s*✔\\s*your bones (ignite!|cool down\\.)$");
     private static ItemStack lastServerStack = null;
 
     public static String styleName(int style) {
@@ -96,62 +94,22 @@ public final class BoneLeggingsTracker {
         return isBoneLeggings(mc.player.getMainHandItem()) || isBoneLeggings(mc.player.getOffhandItem());
     }
 
-    static boolean matchesActivation(String text) {
-        return text != null && ACTIVATION.matcher(text.replaceAll("§.", "").toLowerCase(Locale.ROOT).strip()).matches();
+    static boolean speedMode(boolean equipped) {
+        if (!equipped) rushActive = false;
+        return rushActive;
     }
 
-    static boolean speedMode(int amplifier, int durationTicks, boolean equipped, long now) {
-        // Potions, beacons and other gear can supply Speed even in regeneration mode.
-        // Only a personal Burning Rush message arms this state, at every item tier.
-        if (!equipped || activationAt == Long.MIN_VALUE || now < activationAt) {
-            clearRush();
-            return false;
-        }
-        if (rushDeadline != Long.MIN_VALUE && now >= rushDeadline) {
-            clearRush();
-            return false;
-        }
-        if (amplifier >= 0 && durationTicks > 0) {
-            long deadline = now + durationTicks * 50L;
-            if (rushAmplifier < 0) {
-                rushAmplifier = amplifier;
-                rushDeadline = deadline;
-            } else if (amplifier != rushAmplifier) {
-                // A lower level is the underlying ordinary Speed returning.
-                if (amplifier < rushAmplifier || now - activationAt >= 2000) {
-                    clearRush();
-                    return false;
-                }
-                rushAmplifier = amplifier;
-                rushDeadline = deadline;
-            } else {
-                // Refreshes from unrelated sources must never keep a rush alive.
-                rushDeadline = Math.min(rushDeadline, deadline);
-            }
-            return true;
-        }
-        if (rushAmplifier >= 0 || now - activationAt >= 2000) {
-            clearRush();
-            return false;
-        }
-        return true; // Briefly bridge chat/effect packet ordering.
-    }
-
-    private static void clearRush() {
-        activationAt = Long.MIN_VALUE;
-        rushAmplifier = -1;
-        rushDeadline = Long.MIN_VALUE;
-    }
-
-    static void activation(String text, long now) {
-        if (matchesActivation(text)) {
-            clearRush();
-            activationAt = now;
+    static void updateModeFromChat(String text, boolean equipped) {
+        if (text == null) return;
+        var message = MODE_MESSAGE.matcher(text.replaceAll("§.", "").toLowerCase(Locale.ROOT).strip());
+        // The server announces both ends of the mode. Individual Speed effects can expire while it is active.
+        if (message.matches()) {
+            rushActive = equipped && message.group(1).equals("ignite!");
         }
     }
 
     static void reset() {
-        clearRush();
+        rushActive = false;
         lastSpeedMode = false;
         lastServerStack = null;
     }
@@ -165,14 +123,11 @@ public final class BoneLeggingsTracker {
 
     public static void chat(Minecraft mc, String text) {
         connection(mc.getConnection());
-        if (isWearingBoneLeggings(mc)) activation(text, System.currentTimeMillis());
+        updateModeFromChat(text, isWearingBoneLeggings(mc));
     }
 
     public static boolean hasSpeedMode(Minecraft mc) {
-        if (mc == null || mc.player == null) return false;
-        var effect = mc.player.getEffect(MobEffects.SPEED);
-        return speedMode(effect == null ? -1 : effect.getAmplifier(),
-                effect == null ? 0 : effect.getDuration(), isWearingBoneLeggings(mc), System.currentTimeMillis());
+        return mc != null && mc.player != null && speedMode(isWearingBoneLeggings(mc));
     }
 
     public static boolean shouldShow(Minecraft mc) {

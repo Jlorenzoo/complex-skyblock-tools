@@ -7,7 +7,7 @@ import com.skyblocktoolkit.ToolkitAudio.Cue;
 import com.skyblocktoolkit.ToolkitAudio.Sample;
 public final class ToolkitConfig {
     private static final ToolkitConfig INSTANCE=new ToolkitConfig();
-    public boolean boosterHud=true,chatEnabled=true,wordSelect=true,gcCodeClick=true;
+    public boolean boosterHud=true,chatEnabled=true,wordSelect=true;
     public boolean xpBoosterHud=true,boosterReminder=false,boosterExpiringAlert=true,expiringFlash=false;
     public boolean lightMode=false;
     public boolean voiceMusicHud=false;
@@ -96,7 +96,6 @@ public final class ToolkitConfig {
             if(j.has("fishHudY"))fishHudY=Math.clamp(j.get("fishHudY").getAsInt(),0,10000);
             if(j.has("chatEnabled"))chatEnabled=j.get("chatEnabled").getAsBoolean();
             if(j.has("wordSelect"))wordSelect=j.get("wordSelect").getAsBoolean();
-            if(j.has("gcCodeClick"))gcCodeClick=j.get("gcCodeClick").getAsBoolean();
             if(j.has("ahSoundEnabled"))ahSoundEnabled=j.get("ahSoundEnabled").getAsBoolean();
             readAlertSounds(j);
             if(j.has("ahSoundVolume")){double v=j.get("ahSoundVolume").getAsDouble();if(Double.isFinite(v))ahSoundVolume=Math.clamp(v,0.0,1.0);}
@@ -174,7 +173,6 @@ public final class ToolkitConfig {
         Path temp=null;try{
             Files.createDirectories(path.getParent());temp=Files.createTempFile(path.getParent(),"toolkit-",".tmp");
             var j=new JsonObject();j.addProperty("boosterHud",boosterHud);j.addProperty("chatEnabled",chatEnabled);j.addProperty("wordSelect",wordSelect);
-            j.addProperty("gcCodeClick",gcCodeClick);
             j.addProperty("xpBoosterHud",xpBoosterHud);j.addProperty("boosterReminder",boosterReminder);
             j.addProperty("boosterExpiringAlert",boosterExpiringAlert);
             j.addProperty("expiringFlash",expiringFlash);
