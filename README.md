@@ -18,122 +18,190 @@
 
 ---
 
-## Download & Install
+## 📥 Quick & Easy Installation
 
-Every release automatically provides 1-click modpack bundles and standalone mod JARs:
+Choose the option that fits your setup:
 
-| Your Setup / Launcher | Minecraft 1.21.11 (Recommended) | Minecraft 26.2 |
+### Option 1: 1-Click Modpack *(Recommended)*
+> **Best for teammates & new players!** Includes everything pre-configured: **Complexify**, **Proximity Voice Chat**, **Litematica**, and top performance optimizations. Zero manual configuration required.
+
+1. **Download your launcher bundle** from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest):
+   - **Prism Launcher**: Download `Full-Pack-Prism-1.21.11.zip`
+   - **Modrinth App**: Download `Full-Pack-Modrinth-1.21.11.mrpack`
+2. **Import into your launcher**:
+   - In **Prism Launcher**: Click **Add Instance** → **Import from zip** → Choose the file → Click **OK**.
+   - In **Modrinth App**: Click **Create Instance** → **Import** → Choose the file.
+3. Click **Launch** and enjoy!
+
+---
+
+### Option 2: Standalone Mod JAR *(Existing Fabric Profile)*
+> Add Complexify to your existing Minecraft Fabric setup.
+
+1. Download **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest).
+2. Place the `.jar` file directly into your `.minecraft/mods` directory.
+3. Launch Minecraft using **Fabric Loader 0.18.4+** on **Java 21**.
+
+---
+
+### ⚡ Automatic 1-Click Updates
+Never browse GitHub or drag files again:
+- Complexify automatically checks for updates in the background on startup.
+- When an update is released, click the notification in chat or run **`/complexify update`** to automatically download and install it in one click.
+
+---
+
+## 🎮 Controls & Shortcuts
+
+| Action | Shortcut / Command | Description |
 | :--- | :--- | :--- |
-| **Modrinth App** (1-Click) | **`Full-Pack-Modrinth-1.21.11.mrpack`** | **`Full-Pack-Modrinth-26.2.mrpack`** |
-| **Prism Launcher** (1-Click) | **`Full-Pack-Prism-1.21.11.zip`** | **`Full-Pack-Prism-26.2.zip`** |
-| **Standalone JAR** (Existing Mods Folder) | **`complexify-1.1.0+mc1.21.11.jar`** | **`complexify-1.1.0+mc26.2.jar`** |
-
-> **Tip for Teammates:**  
-> - **Want the full modpack with Litematica & Voice Chat?** Download the `.mrpack` (Modrinth App) or `.zip` (Prism Launcher). Just click **Import** in your launcher—it automatically sets up the right Minecraft version, Java, and all required mods in 1 click. You do not need to configure anything manually.
-> - **Already have a custom Fabric profile?** Download just the `+mc<version>.jar` and drop it into your `.minecraft/mods` folder.
-> - **Unsure what version you are playing?** Check the bottom-left corner of your Minecraft main menu screen.
-
-Minecraft **1.21.11 uses Java 21**; Minecraft **26.2 uses Java 25** and **Fabric Loader 0.19.5 or newer**. Both versions connect directly to Complex Skyblock (`skyblock.mc-complex.com`).
-
-In Complexify, open **Utilities → Startup → Auto-join** and choose **Off**, **Complex Hub**, or **Complex Skyblock**. **Auto-download resource pack** controls whether Minecraft automatically accepts the pack offered by Complex during auto-join. Changes apply the next time Minecraft starts. New full-pack imports start with **Complex Skyblock** and automatic pack downloads enabled. Skyblock startup retries once if Complex reports an initial redirect timeout.
-
-
-### ⚡ Automatic Updates
-Once installed, you never need to visit GitHub or drag files again:
-- The mod automatically checks for updates in the background on startup.
-- When an update is ready, an alert appears in chat: `[Complexify] A new update is available! [Click to Update]`
-- Click the message or type `/complexify update` to auto-download and install with one click.
+| **Open Complexify Hub** | **`Right Shift`** *(or `Esc` → Complexify)* | Main navigation dashboard and settings hub |
+| **Interactive HUD Canvas** | **`/complexify hud`** | Visual drag-and-drop HUD repositioning & visibility toggles |
+| **Toggle Blackout (AFK)** | **`F6`** | Screen dimming for long farming/fishing sessions |
+| **Check & Install Updates** | **`/complexify update`** | One-click in-game updater |
+| **Direct Module Shortcuts** | `/complexify farming`<br>`/complexify boosters`<br>`/complexify fishing`<br>`/complexify chat`<br>`/complexify auction` | Jump straight to any specific configuration module |
 
 ---
 
-## Controls & Shortcuts
+## ✨ Features Showcase
 
-Use the **Dark mode / Light mode** button in the Complexify menu header to switch between charcoal/red and off-white/red themes. The choice applies immediately, is saved across restarts, and covers module pages, history, rate tests, sliders and price inputs. Gameplay HUD colors remain consistent.
+### 🎯 1. Modern Configuration Hub & Themes
+A clean, responsive Lunar Client–inspired hub styled in Crimson Red (`#E5254A`) and dark graphite panels. Features instant search across all settings, structured categories, and seamless switching between **Dark Mode** and **Light Mode**.
 
-| Action | Shortcut / Command |
-| :--- | :--- |
-| **Open Complexify Hub** | **`Right Shift`** (or `Escape` → *Complexify*) |
-| **Toggle Blackout** | **`F6`** *(customizable in settings)* |
-| **Main Menu** | `/complexify` *(or `/toolkit`)* |
-| **Drag & Drop HUD Canvas** | `/complexify hud` |
-| **Check & Install Updates** | `/complexify update` |
-| **Module Shortcuts** | `/complexify farming`, `/complexify boosters`, `/complexify fishing`, `/complexify chat`, `/complexify auction`, `/complexify blackout` |
+![Complexify Hub - Dark Mode](assets/screenshots/hub-overview.png)
 
-### Proximity voice chat on Complex
+<div align="center">
+<sub>Seamless one-click switch between Dark Mode and Light Mode across all menus and inputs:</sub>
+</div>
 
-Complex uses **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** by
-Max Henkel. Lunar is not required. The full pack includes voice chat. If you
-downloaded only the Toolkit jar, install Simple Voice Chat for your Minecraft
-version separately, then restart Minecraft.
-
-Press **V** to select your microphone and speakers and choose **push-to-talk**.
-Pack defaults: hold **Caps Lock** to talk, hold **Right Alt** to whisper,
-**F8** to mute your microphone, and **N** to disable/re-enable voice chat.
-These avoid Litematica's **M** menu; existing voice bindings are preserved on install.
-Use **`/voice`** on Complex for server settings and accept its consent prompt yourself.
-Complex records and moderates voice chat; proximity range is 48 blocks, whisper range
-is 24 blocks, and groups are disabled. See
-[Complex's official guide](https://www.mc-complex.com/forums/vanilla/wiki-page/3/complex-gaming-proximity-voice-chat-guide/).
-The toolkit jar by itself does not include voice chat; the installer adds the separate jar.
+![Complexify Hub - Light Mode](assets/screenshots/theme-light.png)
 
 ---
 
-## Features
+### 📐 2. Interactive Drag & Drop HUD Canvas
+Take full control of your on-screen HUD with the visual layout editor (`/complexify hud`).
+- **Drag & Drop Placement**: Move your Money Timer, XP Timer, Crop Earnings, and Fishing stats anywhere on screen.
+- **Toggle Visibility**: Click the inline eye icons to show or hide individual displays on the fly.
+- **Snapping Guides**: Clean grid snapping keeps elements aligned with screen edges.
 
-### 🌾 Farming Hub & Clear Harvest Textures
-- **Built-in Crop Visibility**: Immature wheat, carrots, potatoes, nether wart, and beetroots are desaturated and dimmed so fully grown crops are instantly distinguishable.
-- **Zero-Setup & Auto-Updating**: Included directly inside the mod JAR as a built-in Fabric resource pack. Updates automatically whenever the mod updates.
-- **Quick In-Game Toggle**: Switch between Clear Harvest and vanilla textures with one click under the **Farming** tab (`Right Shift` or `/toolkit farming`).
-- **Live Crop Earnings & HUD**: Monitor live rolling harvest rates (`$/hr`), toggle the Crop Earnings HUD overlay, and access rate tests directly.
-
-### ⏱️ Booster & Crop Earnings HUD
-- **Separate Money & XP Timers**: Green money and purple XP countdowns track their own activations. Only active, enabled timers appear at the top; money appears above XP when both are visible, with no empty row when either is hidden or expires.
-- **Visibility & Expiry Reminder**: Open **Right Shift → Boosters** to toggle each timer independently. Enable **5-second reminder** for a subtle ending cue and soft outline during the final five seconds. It starts disabled and does not play a sound. The HUD editor has separate eye controls; drag either timer to move the stack together.
-- **Consumable Tracker**: Accurately tracks active coconut and booster item durations with countdown bars.
-- **Rolling Earnings**: Live rolling window (10-second / hourly) calculation of crop farming revenue (`$/hr`).
-- **Minecraft XP per Hour**: Open **Boosters → Rate tests → Minecraft XP** for 1-minute, 5-minute or free-run tests. **Include XP boosters** switches between actual XP and estimated base XP with the detected booster removed. Rates use XP points across level-ups; losses do not count as income. Farming also offers a separate rolling XP/hour HUD, with its own visibility and draggable position in **Edit HUD**.
-- **Session History**: Detailed ledger of your past boosts, earnings, and rate tests.
-
-### 🎣 Fishing Signals & Value Estimates
-- **Audio Depth Cue**: Plays a distinct audio chime when your bobber reaches optimal depth (30 blocks).
-- **Depleted Area & Snap Alerts**: Warns you with descending audio tones when a fishing spot is depleted or your line snaps.
-- **Estimated Hourly Catch Value**: Calculates rolling 60s / 5m catch rates and projected `$/hr` based on your server fish prices.
-
-### 💬 Chat Text Selection & Copy
-- **Drag-to-Select**: Click and drag your mouse across in-game chat text to highlight text seamlessly.
-- **Multi-Click Selection**: Double-click to select a word; triple-click to select an entire message line.
-- **Cross-Platform Copy**: Press **Ctrl + C** (or **Cmd + C** on macOS) to copy text directly to your clipboard. Clickable links and commands remain fully functional.
-
-### 🔔 Auction Alerts & Blackout Mode
-- **Auction Sale Chime**: Immediate custom audio notification when an item sells on the Auction House.
-- **Blackout Focus**: Dim the screen opacity (0–100%) during long farming or fishing sessions while keeping full controls and game audio active.
+![Interactive HUD Editor](assets/screenshots/hud-layout-editor.png)
 
 ---
 
-## Building from Source
+### ⏱️ 3. Booster Timers & Activation Alerts
+Keep precise track of your active boosters and consumables without opening menus.
+- **Independent Money & XP Timers**: Green money (+20%) and purple XP (+150%) countdown bars display exact remaining time.
+- **5-Second Expiry Reminder**: Subtle audio-visual cues notify you before a booster expires so you never lose your multiplier.
+- **Consumable Tracker**: Accurately tracks active coconut and booster item durations.
 
-Requirements: Python 3 and Java 25.
+![Booster Timers](assets/screenshots/booster-timers.png)
 
-For launcher paths, Windows setup, regression checks and safe installation, see [DEVELOPMENT.md](DEVELOPMENT.md). Machine-specific paths belong in ignored `local-settings.json`.
+---
+
+### 🌾 4. Farming Hub & Clear Harvest Textures
+Maximize crop revenue with integrated telemetry and texture enhancements.
+- **Built-in Clear Harvest Textures**: Immature wheat, carrots, potatoes, nether wart, and beetroots are 90% desaturated and 25% darkened, making fully grown crops instantly stand out.
+- **One-Click In-Game Toggle**: Switch between Clear Harvest and vanilla textures instantly under the Farming tab.
+- **Crop Earnings & Gold Shards**: Live rolling harvest rate (`$/hr`), session tallies, and Gold Shard accounting.
+
+![Farming Hub & Clear Harvest](assets/screenshots/farming-clear-harvest.png)
+
+---
+
+### 🎣 5. Fishing Signals & Live Catch Valuation
+Turn fishing into an automated, high-precision workflow.
+- **Optimal Depth Audio Chime**: Plays a distinct audio signal the instant your bobber reaches optimal depth (30 blocks).
+- **Bite & Snap Alerts**: Custom audio warnings for bite detections, depleted fishing spots, and snapped lines.
+- **Projected Hourly Value**: Real-time rolling catch rates and projected `$/hr` earnings based on live server market prices.
+
+![Fishing Signals](assets/screenshots/fishing-signals.png)
+
+---
+
+### 📈 6. Mining & XP / Rate Tests
+Benchmark your efficiency with built-in telemetry and graphing.
+- **Live XP per Hour Telemetry**: Run 1-minute, 5-minute, or continuous free-run benchmark tests with real-time visual performance curves.
+- **Booster Accounting**: Isolate raw base XP from booster multipliers to measure true farm efficiency.
+- **Session History Ledger**: Review past boosts, revenue averages, and rate test logs.
+
+![XP Rate Tests & Graphs](assets/screenshots/xp-rate-tests.png)
+
+---
+
+### 💬 7. Native Chat Selection & Clipboard Copy
+Interact with Minecraft chat like a modern desktop application.
+- **Drag-to-Select**: Click and drag your mouse across chat lines to highlight text smoothly.
+- **Multi-Click Expansion**: Double-click to select a word; triple-click to select the entire line.
+- **Instant Copy**: Press **Ctrl + C** (or **Cmd + C** on macOS) to copy directly to your clipboard. Clickable links and commands remain fully functional.
+
+![Chat Text Selection & Copy](assets/screenshots/chat-selection-copy.png)
+
+---
+
+### 🌑 8. Blackout Mode (AFK & Screen Preservation)
+Designed for long farming, fishing, and AFK sessions.
+- **Instant Toggle (`F6`)**: Dim the screen opacity anywhere from 0% to 100% to protect OLED displays and eliminate night-time glare.
+- **Stay Informed**: Game audio, alert chimes, full player controls, and optional chat overlay remain fully active while dimmed.
+
+![Blackout AFK Mode](assets/screenshots/blackout-mode.png)
+
+---
+
+### ⚔️ 9. Seasonal Gear & Unique Item Trackers
+Specialized tracking for server-specific items and unique gear.
+- **Gear Telemetry**: Monitor active cooldowns, special stats, and abilities for gear like the **Oni Mask** and **Bone Leggings**.
+- **On-Screen Effect Icons**: Clean HUD indicators show when seasonal abilities are active or ready to trigger.
+
+![Seasonal Gear & Item Trackers](assets/screenshots/seasonal-gear.png)
+
+---
+
+### 🚀 10. Startup Auto-Join, Auction Alerts & Utilities
+Everyday quality-of-life utilities that streamline your Skyblock experience.
+- **Skyblock Auto-Join**: Automatically connect straight to Complex Skyblock (`skyblock.mc-complex.com`) on startup, complete with automatic server resource pack approval and timeout retry.
+- **Auction House Sale Chime**: Instant audio notification whenever an item sells on the Auction House.
+- **Sound Library**: Audition and configure all mod audio chimes and cues directly in-game.
+
+![Startup & Utilities](assets/screenshots/utilities-startup.png)
+
+---
+
+## 🎙️ Proximity Voice Chat on Complex
+
+Complex Gaming uses **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** by Max Henkel (Lunar Client is not required).
+- The **Full Modpack** includes voice chat out of the box.
+- Press **V** to configure your microphone and speakers.
+- Default keybinds:
+  - Hold **Caps Lock** to talk
+  - Hold **Right Alt** to whisper
+  - **F8** to mute microphone
+  - **N** to toggle voice chat on/off
+- Type **`/voice`** in-game on Complex for server voice settings and permissions.
+
+---
+
+## 🛠️ Building from Source
+
+Requirements: **Python 3** and **Java 21** (or Java 25 for 26.2 legacy profile).
 
 ```bash
 # Clone the repository
 git clone https://github.com/Jlorenzoo/complex-skyblock-tools.git
 cd complex-skyblock-tools
 
-# Build the mod jar
+# Build the mod JAR and run regression tests
 python3 build.py
 
-# Run test suite
+# Run test suites
 python3 tests/test_updater.py
 python3 tests/test_installer.py
 ```
 
-Produces `build/skyblock-toolkit-1.1.0.jar`.
+For advanced launcher configurations and development documentation, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ---
 
-## License & Credits
+## 📄 License & Community
 
-- Distributed under the [MIT License](LICENSE).
-- Designed with ❤️ for the **Complex Gaming** community.
+- Distributed under the [GNU General Public License v3.0](LICENSE).
+- Built with ❤️ for the **Complex Gaming** community.
