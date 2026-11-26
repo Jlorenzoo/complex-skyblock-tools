@@ -2,7 +2,7 @@
 
 ![Complexify Banner](assets/banner.png)
 
-<img src="assets/logo.png" width="110" alt="Complexify Logo" />
+<img src="assets/logo.png" width="90" alt="Complexify Logo" />
 
 # Complexify
 
@@ -20,148 +20,175 @@
 
 ## 📥 Quick & Easy Installation
 
-Choose the option that fits your setup:
-
 ### Option 1: 1-Click Modpack *(Recommended)*
-> **Best for teammates & new players!** Includes everything pre-configured: **Complexify**, **Proximity Voice Chat**, **Litematica**, and top performance optimizations. Zero manual configuration required.
+> **Best for teammates & new players.** Pre-configured with **Complexify**, **Proximity Voice Chat**, **Litematica**, and top performance optimizations.
 
 1. **Download your launcher bundle** from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest):
-   - **Prism Launcher**: Download `Full-Pack-Prism-1.21.11.zip`
-   - **Modrinth App**: Download `Full-Pack-Modrinth-1.21.11.mrpack`
+   - **Prism Launcher**: `Full-Pack-Prism-1.21.11.zip`
+   - **Modrinth App**: `Full-Pack-Modrinth-1.21.11.mrpack`
 2. **Import into your launcher**:
-   - In **Prism Launcher**: Click **Add Instance** → **Import from zip** → Choose the file → Click **OK**.
-   - In **Modrinth App**: Click **Create Instance** → **Import** → Choose the file.
-3. Click **Launch** and enjoy!
+   - In **Prism Launcher**: Click **Add Instance** → **Import from zip** → Select file → Click **OK**.
+   - In **Modrinth App**: Click **Create Instance** → **Import** → Select file.
+3. Click **Launch** to play!
 
 ---
 
-### Option 2: Standalone Mod JAR *(Existing Fabric Profile)*
-> Add Complexify to your existing Minecraft Fabric setup.
-
-1. Download **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest).
-2. Place the `.jar` file directly into your `.minecraft/mods` directory.
-3. Launch Minecraft using **Fabric Loader 0.18.4+** on **Java 21**.
+### Option 2: Standalone Mod JAR *(Existing Fabric Setup)*
+1. Download **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** from [Releases](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest).
+2. Drop the `.jar` into your `.minecraft/mods` folder.
+3. Launch Minecraft with **Fabric Loader 0.18.4+** on **Java 21**.
 
 ---
 
-### ⚡ Automatic 1-Click Updates
-Never browse GitHub or drag files again:
-- Complexify automatically checks for updates in the background on startup.
-- When an update is released, click the notification in chat or run **`/complexify update`** to automatically download and install it in one click.
+### ⚡ 1-Click Automatic Updates
+- Complexify checks for updates in the background on startup.
+- Click the alert in chat or run **`/complexify update`** to automatically download and install updates in 1 click.
 
 ---
 
 ## 🎮 Controls & Shortcuts
 
-| Action | Shortcut / Command | Description |
+| Action | Shortcut / Command | What It Does |
 | :--- | :--- | :--- |
-| **Open Complexify Hub** | **`Right Shift`** *(or `Esc` → Complexify)* | Main navigation dashboard and settings hub |
-| **Interactive HUD Canvas** | **`/complexify hud`** | Visual drag-and-drop HUD repositioning & visibility toggles |
+| **Open Main Hub** | **`Right Shift`** *(or `Esc` → Complexify)* | Settings dashboard, search & configuration |
+| **HUD Layout Canvas** | **`/complexify hud`** | Drag & drop on-screen HUD elements & toggle eye icons |
 | **Toggle Blackout (AFK)** | **`F6`** | Screen dimming for long farming/fishing sessions |
-| **Check & Install Updates** | **`/complexify update`** | One-click in-game updater |
-| **Direct Module Shortcuts** | `/complexify farming`<br>`/complexify boosters`<br>`/complexify fishing`<br>`/complexify chat`<br>`/complexify auction` | Jump straight to any specific configuration module |
+| **Check & Install Updates** | **`/complexify update`** | One-click mod updater |
+| **Module Shortcuts** | `/complexify farming`<br>`/complexify boosters`<br>`/complexify fishing`<br>`/complexify chat`<br>`/complexify auction` | Quick jump to specific settings |
 
 ---
 
 ## 🕹️ In-Game Functionality Showcase
 
-All HUD overlays, alerts, and telemetry are rendered natively in **Dark Mode** with crisp contrast and Lunar Client–inspired aesthetics.
-
-### 📐 1. Live Drag & Drop HUD Layout Editor (`/complexify hud`)
-Reposition and configure every on-screen HUD widget directly inside the live game environment.
-- **Interactive Dragging**: Move Money Timers, XP Timers, Crop Earnings, and Fishing stats with pixel precision.
-- **Inline Visibility Toggles**: Click the eye icons directly on the canvas to hide or show any element.
-- **Smart Alignment**: Screen-edge snapping keeps your HUD clean and balanced.
-
-![In-Game HUD Layout Editor](assets/screenshots/ingame-hud-editor.png)
+Every HUD display and telemetry feature is rendered natively in **Dark Mode** with clean contrast and zero background clutter.
 
 ---
 
-### ⏱️ 2. Booster Countdown Timers & Notification Banners
-Track your active server multipliers and consumable buffs without opening menus.
-- **Dual HUD Countdown Bars**: Independent emerald green Money (`+20%`) and amethyst purple XP (`+150%`) countdown bars display exact remaining time and progress.
-- **5-Second Reminder**: Subtle on-screen flash before a booster expires so you can renew without losing your streak.
-- **Floating Toast Alerts**: Slide-in banner notifications when boosters trigger, coconuts activate, or timers enter their final countdown.
+### 📐 1. Drag & Drop HUD Layout Editor
+> Visually rearrange and toggle every on-screen widget directly in-game.
 
-![In-Game Booster Countdown Timers & Toast Banner](assets/screenshots/ingame-booster-hud.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-hud-editor.png" width="720" alt="In-Game HUD Layout Editor" />
+</div>
 
----
-
-### 🌾 3. Clear Harvest Crop Visibility (Built-In Resource Pack)
-Eliminate accidental harvesting and wasted clicks during farming runs.
-- **Instant Visual Distinction**: Immature wheat, carrots, potatoes, nether wart, and beetroots are 90% desaturated and 25% darkened.
-- **Harvest-Ready Pop**: Fully grown crops retain their vibrant golden colors, making them immediately identifiable from a distance.
-- **One-Click In-Game Toggle**: Switch between Clear Harvest and vanilla textures in-game (`Right Shift → Farming`).
-
-![Clear Harvest In-Game Texture Comparison](assets/screenshots/ingame-clear-harvest.png)
+- **Command**: Run **`/complexify hud`** (or click *Edit HUD* in the hub).
+- **Pixel-Accurate Positioning**: Click and drag any timer, rate tracker, or radar widget anywhere on screen.
+- **1-Click Visibility Toggles**: Click the eye icons directly on the canvas to show or hide individual displays.
+- **Screen Snapping**: Elements snap neatly along screen borders and HUD stacks.
 
 ---
 
-### 💰 4. Live Crop Harvest & Gold Shard HUD Overlay
-Real-time financial telemetry calculated as you harvest.
-- **Rolling Revenue Telemetry**: Calculates instant 10-second and hourly crop revenue (`$/hr`) in real time.
-- **Gold Shard Tracking**: Live session counter and value estimates for rare Gold Shards.
-- **Full Wand Support**: Fully compatible with Auto-Sell and Sell-All wands.
+### ⏱️ 2. Booster Countdown Timers & Toast Alerts
+> Track active multipliers and consumable buffs without opening any menus.
 
-![In-Game Crop Harvest & Earnings HUD](assets/screenshots/ingame-crop-earnings.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-booster-hud.png" width="700" alt="Booster Countdown Timers & Toast Banner" />
+</div>
+
+- **Independent Dual Bars**: Separate emerald green **Money (+20%)** and amethyst purple **XP (+150%)** countdown bars show exact remaining time.
+- **5-Second Reminder**: Subtle visual cues flash before a booster expires so you can renew in time.
+- **Floating Toast Banners**: Slide-in notification banners trigger on booster activation and coconut consumption.
 
 ---
 
-### 🎣 5. Fishing Signals & Real-Time Catch Valuation
-Turn fishing into an automated, high-precision workflow.
-- **30-Block Optimal Depth Chime**: Plays a crisp audio chime the instant your bobber reaches optimal 30-block depth.
-- **Bite & Line Snap Audio Cues**: Distinct auditory alerts for fish bites, line snaps, and depleted fishing spots.
-- **Hourly Catch Rate Estimation**: Real-time rolling catch values evaluated against live Complex Skyblock fish market prices.
+### 🌾 3. Clear Harvest Crop Visibility
+> Built-in dynamic resource pack that makes fully grown crops pop out immediately.
 
-![In-Game Fishing Signals & Catch Rate HUD](assets/screenshots/ingame-fishing-signals.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-clear-harvest.png" width="700" alt="Clear Harvest In-Game Crop Comparison" />
+</div>
+
+- **Eliminate Wasted Clicks**: Immature wheat, carrots, potatoes, nether wart, and beetroots are **90% desaturated & 25% darkened**.
+- **Instant Golden Pop**: Mature, harvest-ready crops retain their full vibrant colors.
+- **1-Click In-Game Toggle**: Switch between Clear Harvest and vanilla textures in **Right Shift → Farming**.
+
+---
+
+### 💰 4. Live Crop Harvest & Gold Shard Telemetry
+> Real-time earnings overlay calculated continuously as you farm.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-crop-earnings.png" width="700" alt="Crop Harvest & Gold Shard HUD" />
+</div>
+
+- **Rolling Hourly Rate**: Evaluates your live 10-second and hourly crop farming revenue (**`$/hr`**).
+- **Gold Shard Tracking**: Live session counter and value estimates for rare Gold Shard drops.
+- **Wand Compatibility**: Seamlessly tracks sales from Auto-Sell and Sell-All wands.
+
+---
+
+### 🎣 5. Fishing Signals & Market Catch Valuation
+> High-precision audio cues and projected revenue for Skyblock fishing.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-fishing-signals.png" width="700" alt="Fishing Signals & Valuation HUD" />
+</div>
+
+- **30-Block Optimal Depth Chime**: Plays a crisp audio cue the instant your bobber reaches max depth.
+- **Smart Audio Alerts**: Distinct tones for bite detections, snapped lines, and depleted fishing spots.
+- **Projected Hourly Catch Value**: Evaluates rolling 60s / 5m catch rates against live server fish prices.
 
 ---
 
 ### 📈 6. Mining & XP Rate Benchmark Telemetry
-Live telemetry benchmarks and interactive graph analysis in dark mode.
-- **Real-Time Performance Graphs**: Run 1-minute, 5-minute, or free-run benchmark tests with real-time curve plots.
-- **Booster Isolation**: Compare raw base XP against active booster multipliers to measure true farm efficiency.
-- **Historical Session Ledger**: Review past session stats, average rates, and historical logs.
+> Benchmark your farming efficiency with real-time telemetry graphing.
 
-![In-Game XP Rate Benchmark Graph](assets/screenshots/ingame-xp-rates.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-xp-rates.png" width="720" alt="XP Rate Benchmark Graph" />
+</div>
+
+- **Live Performance Curves**: Track XP gain in real-time across 1-minute, 5-minute, or continuous free-run tests.
+- **Booster Isolation**: Compares raw base XP against active booster multipliers to measure true farm efficiency.
+- **Session History**: Detailed ledgers track past earnings, boosts, and rate test logs.
 
 ---
 
 ### 💬 7. Native Chat Selection & Clipboard Copy
-Interact with Minecraft chat like a modern desktop application.
-- **Drag-to-Select**: Click and drag your mouse across chat messages to highlight text seamlessly.
-- **Smart Gestures**: Double-click to select a word; triple-click to select an entire line.
-- **Instant Copy**: Press **Ctrl + C** (or **Cmd + C** on macOS) to copy directly to your clipboard while preserving clickable server commands and links.
+> Select and copy chat messages like a desktop application.
 
-![In-Game Native Chat Selection & Copy](assets/screenshots/ingame-chat-selection.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-chat-selection.png" width="700" alt="Native Chat Selection & Copy" />
+</div>
+
+- **Drag-to-Select**: Click and drag your cursor across chat lines to highlight text smoothly.
+- **Multi-Click Selection**: Double-click to select a single word; triple-click to select the entire line.
+- **Instant Copy**: Press **Ctrl + C** (or **Cmd + C** on macOS) to copy to clipboard while preserving clickable server links.
 
 ---
 
 ### 🌑 8. Blackout Focus Mode (AFK & Screen Preservation)
-Built for long farming, fishing, and AFK grinding sessions.
-- **One-Key Dimming (`F6`)**: Dim screen opacity from 0% to 100% to protect OLED displays and eliminate glare at night.
-- **Zero Loss of Control**: Full character controls, audio alert chimes, and optional chat overlay remain completely active while dimmed.
+> Designed for long farming, fishing, and AFK sessions without display wear.
 
-![In-Game Blackout AFK Mode](assets/screenshots/ingame-blackout.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-blackout.png" width="700" alt="Blackout AFK Mode" />
+</div>
+
+- **Instant Toggle (`F6`)**: Dim screen opacity from 0% to 100% to eliminate OLED burn-in and night-time glare.
+- **Live Background Passthrough**: Audio chimes, player controls, and optional chat overlay remain fully functional.
 
 ---
 
 ### ⚔️ 9. Seasonal Item Abilities & Cooldown HUD
-Specialized on-screen status tracking for custom server equipment.
-- **Active Ability Indicators**: Live HUD effect icons for gear like **Bone Leggings** (Speed / Regen modes) and **Oni Mask**.
-- **Cooldown & State Glint**: Visual indicators display when special abilities are active, cooling down, or ready to fire.
+> On-screen status tracking for custom server equipment and seasonal tools.
 
-![In-Game Seasonal Gear Ability & Cooldown HUD](assets/screenshots/ingame-seasonal-icons.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-seasonal-icons.png" width="700" alt="Seasonal Gear Ability & Cooldown HUD" />
+</div>
+
+- **Mode Indicators**: Live on-screen icons for gear like **Bone Leggings** (Speed / Regen modes) and **Oni Mask**.
+- **Dynamic Glint & Cooldown**: Visual cues show when special abilities are active, cooling down, or ready to fire.
 
 ---
 
 ### 🧭 10. Treasure Chest Discovery Radar HUD
-Never miss a server treasure chest event.
-- **Live Event Countdown**: Displays the exact synchronized server countdown timer on your HUD.
-- **Final 30-Second Warning**: Flashing alert prompts in the closing window before chest expiration.
-- **Distance & Value Telemetry**: Real-time distance and discovery estimates.
+> Synchronized radar tracking for server treasure events.
 
-![In-Game Treasure Chest Radar HUD](assets/screenshots/ingame-treasure-hud.png)
+<div align="center">
+  <img src="assets/screenshots/ingame-treasure-hud.png" width="700" alt="Treasure Chest Radar HUD" />
+</div>
+
+- **Synchronized Countdown**: Real-time event countdown synced directly to server chat alerts.
+- **Closing Window Warning**: Flashes alert prompts during the final 30 seconds before chest despawn.
 
 ---
 
