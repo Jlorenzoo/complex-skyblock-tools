@@ -20,20 +20,19 @@
 
 ## Installation
 
-- **Modpack (Recommended):**
-  - **1.21.11:** [Prism Launcher (`.zip`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-1.21.11.zip) · [Modrinth App (`.mrpack`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-1.21.11.mrpack)
-  - **26.2:** [Prism Launcher (`.zip`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-26.2.zip) · [Modrinth App (`.mrpack`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-26.2.mrpack)
-- **Standalone JAR** *(drop into `.minecraft/mods`, requires Fabric Loader 0.18.4+ & Java 21)*:
-  - [Minecraft 1.21.11](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc1.21.11) · [Minecraft 26.2](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc26.2)
+| Setup | Minecraft 1.21.11 | Minecraft 26.2 |
+| :--- | :--- | :--- |
+| **Modpack — Prism Launcher** | [Download `.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-1.21.11.zip) | [Download `.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-26.2.zip) |
+| **Modpack — Modrinth App** | [Download `.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-1.21.11.mrpack) | [Download `.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-26.2.mrpack) |
+| **Standalone Mod JAR** | [Download `.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc1.21.11) | [Download `.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc26.2) |
+
+*Standalone JAR goes in `.minecraft/mods` (requires Fabric Loader 0.18.4+ & Java 21).*
 
 ---
 
 ## Controls
 
-| Key | Action |
-| :--- | :--- |
-| **`Right Shift`** *(or `Esc` → Complexify)* | Open settings hub |
-| **`F6`** | Toggle Blackout AFK mode |
+Press **`Right Shift`** *(or `Esc` → Complexify)* in-game to open the settings hub.
 
 ---
 
