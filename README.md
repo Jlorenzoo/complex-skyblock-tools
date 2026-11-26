@@ -20,23 +20,20 @@
 
 ## Installation
 
-Download from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest) based on your setup:
-
-- **Modpack (Recommended):** Import `Full-Pack-Prism-1.21.11.zip` (Prism Launcher) or `Full-Pack-Modrinth-1.21.11.mrpack` (Modrinth App).
-- **Standalone JAR (1.21.11 / 26.2):** Drop `skyblock-toolkit-*.jar` into your `.minecraft/mods` folder (requires Fabric Loader 0.18.4+ & Java 21).
-
-> Updates install in 1 click via **`/complexify update`**.
+- **Modpack (Recommended):**
+  - **1.21.11:** [Prism Launcher (`.zip`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-1.21.11.zip) · [Modrinth App (`.mrpack`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-1.21.11.mrpack)
+  - **26.2:** [Prism Launcher (`.zip`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-26.2.zip) · [Modrinth App (`.mrpack`)](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-26.2.mrpack)
+- **Standalone JAR** *(drop into `.minecraft/mods`, requires Fabric Loader 0.18.4+ & Java 21)*:
+  - [Minecraft 1.21.11](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc1.21.11) · [Minecraft 26.2](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc26.2)
 
 ---
 
 ## Controls
 
-| Key / Command | Action |
+| Key | Action |
 | :--- | :--- |
 | **`Right Shift`** *(or `Esc` → Complexify)* | Open settings hub |
-| **`/complexify hud`** | Move or toggle HUD overlays |
 | **`F6`** | Toggle Blackout AFK mode |
-| **`/complexify update`** | Install mod updates in-game |
 
 ---
 
