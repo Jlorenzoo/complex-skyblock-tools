@@ -149,7 +149,7 @@ Dedicated HUD indicator tracking status and ability cooldowns for custom server 
 Highlight and copy text directly from in-game chat like a desktop text editor.
 
 <div align="center">
-  <img src="assets/screenshots/ingame-chat-selection.png" width="720" alt="Native Chat Text Selection & Clipboard Copy" />
+  <img src="assets/screenshots/ingame-chat-selection.gif" width="720" alt="Native Chat Text Selection & Clipboard Copy" />
 </div>
 
 - **Drag-to-Select**: Click and drag your mouse cursor across chat lines to highlight text smoothly.
