@@ -20,42 +20,23 @@
 
 ## Installation
 
-### Option 1: 1-Click Modpack (Recommended)
-Pre-configured bundle with **Complexify**, **Simple Voice Chat**, **Litematica**, and Sodium performance optimizations.
+Download from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest) based on your setup:
 
-1. **Download your launcher bundle** from the [Latest Release](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest):
-   - **Prism Launcher**: `Full-Pack-Prism-1.21.11.zip`
-   - **Modrinth App**: `Full-Pack-Modrinth-1.21.11.mrpack`
-2. **Import into your launcher**:
-   - In **Prism Launcher**: Click **Add Instance** → **Import from zip** → Select file → **OK**.
-   - In **Modrinth App**: Click **Create Instance** → **Import** → Select file.
-3. Click **Launch**.
+- **Modpack (Recommended):** Import `Full-Pack-Prism-1.21.11.zip` (Prism Launcher) or `Full-Pack-Modrinth-1.21.11.mrpack` (Modrinth App).
+- **Standalone JAR (1.21.11 / 26.2):** Drop `skyblock-toolkit-*.jar` into your `.minecraft/mods` folder (requires Fabric Loader 0.18.4+ & Java 21).
+
+> Updates install in 1 click via **`/complexify update`**.
 
 ---
 
-### Option 2: Standalone Mod JAR
-For existing Minecraft Fabric installations.
+## Controls
 
-1. Download **`skyblock-toolkit-1.1.0+mc1.21.11.jar`** from [Releases](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/latest).
-2. Place the `.jar` into your `.minecraft/mods` folder.
-3. Launch Minecraft with **Fabric Loader 0.18.4+** on **Java 21**.
-
----
-
-### In-Game 1-Click Updates
-Complexify checks for updates on startup. Click the chat alert or run **`/complexify update`** to automatically download and install updates in 1 click.
-
----
-
-## Controls & Shortcuts
-
-| Action | Shortcut / Command | Description |
-| :--- | :--- | :--- |
-| **Open Main Hub** | **`Right Shift`** *(or `Esc` → Complexify)* | Settings dashboard, search, and configuration |
-| **HUD Customization** | **`/complexify hud`** | On-screen layout editor to move displays and toggle elements |
-| **Toggle Blackout** | **`F6`** | Screen dimming for long AFK, farming, or fishing sessions |
-| **Check & Install Updates** | **`/complexify update`** | One-click in-game updater |
-| **Direct Shortcuts** | `/complexify farming`<br>`/complexify boosters`<br>`/complexify fishing`<br>`/complexify chat`<br>`/complexify auction` | Quick access to individual modules |
+| Key / Command | Action |
+| :--- | :--- |
+| **`Right Shift`** *(or `Esc` → Complexify)* | Open settings hub |
+| **`/complexify hud`** | Move or toggle HUD overlays |
+| **`F6`** | Toggle Blackout AFK mode |
+| **`/complexify update`** | Install mod updates in-game |
 
 ---
 
