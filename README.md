@@ -78,16 +78,16 @@ The flagship telemetry engine of Complexify. Continuously evaluates your earning
 
 ---
 
-### Booster Countdown Timers & Toast Alerts
-Independent countdown clocks for server multipliers and consumable buffs.
+### Seasonal Tool History & $/hr Comparison
+Automatic session ledgers that track and compare earnings per hour across your tools and seasonal gear.
 
 <div align="center">
-  <img src="assets/screenshots/ingame-booster-hud.png" width="720" alt="Booster Countdown Timers & Toast Banner" />
+  <img src="assets/screenshots/seasonal-history.png" width="720" alt="Seasonal Tool History & Income Comparison" />
 </div>
 
-- **Dual Countdown Bars**: Green **Money (+20%)** and purple **XP (+150%)** bars display exact remaining time and active multipliers.
-- **5-Second Reminder**: Subtle visual flash warns you before a booster expires so you can re-activate without losing your boost.
-- **Slide-In Alerts**: Floating toast banners slide in when boosters activate or coconuts trigger.
+- **Hourly Rate Comparison**: Easily compare how much money each seasonal tool or setup makes per hour (e.g. Oni Rod vs. Harvest Hoe & Pickaxe).
+- **Session Breakdowns**: Tracks total cash earned, duration, area (Realm vs. Overworld), and Gold Shards collected.
+- **Automatic Recording**: Automatically logs sessions when holding trackable tools with no manual start/stop required.
 
 ---
 
@@ -108,7 +108,7 @@ Built-in resource pack that makes fully grown crops immediately distinguishable 
 Auditory depth cues, bite alerts, and live market catch valuation for Skyblock fishing.
 
 <div align="center">
-  <img src="assets/screenshots/ingame-fishing-signals.png" width="720" alt="Fishing Signals & Valuation HUD" />
+  <img src="assets/screenshots/ingame-fishing-signals.gif" width="720" alt="Fishing Signals & Valuation HUD" />
 </div>
 
 - **30-Block Optimal Depth Chime**: Plays a crisp **Note Block Harp (1.6x)** chime the moment your bobber reaches max depth.
@@ -116,32 +116,6 @@ Auditory depth cues, bite alerts, and live market catch valuation for Skyblock f
 - **Depleted Area Warning**: Descending **Note Block Bass** sequence warns when a fishing spot is exhausted.
 - **Line Snap Alert**: Immediate item-break warning sound when a line snaps.
 - **Catch Rate Valuation**: Real-time rolling catch revenue calculated from live server fish market prices (**`$/hr`**).
-
----
-
-### Seasonal Tool History & $/hr Comparison
-Automatic session ledgers that track and compare earnings per hour across your tools and seasonal gear.
-
-<div align="center">
-  <img src="assets/screenshots/seasonal-history.png" width="720" alt="Seasonal Tool History & Income Comparison" />
-</div>
-
-- **Hourly Rate Comparison**: Easily compare how much money each seasonal tool or setup makes per hour (e.g. Oni Rod vs. Void Rod).
-- **Session Breakdowns**: Tracks total cash earned, duration, area (Realm vs. Overworld), and Gold Shards collected.
-- **Automatic Recording**: Automatically logs sessions when holding trackable tools with no manual start/stop required.
-
----
-
-### Seasonal Gear: Bone Leggings
-Dedicated HUD indicator tracking status and ability cooldowns for custom server equipment.
-
-<div align="center">
-  <img src="assets/screenshots/ingame-seasonal-icons.png" width="720" alt="Bone Leggings Status & Cooldown HUD" />
-</div>
-
-- **Item & Mode Badge Variant**: Displays the leggings icon overlaid with an active status badge.
-- **Speed vs. Regen Modes**: Flame badge for Speed ignition mode; heart badge for non-combat health recovery.
-- **Cooldown Readiness Glint**: Dynamic glint effect shows when abilities are off cooldown and ready to trigger.
 
 ---
 
@@ -158,6 +132,45 @@ Highlight and copy text directly from in-game chat like a desktop text editor.
 
 ---
 
+### Mining & XP Rate HUD
+Live Minecraft XP per hour and rate test progress rendered directly on your in-game HUD.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-xp-rates.png" width="720" alt="XP & Mining Rate HUD" />
+</div>
+
+- **Live XP/hr Overlay**: Tracks rolling 60-second Minecraft XP gain directly on your HUD as you mine or farm.
+- **Booster Isolation**: Toggle whether active XP boosters are included to measure raw base efficiency.
+- **1m, 5m & Free-Run Tests**: Displays active timed benchmark progress and results on your screen.
+
+---
+
+### Booster Countdown Timers & Toast Alerts
+Independent countdown clocks for server multipliers and consumable buffs.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-booster-hud.png" width="720" alt="Booster Countdown Timers & Toast Banner" />
+</div>
+
+- **Dual Countdown Bars**: Green **Money (+39%)** and purple **XP (+150%)** bars display exact remaining time and active multipliers.
+- **5-Second Reminder**: Subtle visual flash warns you before a booster expires so you can re-activate without losing your boost.
+- **Slide-In Alerts**: Floating toast banners slide in when boosters activate or coconuts trigger.
+
+---
+
+### Seasonal Gear: Bone Leggings
+Dedicated HUD indicator tracking status and ability cooldowns for custom server equipment.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-seasonal-icons.png" width="720" alt="Bone Leggings Status & Cooldown HUD" />
+</div>
+
+- **Item & Mode Badge Variant**: Displays the leggings icon overlaid with an active status badge.
+- **Speed vs. Regen Modes**: Speed boot badge for Speed ignition mode; heart badge for non-combat health recovery.
+- **Cooldown Readiness Glint**: Dynamic glint effect shows when abilities are off cooldown and ready to trigger.
+
+---
+
 ### Treasure Chest Event Countdown & Tracker
 Synchronized on-screen countdown timer for server treasure chest events.
 
@@ -168,18 +181,6 @@ Synchronized on-screen countdown timer for server treasure chest events.
 - **Synchronized Server Countdown**: Displays the exact remaining time until the chest despawns.
 - **Final 30-Second Warning**: Flashes alert prompts during the closing window before despawn.
 - **Legitimate Event Tracking**: Purely reads official server broadcasts and scoreboard events (not an ESP, radar hack, or memory reader).
-
----
-
-### Mining & XP Rate Benchmark Telemetry
-Live telemetry benchmarks and interactive graph analysis in dark mode.
-
-<div align="center">
-  <img src="assets/screenshots/ingame-xp-rates.png" width="720" alt="XP Rate Benchmark Graph" />
-</div>
-
-- **Live Performance Curves**: Track XP gain in real-time across 1-minute, 5-minute, or continuous free-run tests.
-- **Booster Isolation**: Compares raw base XP against active booster multipliers to measure true farm efficiency.
 
 ---
 
