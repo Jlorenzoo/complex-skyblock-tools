@@ -104,6 +104,10 @@ public final class CropHarvestTracker {
         totalHarvestedInSession += delta;
         rolling.add(delta, from, now);
         com.moneybooster.RateTracker.onCropHarvest(delta, now, com.moneybooster.RateTracker.getActiveTestId());
+        try {
+            var mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc != null && mc.player != null) ItemStatsTracker.crops(delta, now);
+        } catch (Throwable ignored) {}
     }
 
     public static void tick() {

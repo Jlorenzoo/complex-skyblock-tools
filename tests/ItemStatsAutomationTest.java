@@ -23,6 +23,9 @@ public final class ItemStatsAutomationTest {
             check(a.currentHand().equals(first),"follow a moved item after reserving an unchanged identical duplicate");
             a.observe("server/player",world,List.of(item("8","HAND","same-config-0001",null),duplicate),false,38000);
             check(h.active()==null&&h.sessions(first).getFirst().status.equals("Paused while idle"),"automatically pause after inactivity");
+            a.observe("server/player",world,List.of(item("8","HAND","same-config-0001",null),duplicate),true,38100);
+            a.observe("server/player",world,ItemStatsLocation.OVERWORLD,List.of(item("8","HAND","same-config-0001",null),duplicate),false,true,39700);
+            check(h.active()==null&&h.sessions(first).getFirst().status.equals("Paused while idle"),"GUI screen pauses active tracking after short settlement grace");
             h.save(38000);h=new ItemStatsHistory(file);a=new ItemStatsAutomation(h);world=new Object();
             a.observe("server/player",world,List.of(item("8","HAND","same-config-0001",null),duplicate),true,40000);
             check(a.currentHand().equals(first)&&h.profiles("server/player").size()==2&&h.totals(first).cash()==100,"restart recognizes same physical occurrence and preserves earnings");

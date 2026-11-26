@@ -5,7 +5,8 @@ import java.util.*;
 
 /** Passive recognition and session lifecycle; no registration, controls or gameplay actions. */
 public final class ItemStatsAutomation {
-    public static final long IDLE_MS=30_000;
+    public static final long IDLE_MS=5_000;
+    public static final long GUI_IDLE_MS=1_500;
     public record Observation(String location,String slot,String fingerprint,String physicalId,String name,String icon){}
     private final ItemStatsHistory history;
     private Object connection;
@@ -16,9 +17,12 @@ public final class ItemStatsAutomation {
     public ItemStatsAutomation(ItemStatsHistory history){this.history=history;}
     public String currentHand(){return currentHand;}
     public void observe(String scope,Object connection,List<Observation> inventory,boolean activity,long now){
-        observe(scope,connection,ItemStatsLocation.OVERWORLD,inventory,activity,now);
+        observe(scope,connection,ItemStatsLocation.OVERWORLD,inventory,activity,false,now);
     }
     public void observe(String scope,Object connection,ItemStatsLocation location,List<Observation> inventory,boolean activity,long now){
+        observe(scope,connection,location,inventory,activity,false,now);
+    }
+    public void observe(String scope,Object connection,ItemStatsLocation location,List<Observation> inventory,boolean activity,boolean guiOpen,long now){
         if(this.connection!=connection||!this.scope.equals(scope)){
             end("Disconnected / changed world");this.connection=connection;this.scope=scope;lastActivity=-1;
         }
@@ -47,8 +51,9 @@ public final class ItemStatsAutomation {
             if(item.slot()!=null&&!Objects.equals(p.slot,item.slot())){p.slot=item.slot();history.changed();}
         }
         for(var session:history.activeSessions())if(!earningTools.contains(session.profileId))history.stop(session.profileId,session.lastSeen,"Switched / unequipped");
+        long grace=guiOpen?GUI_IDLE_MS:IDLE_MS;
         if(activity){lastActivity=now;for(String id:earningTools)if(!history.recording(id))history.start(history.profile(id),now,location);}
-        else if(lastActivity>=0&&now-lastActivity>=IDLE_MS){history.stop(Math.min(now,lastActivity+IDLE_MS),"Paused while idle");lastActivity=-1;}
+        else if(lastActivity>=0&&now-lastActivity>=grace){history.stop(Math.min(now,lastActivity+grace),"Paused while idle");lastActivity=-1;}
         history.tick(now);
     }
     private static boolean same(ItemStatsHistory.Profile p,Observation item){

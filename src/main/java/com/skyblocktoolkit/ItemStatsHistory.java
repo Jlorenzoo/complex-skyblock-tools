@@ -16,13 +16,14 @@ public final class ItemStatsHistory {
     public static final class Session {
         public String id, profileId, status="Recording";
         public ItemStatsLocation location=ItemStatsLocation.UNKNOWN;
-        public long started, lastSeen, ended, shards, fish;
+        public long started, lastSeen, ended, shards, fish, crops;
         public double cash, baseCash, fishValue;
         public boolean hasData(){return cash>0||shards>0||fish>0;}
         public long elapsed(){return Math.max(0,(ended>0?ended:lastSeen)-started);}
-        public Totals totals(){return new Totals(1,elapsed(),cash,baseCash,shards,fish,fishValue);}
+        public Totals totals(){return new Totals(1,elapsed(),cash,baseCash,shards,fish,fishValue,crops);}
     }
-    public record Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue) {
+    public record Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue,long crops) {
+        public Totals(int sessions,long elapsed,double cash,double baseCash,long shards,long fish,double fishValue){this(sessions,elapsed,cash,baseCash,shards,fish,fishValue,0);}
         public double hourly(double value){return elapsed>0?value*3_600_000.0/elapsed:0;}
         /** Reprice saved counts without changing cash or applying a cash booster to shards. */
         public double income(boolean base,boolean includeShards,double shardPrice){return (base?baseCash:cash)+(includeShards?shards*shardPrice:0);}
@@ -48,7 +49,7 @@ public final class ItemStatsHistory {
             }
             Set<String> sessionIds=new HashSet<>();
             for(var s:loaded.sessions) {
-                if(s==null||s.id==null||!sessionIds.add(s.id)||!ids.contains(s.profileId)||s.started<0||s.lastSeen<s.started||s.ended<0||s.ended>0&&s.ended<s.started||s.shards<0||s.fish<0||!valid(s.cash)||!valid(s.baseCash)||!valid(s.fishValue))throw new IllegalArgumentException("Invalid session");
+                if(s==null||s.id==null||!sessionIds.add(s.id)||!ids.contains(s.profileId)||s.started<0||s.lastSeen<s.started||s.ended<0||s.ended>0&&s.ended<s.started||s.shards<0||s.fish<0||s.crops<0||!valid(s.cash)||!valid(s.baseCash)||!valid(s.fishValue))throw new IllegalArgumentException("Invalid session");
                 if(s.location==null)s.location=ItemStatsLocation.UNKNOWN;
                 if(s.ended==0){s.ended=Math.max(s.started,s.lastSeen);s.status="Interrupted";dirty=true;}
             }
@@ -119,13 +120,15 @@ public final class ItemStatsHistory {
     public void shards(long count,long at,java.util.function.Predicate<Profile> source){if(count<=0)return;for(var s:containing(at,at,true))if(source.test(profile(s.profileId))){s.shards+=count;dirty=true;}}
     public void fish(long count,double value,long at){fish(count,value,at,p->true);}
     public void fish(long count,double value,long at,java.util.function.Predicate<Profile> source){if(count<=0||!valid(value))return;for(var s:containing(at,at,true))if(source.test(profile(s.profileId))){s.fish+=count;s.fishValue+=value;dirty=true;}}
+    public void crops(long count,long at){crops(count,at,p->true);}
+    public void crops(long count,long at,java.util.function.Predicate<Profile> source){if(count<=0)return;for(var s:containing(at,at,true))if(source.test(profile(s.profileId))){s.crops+=count;dirty=true;}}
     public Totals totals(String profileId){
         return totals(profileId,null);
     }
     public Totals totals(String profileId,ItemStatsLocation location){
-        long elapsed=0,shards=0,fish=0;double cash=0,base=0,value=0;int count=0;
-        for(var s:data.sessions)if(s.profileId.equals(profileId)&&(location==null||s.location==location)){count++;elapsed+=s.elapsed();cash+=s.cash;base+=s.baseCash;shards+=s.shards;fish+=s.fish;value+=s.fishValue;}
-        return new Totals(count,elapsed,cash,base,shards,fish,value);
+        long elapsed=0,shards=0,fish=0,crops=0;double cash=0,base=0,value=0;int count=0;
+        for(var s:data.sessions)if(s.profileId.equals(profileId)&&(location==null||s.location==location)){count++;elapsed+=s.elapsed();cash+=s.cash;base+=s.baseCash;shards+=s.shards;fish+=s.fish;value+=s.fishValue;crops+=s.crops;}
+        return new Totals(count,elapsed,cash,base,shards,fish,value,crops);
     }
     public void save(long now){
         if(readOnly||!dirty)return;

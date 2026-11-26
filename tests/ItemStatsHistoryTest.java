@@ -19,7 +19,7 @@ public final class ItemStatsHistoryTest {
             check(h.profiles("server/player").size()==3,"server/account isolation");
             h.rename(first,"My farming hoe");
             var one=h.start(first,1000);h.tick(61000);
-            h.money(300,50,1001,60000);h.shards(12,10000);h.fish(4,80,20000);
+            h.money(300,50,1001,60000);h.shards(12,10000);h.fish(4,80,20000);h.crops(5000,15000);
             h.money(Double.NaN,0,1001,60000);h.money(-1,0,1001,60000);
             h.money(999,0,999,2000); // spanning start is ambiguous
             h.stop(61000,"Stopped");
@@ -33,7 +33,7 @@ public final class ItemStatsHistoryTest {
             check(totals.sessions()==2&&totals.elapsed()==240000,"duration includes zero-reward/idle time");
             close(1350,totals.cash(),"cash totals");close(900,totals.baseCash(),"per-receipt booster normalization");
             close(20250,totals.hourly(totals.cash()),"duration-weighted average, not mean of session rates");
-            check(totals.shards()==15&&totals.fish()==4,"delayed shards and fishing counts");close(80,totals.fishValue(),"fish estimate separate from cash");
+            check(totals.shards()==15&&totals.fish()==4&&totals.crops()==5000,"delayed shards, fishing and crop counts");close(80,totals.fishValue(),"fish estimate separate from cash");
             close(2850,totals.income(false,true,100),"configured shard value is included in income");
             close(42750,totals.hourly(totals.income(false,true,100)),"combined income uses total duration");
             close(2400,totals.income(true,true,100),"cash booster removed without reducing shard value");

@@ -366,12 +366,19 @@ public final class ToolkitScreen extends Screen {
         var config=ToolkitConfig.get();return totals.income(base,config.includeGoldShards,config.goldShardPrice);
     }
     private String statsRate(ItemStatsHistory.Totals totals){return statsMoney(totals.hourly(statsIncome(totals,false)))+"/h";}
-    private static String statsShardRate(ItemStatsHistory.Totals totals){
+    private String statsCashBreakdown(ItemStatsHistory.Totals totals){
+        double cashRate=totals.hourly(totals.cash()),baseRate=totals.hourly(totals.baseCash()),bonusRate=Math.max(0,cashRate-baseRate);
+        return "Cash: "+statsMoney(cashRate)+"/h (Base "+statsMoney(baseRate)+"/h + Booster "+statsMoney(bonusRate)+"/h)";
+    }
+    private static String statsCropRate(ItemStatsHistory.Totals totals){
+        return "Crops: "+CropHarvestTracker.format(totals.hourly(totals.crops()))+"/h \u00b7 "+CropHarvestTracker.format(totals.crops())+" harvested";
+    }
+    private String statsShardRate(ItemStatsHistory.Totals totals){
         double hourly=totals.hourly(totals.shards());
-        double perMinute=hourly/60;
-        String minute=perMinute>0&&perMinute<0.01?"<0.01":perMinute<10
-            ?String.format(java.util.Locale.ROOT,"%.2f",perMinute):CropHarvestTracker.format(perMinute);
-        return "Shards: "+totals.shards()+" · "+CropHarvestTracker.format(hourly)+"/h · "+minute+"/min";
+        var config=ToolkitConfig.get();
+        double valueRate=totals.hourly(totals.shards()*config.goldShardPrice);
+        String state=config.includeGoldShards?"included":"excluded";
+        return "Gold shards: "+CropHarvestTracker.format(hourly)+"/h ("+statsMoney(valueRate)+"/h, "+state+") \u00b7 "+totals.shards()+" total";
     }
     private void stats(){
         var history=ItemStatsTracker.history();var profile=history.profile(statsProfileId);
@@ -403,33 +410,38 @@ public final class ToolkitScreen extends Screen {
             var session=history.sessions(profile.id).stream().filter(s->s.id.equals(statsSessionId)).findFirst().orElse(null);
             button("< Item statistics",0,()->{statsSessionId=null;scroll=0;statsRefresh();});
             if(session==null)return;
+            boolean farming=ItemStatsEligibility.farming(profile)||session.crops>0;
+            boolean fishing=ItemStatsEligibility.fishing(profile)||session.fish>0;
             label(profile.title(),28);
-            label(()->"Money / hour: "+statsRate(session.totals()),44,ToolkitTheme.palette().accent(),1);
-            label(()->"Total income: "+statsMoney(statsIncome(session.totals(),false)),60,ToolkitTheme.palette().text(),1);
-            label("Started: "+statsDate(session.started),84);
-            label(()->session.status+" \u00b7 "+statsTime(session.elapsed()),100,ToolkitTheme.palette().accent(),1);
-            label("Area: "+session.location.label(),116);
-            label(()->"Cash: "+statsMoney(session.cash)+" \u00b7 Base: "+statsMoney(session.baseCash),140,ToolkitTheme.palette().text(),1);
-            label(()->statsShardRate(session.totals()),156,ToolkitTheme.palette().text(),1);
-            label(()->"Shard value: "+statsMoney(GoldShardTracker.value(session.shards))+(ToolkitConfig.get().includeGoldShards?" included":" (excluded)"),172,ToolkitTheme.palette().text(),1);
-            label(()->"Fish: "+session.fish+" \u00b7 Est. value: "+statsMoney(session.fishValue),188,ToolkitTheme.palette().text(),1);
-            label("Income = cash + enabled shards at your current price.",212);
-            label("Fish estimate is separate. Base removes the cash boost.",226);
-            label("Rounded balances limit precision; time includes idle grace.",240);
+            label(()->"Total: "+statsRate(session.totals())+" (with boosters)",46,ToolkitTheme.palette().accent(),1);
+            label(()->statsCashBreakdown(session.totals()),64,ToolkitTheme.palette().text(),1);
+            int sy=80;
+            if(farming){label(()->statsCropRate(session.totals()),sy,ToolkitTheme.palette().text(),1);sy+=16;}
+            label(()->statsShardRate(session.totals()),sy,ToolkitTheme.palette().text(),1);sy+=16;
+            if(fishing){label(()->"Fish: "+session.fish+" \u00b7 Est. value: "+statsMoney(session.fishValue),sy,ToolkitTheme.palette().text(),1);sy+=16;}
+            sy+=6;
+            label(()->"Total income: "+statsMoney(statsIncome(session.totals(),false)),sy,ToolkitTheme.palette().text(),1);sy+=16;
+            label("Started: "+statsDate(session.started),sy);sy+=16;
+            label(()->session.status+" \u00b7 "+statsTime(session.elapsed()),sy,ToolkitTheme.palette().accent(),1);sy+=16;
+            label("Area: "+session.location.label(),sy);sy+=20;
+            label("Income = cash (with boosters) + enabled gold shards.",sy);
             return;
         }
         pair(()->"< All items",()->{statsProfileId=null;scroll=0;statsRefresh();},()->"Area: "+statsAreaName(),this::statsNextArea,0);
+        boolean farming=ItemStatsEligibility.farming(profile)||statsTotals(profile.id).crops()>0;
+        boolean fishing=ItemStatsEligibility.fishing(profile)||statsTotals(profile.id).fish()>0;
         label(profile.title(),28);
-        label(()->"Avg money: "+statsRate(statsTotals(profile.id)),56,ToolkitTheme.palette().accent(),1);
-        label(()->{var t=statsTotals(profile.id);return "Base + enabled shards: "+statsMoney(t.hourly(statsIncome(t,true)))+"/h";},72,ToolkitTheme.palette().text(),1);
-        label(()->statsShardRate(statsTotals(profile.id)),88,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Income: "+statsMoney(statsIncome(t,false))+" · Avg/session: "+statsMoney(t.sessions()>0?statsIncome(t,false)/t.sessions():0);},104,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return t.sessions()+" sessions · "+statsTime(t.elapsed());},120,ToolkitTheme.palette().text(),1);
-        label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" · Est. value: "+statsMoney(t.fishValue());},136,ToolkitTheme.palette().text(),1);
-        label(()->history.recording(profile.id)?"Recording automatically":"Automatic · paused / not equipped",158,ToolkitTheme.palette().accent(),0.85f);
-        label("Average = total income / total time, including idle grace.",176);
-        label("Past sessions · money per hour",200);
-        int top=216;
+        label(()->"Total: "+statsRate(statsTotals(profile.id))+" (with boosters)",48,ToolkitTheme.palette().accent(),1);
+        label(()->statsCashBreakdown(statsTotals(profile.id)),66,ToolkitTheme.palette().text(),1);
+        int y=82;
+        if(farming){label(()->statsCropRate(statsTotals(profile.id)),y,ToolkitTheme.palette().text(),1);y+=16;}
+        label(()->statsShardRate(statsTotals(profile.id)),y,ToolkitTheme.palette().text(),1);y+=16;
+        if(fishing){label(()->{var t=statsTotals(profile.id);return "Fish: "+t.fish()+" \u00b7 Est. value: "+statsMoney(t.fishValue());},y,ToolkitTheme.palette().text(),1);y+=16;}
+        label(()->{var t=statsTotals(profile.id);return "Income: "+statsMoney(statsIncome(t,false))+" \u00b7 "+t.sessions()+" sessions \u00b7 "+statsTime(t.elapsed());},y,ToolkitTheme.palette().text(),1);y+=18;
+        label(()->history.recording(profile.id)?"Recording automatically":"Automatic \u00b7 paused / not equipped",y,ToolkitTheme.palette().accent(),0.85f);y+=16;
+        label("Average = total income / total time, including idle grace.",y);y+=20;
+        label("Past sessions \u00b7 money per hour",y);
+        int top=y+16;
         var sessions=history.sessions(profile.id,statsArea);
         var stack=ItemStatsTracker.icon(profile);
         if(sessions.isEmpty())label("No sessions in this area yet. Tracking starts automatically.",top);

@@ -57,7 +57,7 @@ public final class ItemStatsTracker {
         long now=System.currentTimeMillis();
         if(!force&&mc.level==level&&now-checkedAt<250){HISTORY.tick(now);return;}
         checkedAt=now;level=mc.level;
-        var observations=new ArrayList<ItemStatsAutomation.Observation>();boolean activity=false;
+        var observations=new ArrayList<ItemStatsAutomation.Observation>();boolean activity=false;boolean guiOpen=mc.gui!=null&&mc.gui.screen()!=null;
         if(mc.player!=null&&mc.level!=null){
             var inventory=mc.player.getInventory();int selected=inventory.getSelectedSlot();
             for(int i=0;i<Math.min(36,inventory.getContainerSize());i++){
@@ -65,12 +65,12 @@ public final class ItemStatsTracker {
                 observeItem(observations,stack,"inventory:"+i,i==selected?"HAND":null);
             }
             var hand=mc.player.getMainHandItem();
-            activity=mc.gui.screen()==null&&(mc.options.keyAttack.isDown()||mc.options.keyUse.isDown()
+            activity=!guiOpen&&(mc.options.keyAttack.isDown()||mc.options.keyUse.isDown()
                 ||hand.getItem() instanceof FishingRodItem&&mc.player.fishing!=null
                 ||hand.getItem() instanceof HoeItem&&CropHarvestTracker.isActive(now));
-            activity|=reward;
+            activity|=!guiOpen&&reward;
         }
-        try{AUTOMATION.observe(scope(),mc.level,location(mc),observations,activity,now);}catch(Exception e){System.err.println("[Complexify] Item recognition: "+e.getMessage());}
+        try{AUTOMATION.observe(scope(),mc.level,location(mc),observations,activity,guiOpen,now);}catch(Exception e){System.err.println("[Complexify] Item recognition: "+e.getMessage());}
     }
     private static void observeItem(List<ItemStatsAutomation.Observation> observations,ItemStack stack,String location,String slot){
         if(!trackable(stack))return;
@@ -84,5 +84,6 @@ public final class ItemStatsTracker {
         HISTORY.shards(count,at,p->ItemStatsEligibility.fishing(p)&&rodName.equals(p.name));
     }
     public static void fish(long count,double value,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof FishingRodItem);HISTORY.fish(count,value,at,ItemStatsEligibility::fishing);}
+    public static void crops(long count,long at){var mc=Minecraft.getInstance();sample(mc,true,mc.player!=null&&mc.player.getMainHandItem().getItem() instanceof HoeItem);HISTORY.crops(count,at,ItemStatsEligibility::farming);}
     public static void shutdown(){AUTOMATION.end("Game closed");HISTORY.save(System.currentTimeMillis());}
 }
