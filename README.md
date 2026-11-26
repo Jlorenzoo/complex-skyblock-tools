@@ -158,17 +158,6 @@ Highlight and copy text directly from in-game chat like a desktop text editor.
 
 ---
 
-### Blackout Focus Mode (AFK Screen Preservation)
-Screen dimming designed for long farming, fishing, and AFK sessions without display wear.
-
-<div align="center">
-  <img src="assets/screenshots/ingame-blackout.png" width="720" alt="Blackout AFK Mode" />
-</div>
-
-- **One-Touch Dimming (`F6`)**: Dims screen opacity from 0% to 100% to eliminate OLED burn-in and night-time glare during long AFK sessions, while alert audio chimes and chat overlay remain fully active with zero loss of player control.
-
----
-
 ### Treasure Chest Event Countdown & Tracker
 Synchronized on-screen countdown timer for server treasure chest events.
 
@@ -191,6 +180,17 @@ Live telemetry benchmarks and interactive graph analysis in dark mode.
 
 - **Live Performance Curves**: Track XP gain in real-time across 1-minute, 5-minute, or continuous free-run tests.
 - **Booster Isolation**: Compares raw base XP against active booster multipliers to measure true farm efficiency.
+
+---
+
+### Blackout Focus Mode (AFK Screen Preservation)
+Screen dimming designed for long farming, fishing, and AFK sessions without display wear.
+
+<div align="center">
+  <img src="assets/screenshots/ingame-blackout.png" width="720" alt="Blackout AFK Mode" />
+</div>
+
+- **One-Touch Dimming (`F6`)**: Dims screen opacity from 0% to 100% to eliminate OLED burn-in and night-time glare during long AFK sessions, while alert audio chimes and chat overlay remain fully active with zero loss of player control.
 
 ---
 
