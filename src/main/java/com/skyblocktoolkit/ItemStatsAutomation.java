@@ -46,6 +46,10 @@ public final class ItemStatsAutomation {
         for(var entry:resolved.entrySet()){
             var item=entry.getKey();var p=entry.getValue();
             if(!p.automatic){p.fingerprint=item.fingerprint();p.physicalId=item.physicalId()==null?"local:"+UUID.randomUUID():item.physicalId();p.icon=item.icon();}
+            else if(!Objects.equals(p.fingerprint,item.fingerprint())){
+                if(Objects.equals(p.label,p.name))p.label=item.name();
+                p.name=item.name();p.fingerprint=item.fingerprint();p.icon=item.icon();history.changed();
+            }
             if(!Objects.equals(p.lastLocation,item.location())||!p.automatic){p.lastLocation=item.location();p.automatic=true;history.changed();}
             if("HAND".equals(item.slot())){currentHand=p.id;earningTools.add(p.id);}
             if(item.slot()!=null&&!Objects.equals(p.slot,item.slot())){p.slot=item.slot();history.changed();}
@@ -57,7 +61,7 @@ public final class ItemStatsAutomation {
         history.tick(now);
     }
     private static boolean same(ItemStatsHistory.Profile p,Observation item){
-        if(item.physicalId()!=null&&p.physicalId!=null&&!p.physicalId.equals(item.physicalId()))return false;
+        if(item.physicalId()!=null&&p.physicalId!=null&&!p.physicalId.startsWith("local:"))return p.physicalId.equals(item.physicalId());
         if(item.physicalId()==null&&p.physicalId!=null&&!p.physicalId.startsWith("local:"))return false;
         if(p.fingerprint.equals(item.fingerprint()))return true;
         if(!p.automatic&&p.icon!=null)try{return ItemStatsIdentity.automaticFingerprint(JsonParser.parseString(p.icon)).equals(item.fingerprint());}catch(Exception ignored){}

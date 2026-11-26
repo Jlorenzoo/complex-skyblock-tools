@@ -41,6 +41,8 @@ public final class ItemStatsAutomationTest {
             check(b.currentHand().equals(unique)&&ids.activeSessions().size()==1,"server IDs survive identical-item swaps; worn gear is not an earning source");
             b.observe("s/p",connection,List.of(item("1","HAND","same-config-0001","server-id-one"),item("37","LEGS","bone-leggings-01","server-id-legs")),true,3000);
             ids.money(50,0,2000,3000);ids.shards(3,3000);
+            b.observe("s/p",connection,List.of(item("1","HAND","rune-swapped-config-0002","server-id-one"),item("37","LEGS","bone-leggings-01","server-id-legs")),true,4000);
+            check(b.currentHand().equals(unique)&&ids.totals(unique).cash()==50,"swapping runes/enchants on same server item ID keeps the same profile");
             for(var session:ids.activeSessions())check(session.profileId.equals(unique)&&session.cash==50&&session.shards==3,"only the active earning tool receives rewards");
             check(ids.profiles("s/p").stream().filter(p->p.physicalId.equals("server-id-legs")).allMatch(p->ids.sessions(p.id).isEmpty()),"leg armor receives no copied sessions or shards");
 
