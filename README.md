@@ -21,8 +21,8 @@
 ## Installation
 
 - **Modpack (Recommended):**
-  - **1.21.11:** Prism Launcher ([`Full-Pack-Prism-1.21.11.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-1.21.11.zip)) &nbsp;-&nbsp; Modrinth App ([`Full-Pack-Modrinth-1.21.11.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-1.21.11.mrpack))
-  - **26.2:** Prism Launcher ([`Full-Pack-Prism-26.2.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-26.2.zip)) &nbsp;-&nbsp; Modrinth App ([`Full-Pack-Modrinth-26.2.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-26.2.mrpack))
+  - **1.21.11:** Prism Launcher ([`.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-1.21.11.zip)) &nbsp;-&nbsp; Modrinth App ([`.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-1.21.11.mrpack))
+  - **26.2:** Prism Launcher ([`.zip`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Prism-26.2.zip)) &nbsp;-&nbsp; Modrinth App ([`.mrpack`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases/download/v1.1.137/Full-Pack-Modrinth-26.2.mrpack))
 - **Standalone JAR** *(drop into `.minecraft/mods`, requires Fabric Loader 0.18.4+ & Java 21)*:
   - Minecraft 1.21.11 ([`.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc1.21.11)) &nbsp;-&nbsp; Minecraft 26.2 ([`.jar`](https://github.com/Jlorenzoo/complex-skyblock-tools/releases?q=mc26.2))
 
