@@ -155,12 +155,14 @@ public class BoosterHudOverlay implements HudElement {
 
     private static final Identifier SHARD_ICON = Identifier.withDefaultNamespace("textures/item/gold_nugget.png");
     private static final Identifier KEY_ICON = Identifier.withDefaultNamespace("textures/block/tripwire_hook.png");
+    private static final Identifier HOE_ICON = Identifier.withDefaultNamespace("textures/item/golden_hoe.png");
     private static final int EARNINGS_ICON_STEP = 10;
 
     public static int averageWidth(Minecraft mc, String label) {
         var config = ToolkitConfig.get();
         return mc.font.width(label) + (config.includeGoldShards ? EARNINGS_ICON_STEP : 0)
-                + (config.includeVoteKeys ? EARNINGS_ICON_STEP : 0);
+                + (config.includeVoteKeys ? EARNINGS_ICON_STEP : 0)
+                + (config.realmCropIncome ? EARNINGS_ICON_STEP : 0);
     }
 
     public static int averageX(Minecraft mc,String label) { return Math.max(2,Math.min(mc.getWindow().getGuiScaledWidth()-averageWidth(mc,label)-2,ModConfig.getInstance().averageX())); }
@@ -191,7 +193,11 @@ public class BoosterHudOverlay implements HudElement {
             renderEarningsIcon(g, SHARD_ICON, iconX, y);
             iconX += EARNINGS_ICON_STEP;
         }
-        if (config.includeVoteKeys) renderEarningsIcon(g, KEY_ICON, iconX, y);
+        if (config.includeVoteKeys) {
+            renderEarningsIcon(g, KEY_ICON, iconX, y);
+            iconX += EARNINGS_ICON_STEP;
+        }
+        if (config.realmCropIncome) renderEarningsIcon(g, HOE_ICON, iconX, y);
     }
 
     private static void renderEarningsIcon(GuiGraphicsExtractor g, Identifier texture, int x, int y) {
