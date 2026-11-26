@@ -9,7 +9,68 @@ public final class CropHarvestTrackerTest {
         testRateThresholdFilter();
         testResetOnDecrease();
         testFormatting();
-        System.out.println("PASS: sidebar scoreboard parsing, 60s rolling rate, 1k/h threshold, idle timeout and island single-block rejection");
+        testRealmCropCalculation();
+        System.out.println("PASS: sidebar scoreboard parsing, 60s rolling rate, 1k/h threshold, idle timeout, island rejection and realm crop income");
+    }
+
+    private static void testRealmCropCalculation() {
+        CropHarvestTracker.reset();
+        var cfg = ToolkitConfig.get();
+        cfg.realmCropIncome = false;
+        cfg.realmMoneyPerMillionCrops = 100_000.0; // $100K per 1M crops
+
+        check(!CropHarvestTracker.isInRealm(), "starts not in realm");
+        check(CropHarvestTracker.realmCropHourlyValue() == 0, "no realm value when toggle disabled");
+
+        // Scoreboard lines detection
+        CropHarvestTracker.checkScoreboardLines(java.util.List.of("☽ PHARAOH'S REALM ☾", "Crops Harvested: 1,000"));
+        check(CropHarvestTracker.isInRealm(), "in realm after scoreboard sweep");
+
+        // Toggle disabled even though in realm
+        check(CropHarvestTracker.realmCropHourlyValue() == 0, "no realm value when toggle is off");
+
+        // Enable toggle
+        cfg.realmCropIncome = true;
+
+        long t0 = 500_000;
+        CropHarvestTracker.observe(1000, t0); // baseline
+        long t = t0;
+        long count = 1000;
+        for (int i = 0; i < 16; i++) {
+            t += 250;
+            count += 10;
+            CropHarvestTracker.observe(count, t);
+        }
+        // Actively harvesting 160 crops in 4s (~144,000 crops/hr)
+        double rate = CropHarvestTracker.getRatePerHour(t);
+        check(rate > 100_000, "rate > 100k/h");
+        double hourlyValue = CropHarvestTracker.realmCropHourlyValue(t);
+        double expected = (rate / 1_000_000.0) * cfg.realmMoneyPerMillionCrops;
+        check(Math.abs(hourlyValue - expected) < 1e-4, "hourly value matches (rate / 1M) * price: " + hourlyValue + " vs " + expected);
+        check(hourlyValue > 0, "positive hourly value");
+
+        // Test cropValue helper
+        double value500k = CropHarvestTracker.cropValue(500_000);
+        check(Math.abs(value500k - 50_000.0) < 1e-4, "500k crops at 100k/M = 50k");
+
+        // Leave realm -> Overworld sidebar
+        CropHarvestTracker.checkScoreboardLines(java.util.List.of("Complex Skyblock"));
+        check(!CropHarvestTracker.isInRealm(), "no longer in realm after overworld sidebar");
+        check(CropHarvestTracker.realmCropHourlyValue(t) == 0, "zero value outside realm even when actively harvesting");
+        check(CropHarvestTracker.cropValue(500_000) == 0, "zero crop value outside realm");
+
+        // Re-enter realm
+        CropHarvestTracker.checkScoreboardLines(java.util.List.of("☽ PHARAOH'S REALM ☾"));
+        check(CropHarvestTracker.isInRealm(), "in realm after scoreboard sweep");
+        check(CropHarvestTracker.realmCropHourlyValue(t) > 0, "realm value restored");
+
+        // Turn toggle off
+        cfg.realmCropIncome = false;
+        check(CropHarvestTracker.realmCropHourlyValue(t) == 0, "zero value when toggle turned off");
+
+        // Reset
+        CropHarvestTracker.reset();
+        check(!CropHarvestTracker.isInRealm(), "not in realm after reset");
     }
 
     private static void testScoreboardParsing() {

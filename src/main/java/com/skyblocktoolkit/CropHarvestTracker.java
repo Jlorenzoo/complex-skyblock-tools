@@ -18,6 +18,7 @@ public final class CropHarvestTracker {
     public static final double MIN_RATE = 1000.0;
 
     private static final RollingEarnings rolling = new RollingEarnings(60000, 0);
+    private static ItemStatsLocation currentLocation = ItemStatsLocation.UNKNOWN;
     private static long lastKnownCount = -1;
     private static long lastObservationTime = 0;
     private static long lastHarvestTime = -1;
@@ -30,6 +31,7 @@ public final class CropHarvestTracker {
     public static void reset() {
         long now = System.currentTimeMillis();
         rolling.reset(now);
+        currentLocation = ItemStatsLocation.UNKNOWN;
         lastKnownCount = -1;
         lastObservationTime = 0;
         lastHarvestTime = -1;
@@ -38,9 +40,19 @@ public final class CropHarvestTracker {
         averageUpdated = 0;
     }
 
+    public static void checkScoreboardLines(java.util.List<String> lines) {
+        if (lines == null || lines.isEmpty()) return;
+        currentLocation = ItemStatsLocation.sidebar(lines);
+        for (String line : lines) checkScoreboardLine(line);
+    }
+
     public static void checkScoreboardLine(String line) {
         if (line == null) return;
-        Matcher m = CROPS_HARVESTED_PATTERN.matcher(clean(line));
+        String cleaned = clean(line).replace('’', '\'').replace('ʼ', '\'').replace('‘', '\'');
+        if (cleaned.toLowerCase(Locale.ROOT).matches(".*\\bpharaoh'?s\\s+realm\\b.*")) {
+            currentLocation = ItemStatsLocation.REALM;
+        }
+        Matcher m = CROPS_HARVESTED_PATTERN.matcher(cleaned);
         if (m.find()) {
             try {
                 double val = Double.parseDouble(m.group(1).replace(",", ""));
@@ -91,6 +103,7 @@ public final class CropHarvestTracker {
         }
         totalHarvestedInSession += delta;
         rolling.add(delta, from, now);
+        com.moneybooster.RateTracker.onCropHarvest(delta, now, com.moneybooster.RateTracker.getActiveTestId());
     }
 
     public static void tick() {
@@ -103,6 +116,53 @@ public final class CropHarvestTracker {
 
     public static boolean isActive(long now) {
         return lastHarvestTime >= 0 && now >= lastHarvestTime && (now - lastHarvestTime < IDLE_MS);
+    }
+
+    public static boolean isReady(long now) {
+        return isActive(now) && rolling.ready(now) && totalHarvestedInSession >= 2;
+    }
+
+    public static void updateLocation(ItemStatsLocation loc) {
+        if (loc != null) currentLocation = loc;
+    }
+
+    public static ItemStatsLocation getLocation() {
+        return currentLocation;
+    }
+
+    public static boolean isInRealm() {
+        if (currentLocation == ItemStatsLocation.REALM) return true;
+        try {
+            var mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc != null && mc.level != null) {
+                return ItemStatsTracker.location(mc) == ItemStatsLocation.REALM;
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    public static double realmCropHourlyValue() {
+        return realmCropHourlyValue(System.currentTimeMillis());
+    }
+
+    public static double realmCropHourlyValue(long now) {
+        var cfg = ToolkitConfig.get();
+        if (!cfg.realmCropIncome || !isInRealm() || cfg.realmMoneyPerMillionCrops <= 0) return 0;
+        if (!isReady(now)) return 0;
+        return (getRatePerHour(now) / 1_000_000.0) * cfg.realmMoneyPerMillionCrops;
+    }
+
+    public static double cropValue(long count) {
+        var cfg = ToolkitConfig.get();
+        return (cfg.realmCropIncome && isInRealm()) ? (count / 1_000_000.0) * cfg.realmMoneyPerMillionCrops : 0;
+    }
+
+    public static String realmIncomeLabel() {
+        var cfg = ToolkitConfig.get();
+        if (!cfg.realmCropIncome) return "Realm crop income: disabled";
+        boolean inRealm = isInRealm();
+        double val = realmCropHourlyValue();
+        return "Realm crops: " + (inRealm ? (val > 0 ? "+" + CompactMoney.display(val) + "/h" : "waiting for harvest") : "not in Realm");
     }
 
     public static boolean shouldShowHud() {

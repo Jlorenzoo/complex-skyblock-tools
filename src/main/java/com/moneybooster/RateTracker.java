@@ -41,6 +41,7 @@ public class RateTracker {
     private static long startTimeMs = 0;
     private static long stopTimeMs = 0;
     private static long shardsEarned = 0;
+    private static long cropsEarned = 0;
     private static double baseEarned = 0;
     private static double totalEarned = 0;
     private static boolean moneyEstimated;
@@ -92,6 +93,7 @@ public class RateTracker {
         startTimeMs = 0;
         stopTimeMs = 0;
         shardsEarned = 0;
+        cropsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
         moneyEstimated = BoosterStatsManager.isBalanceRounded();
@@ -107,6 +109,7 @@ public class RateTracker {
         BoosterStatsManager.markContext();
         stopTimeMs = 0;
         shardsEarned = 0;
+        cropsEarned = 0;
         baseEarned = 0;
         totalEarned = 0;
         moneyEstimated = BoosterStatsManager.isBalanceRounded();
@@ -151,11 +154,11 @@ public class RateTracker {
     }
 
     public static double getBaseEarned() {
-        return baseEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned);
+        return baseEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned) + com.skyblocktoolkit.CropHarvestTracker.cropValue(cropsEarned);
     }
 
     public static double getTotalEarned() {
-        return totalEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned);
+        return totalEarned + com.skyblocktoolkit.GoldShardTracker.value(shardsEarned) + com.skyblocktoolkit.CropHarvestTracker.cropValue(cropsEarned);
     }
 
     public static double getFinalRatePerHour() {
@@ -170,9 +173,14 @@ public class RateTracker {
         return seconds>0&&(completed||seconds>=2)?getBaseEarned()/seconds*3600:0;
     }
     public static long getShardsEarned(){return shardsEarned;}
+    public static long getCropsEarned(){return cropsEarned;}
     public static void onShardGain(long count,long at,int id){
         long deadline=selectedDuration.seconds>0?startTimeMs+selectedDuration.seconds*1000L:Long.MAX_VALUE;
         if(count>0&&id==testId&&(running||completed)&&at>=startTimeMs&&at<=deadline&&(running||at<=stopTimeMs))shardsEarned+=count;
+    }
+    public static void onCropHarvest(long count,long at,int id){
+        long deadline=selectedDuration.seconds>0?startTimeMs+selectedDuration.seconds*1000L:Long.MAX_VALUE;
+        if(count>0&&id==testId&&(running||completed)&&at>=startTimeMs&&at<=deadline&&(running||at<=stopTimeMs))cropsEarned+=count;
     }
 
     public static boolean isXpSelected() { return com.skyblocktoolkit.ToolkitConfig.get().rateTestXp; }

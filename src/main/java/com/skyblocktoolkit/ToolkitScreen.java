@@ -451,12 +451,15 @@ public final class ToolkitScreen extends Screen {
             toggle("Include boosters in crop average",row+48,money::includesBoostersInAverage,money::toggleAverageBoosters);
             label(CropHarvestTracker::averageLabel,row+72,ToolkitTheme.palette().accent(),1);
             int next=row+124;
-            if(details("Gold shards & income",row+96,"Include gold shards in income","Include Vote Keys in earnings HUD")){
+            if(details("Gold shards & income",row+96,"Include gold shards in income","Include Vote Keys in earnings HUD","Money per million crops in Realm","Money per million crops harvested")){
                 toggle("Include gold shards in income","Silent farming drops need a held hoe.",row+124,()->toolkit.includeGoldShards,()->toolkit.includeGoldShards=!toolkit.includeGoldShards);
                 toggle("Include Vote Keys in earnings HUD",row+156,()->toolkit.includeVoteKeys,()->toolkit.includeVoteKeys=!toolkit.includeVoteKeys);
-                link("Item prices",row+180,2,"Item prices");
-                label(GoldShardTracker::label,row+208,ToolkitTheme.palette().accent(),1);
-                next=row+238;
+                toggle("Money per million crops in Realm","Add harvest rate to earnings only in Realm.",row+180,()->toolkit.realmCropIncome,()->toolkit.realmCropIncome=!toolkit.realmCropIncome);
+                priceField("Money per million crops harvested",row+212,()->toolkit.realmMoneyPerMillionCrops,v->toolkit.realmMoneyPerMillionCrops=v);
+                link("Item prices",row+236,2,"Item prices");
+                label(GoldShardTracker::label,row+260,ToolkitTheme.palette().accent(),1);
+                label(CropHarvestTracker::realmIncomeLabel,row+280,ToolkitTheme.palette().accent(),1);
+                next=row+310;
             }
             button("Compare income: Rate tests",next,()->{toolkit.rateTestXp=false;Minecraft.getInstance().setScreenAndShow(new BoosterStatsScreen(this,true));});
         }
@@ -477,12 +480,13 @@ public final class ToolkitScreen extends Screen {
             label("Sell price per item ($ each, accepts K, M or B)",16);
             priceField("Vote Key price",32,()->toolkit.voteKeyPrice,v->toolkit.voteKeyPrice=v);
             priceField("Gold shard value ($ each)",56,()->toolkit.goldShardPrice,v->toolkit.goldShardPrice=v);
-            priceField("Cod · 60%",80,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
-            priceField("Salmon · 25%",104,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
-            priceField("Puffer · 13%",128,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
-            priceField("Tropical · 2%",152,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
-            label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),184,ToolkitTheme.palette().accent(),1);
-            label("Unpriced drops contribute $0.",200);
+            priceField("Money per million crops harvested",80,()->toolkit.realmMoneyPerMillionCrops,v->toolkit.realmMoneyPerMillionCrops=v);
+            priceField("Cod · 60%",104,()->fishCfg.codPrice,v->fishCfg.codPrice=v);
+            priceField("Salmon · 25%",128,()->fishCfg.salmonPrice,v->fishCfg.salmonPrice=v);
+            priceField("Puffer · 13%",152,()->fishCfg.pufferPrice,v->fishCfg.pufferPrice=v);
+            priceField("Tropical · 2%",176,()->fishCfg.tropicalPrice,v->fishCfg.tropicalPrice=v);
+            label(()->"Weighted value / fish: "+BoosterStatsManager.formatMoney(fishCfg.averageFishPrice()),208,ToolkitTheme.palette().accent(),1);
+            label("Unpriced drops contribute $0.",224);
         }
         if(topic("Mining & XP",0)){
             toggle("XP per hour HUD","Appears while you collect XP.",16,()->toolkit.xpEarningsHud,()->toolkit.xpEarningsHud=!toolkit.xpEarningsHud);

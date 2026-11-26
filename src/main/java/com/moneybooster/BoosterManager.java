@@ -113,10 +113,10 @@ public class BoosterManager {
         java.util.List<String> lines = components.stream().map(Component::getString).toList();
         long now = System.currentTimeMillis();
         for (var type : BoosterTimers.Type.values()) timers.observe(type, BoosterSidebar.parse(lines, type), now);
+        com.skyblocktoolkit.CropHarvestTracker.checkScoreboardLines(lines);
         for (Component component : components) {
             BoosterStatsManager.checkScoreboardComponent(component);
             PassiveIncomeCapture.observe("sidebar", component);
-            com.skyblocktoolkit.CropHarvestTracker.checkScoreboardLine(component.getString());
         }
     }
 }

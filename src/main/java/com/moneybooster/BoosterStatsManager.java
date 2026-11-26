@@ -31,13 +31,16 @@ public class BoosterStatsManager {
         boolean shardsReady = config.includeGoldShards && com.skyblocktoolkit.GoldShardTracker.ready();
         double keyRate = config.includeVoteKeys ? com.skyblocktoolkit.VoteKeyTracker.hourlyValue(now) : 0;
         boolean keysReady = keyRate > 0;
+        double realmCropRate = com.skyblocktoolkit.CropHarvestTracker.realmCropHourlyValue(now);
+        boolean realmCropReady = realmCropRate > 0;
         if (!shardsReady) shardDisplay.reset();
-        if (!cashReady && !shardsReady && !keysReady) return "Earning: " + (rounded ? "waiting" : "--/h");
+        if (!cashReady && !shardsReady && !keysReady && !realmCropReady) return "Earning: " + (rounded ? "waiting" : "--/h");
 
         double rate = cashReady ? (boosted ? averageRate : baseAverageRate) : 0;
         if (shardsReady) rate += shardDisplay.update(com.skyblocktoolkit.GoldShardTracker.hourlyValue(), now);
         rate += keyRate;
-        String estimate = rounded || boosted || shardsReady || keysReady ? "~" : "";
+        if (realmCropReady) rate += realmCropRate;
+        String estimate = rounded || boosted || shardsReady || keysReady || realmCropReady ? "~" : "";
         return "Earning: " + estimate + formatMoney(rate) + "/h" + (cashReady ? "" : " (cash --)");
     }
     private static double lastKnownBalance = -1;

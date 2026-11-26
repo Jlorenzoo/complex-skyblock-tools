@@ -20,8 +20,8 @@ public final class ToolkitConfig {
     public int xpHudX=12,xpHudY=74;
     public boolean cropEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled();
     public boolean cropHarvestHud=true;
-    public boolean includeGoldShards=false,includeVoteKeys=false;
-    public double goldShardPrice,voteKeyPrice;
+    public boolean includeGoldShards=false,includeVoteKeys=false,realmCropIncome=false;
+    public double goldShardPrice,voteKeyPrice,realmMoneyPerMillionCrops;
     public int cropHarvestHudX=12,cropHarvestHudY=90;
     public boolean fishEarningsHud=com.moneybooster.ModConfig.getInstance().isAverageEnabled(),rateTestHud=true;
     public boolean clearHarvest=true;
@@ -83,9 +83,11 @@ public final class ToolkitConfig {
             if(j.has("cropEarningsHud"))cropEarningsHud=j.get("cropEarningsHud").getAsBoolean();
             if(j.has("includeGoldShards"))includeGoldShards=j.get("includeGoldShards").getAsBoolean();
             if(j.has("includeVoteKeys"))includeVoteKeys=j.get("includeVoteKeys").getAsBoolean();
+            if(j.has("realmCropIncome"))realmCropIncome=j.get("realmCropIncome").getAsBoolean();
             goldShardPrice=readPrice(j,"goldShardPrice");
             sharedPricesSaved=j.has("voteKeyPrice");
             voteKeyPrice=readPrice(j,"voteKeyPrice");
+            realmMoneyPerMillionCrops=readPrice(j,"realmMoneyPerMillionCrops");
             if(j.has("cropHarvestHud"))cropHarvestHud=j.get("cropHarvestHud").getAsBoolean();
             if(j.has("cropHarvestHudX"))cropHarvestHudX=Math.clamp(j.get("cropHarvestHudX").getAsInt(),0,10000);
             if(j.has("cropHarvestHudY"))cropHarvestHudY=Math.clamp(j.get("cropHarvestHudY").getAsInt(),0,10000);
@@ -187,8 +189,9 @@ public final class ToolkitConfig {
             j.addProperty("rateTestXp",rateTestXp);j.addProperty("xpHudX",xpHudX);j.addProperty("xpHudY",xpHudY);
             j.addProperty("cropEarningsHud",cropEarningsHud);
             j.addProperty("cropHarvestHud",cropHarvestHud);
-            j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("includeVoteKeys",includeVoteKeys);j.addProperty("goldShardPrice",goldShardPrice);
+            j.addProperty("includeGoldShards",includeGoldShards);j.addProperty("includeVoteKeys",includeVoteKeys);j.addProperty("realmCropIncome",realmCropIncome);j.addProperty("goldShardPrice",goldShardPrice);
             j.addProperty("voteKeyPrice",voteKeyPrice);
+            j.addProperty("realmMoneyPerMillionCrops",realmMoneyPerMillionCrops);
             j.addProperty("cropHarvestHudX",cropHarvestHudX);
             j.addProperty("cropHarvestHudY",cropHarvestHudY);
             j.addProperty("fishEarningsHud",fishEarningsHud);j.addProperty("rateTestHud",rateTestHud);
